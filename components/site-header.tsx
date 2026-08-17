@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+
 import {
   ArrowUpRight,
   BookOpenText,
@@ -9,6 +11,7 @@ import {
   Wrench,
   type Icon,
 } from "@phosphor-icons/react"
+import { AnimatePresence, motion, useMotionValue } from "motion/react"
 import Link from "next/link"
 
 import {
@@ -119,21 +122,67 @@ function PanelFooter({ children }: { children: React.ReactNode }) {
   )
 }
 
+/* Optional artwork layer for the Start here! card — drop a webp in
+   public/brand and point this at it. It sits between the checkerboard and
+   the text, and scales up while the card is hovered. */
+const CARD_FG_SRC: string | null = null
+
 function GuidesPanel() {
+  const [cardHover, setCardHover] = useState(false)
+  /* Raw motion values, no spring — the pill tracks the cursor 1:1. Only the
+     enter/exit fade+scale is sprung. */
+  const cursorX = useMotionValue(0)
+  const cursorY = useMotionValue(0)
+
+  /* Pill coordinates are relative to the panel wrapper; the pill floats to
+     the top-right of the cursor. */
+  const placePill = (e: React.MouseEvent<HTMLElement>) => {
+    const wrap = e.currentTarget.parentElement
+    if (!wrap) return
+    const wr = wrap.getBoundingClientRect()
+    cursorX.set(e.clientX - wr.left + 16)
+    cursorY.set(e.clientY - wr.top - 40)
+  }
+
   return (
-    <div className="flex h-full w-full pt-[13px] pr-[12px] pb-[12px] pl-[14px]">
-        {/* Start here! card */}
+    <div className="relative flex h-full w-full pt-[13px] pr-[12px] pb-[12px] pl-[14px] [perspective:900px]">
+        {/* Start here! card — layers: checker bg, artwork, text, corner tab.
+            Pointer-tracking tilt: mousemove writes the rotation directly so
+            there is no re-render; the transform transition smooths it out. */}
         <NavigationMenuLink
           href="#"
-          className="relative block h-[302px] w-[244px] shrink-0 overflow-hidden rounded-[7px] border-[3px] border-solid border-[#ff902f] p-0 hover:bg-transparent focus:bg-transparent"
+          className="group/card relative block h-[302px] w-[244px] shrink-0 overflow-hidden rounded-[7px] border-[3px] border-solid border-[#ff902f] p-0 transition-[transform,box-shadow] duration-200 ease-out will-change-transform hover:bg-transparent hover:shadow-[0px_14px_28px_rgba(0,0,0,0.28)] focus:bg-transparent"
+          onMouseEnter={(e) => {
+            placePill(e)
+            setCardHover(true)
+          }}
+          onMouseMove={(e) => {
+            const el = e.currentTarget
+            const r = el.getBoundingClientRect()
+            const x = (e.clientX - r.left) / r.width - 0.5
+            const y = (e.clientY - r.top) / r.height - 0.5
+            el.style.transform = `rotateX(${(-y * 7).toFixed(2)}deg) rotateY(${(x * 9).toFixed(2)}deg) scale(1.02)`
+            // the light sweep rides the tilt: same pointer position drives it
+            el.style.setProperty("--sweep", (x + 0.5).toFixed(3))
+            placePill(e)
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = ""
+            e.currentTarget.style.removeProperty("--sweep")
+            setCardHover(false)
+          }}
         >
+          {/* background: checkerboard + sunlight gradient.
+              Values sampled from the Figma render: base squares #FFBA01/#FF9D00
+              (~54px at this scale), washed toward rgba(255,211,1,.75) at the
+              top-right so the checker contrast fades out there. */}
           <div
             aria-hidden
             className="absolute -inset-[60%] rotate-[-8.66deg]"
             style={{
               backgroundImage:
-                "conic-gradient(#ffbb01 0 25%, #ffa201 0 50%, #ffbb01 0 75%, #ffa201 0)",
-              backgroundSize: "120px 120px",
+                "conic-gradient(#FFBA01 0 25%, #FF9D00 0 50%, #FFBA01 0 75%, #FF9D00 0)",
+              backgroundSize: "107px 107px",
             }}
           />
           <div
@@ -141,23 +190,68 @@ function GuidesPanel() {
             className="absolute inset-0"
             style={{
               backgroundImage:
-                "linear-gradient(67deg, rgba(255,214,1,0) 21.354%, rgba(255,211,1,0.8) 69.365%)",
+                "linear-gradient(67.21deg, rgba(255,211,1,0) 0%, rgba(255,211,1,0.75) 100%)",
             }}
           />
 
-          <span className="absolute top-[13px] right-[11px] flex h-[25px] items-center gap-[6px] rounded-full bg-[#170117] px-[11px] text-[13px] font-semibold tracking-[-0.03em] text-white">
+          {/* foreground artwork — scales up on hover */}
+          {CARD_FG_SRC && (
+            <img
+              src={CARD_FG_SRC}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 ease-out group-hover/card:scale-[1.06]"
+            />
+          )}
+
+          {/* text layer — the Figma-exported vector overlay (305x377, scales
+              to the card), outlines and shadows baked in */}
+          <img
+            src="/brand/cardtext.svg"
+            alt="beginner? Start here!"
+            className="pointer-events-none absolute inset-0 h-full w-full"
+          />
+
+          {/* soft light sweep — its position is driven by the same pointer
+              value as the tilt (--sweep, 0..1), so the sheen glides across
+              the card as it tilts */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100"
+          >
+            <div className="absolute -top-[30%] -bottom-[30%] -left-[55%] w-[55%] bg-[linear-gradient(90deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.32)_50%,rgba(255,255,255,0)_100%)] transition-transform duration-200 ease-out [transform:translateX(calc(var(--sweep,0.5)*300%))_rotate(20deg)]" />
+          </div>
+
+          {/* Zero To One corner tab — the Figma flag vector as a clip-path,
+              built at design scale (173x34) and scaled 0.8 from the top-right
+              so it sits flush with the card's corner radius. */}
+          <span
+            className="absolute -top-[3px] -right-[3px] flex h-[34px] w-[173px] origin-top-right scale-[0.8] items-center justify-end gap-[6px] bg-[#ff902f] pr-[20px] text-[16px] font-semibold tracking-[-0.03em] text-white"
+            style={{
+              clipPath:
+                "path('M22.3123 26.1852L11.8664 7.04281C9.49719 2.70115 4.94603 0 0 0H165C169.418 0 173 3.58172 173 8V34H35.4794C29.9913 34 24.9412 31.0028 22.3123 26.1852Z')",
+            }}
+          >
             Zero To One
-            <ArrowUpRight size={12} weight="bold" aria-hidden />
-          </span>
-
-          <span className="absolute top-[43px] left-0 w-full text-center font-augie text-[29px] tracking-[-0.05em] text-white [text-shadow:0px_1.5px_6px_rgba(0,0,0,0.25)]">
-            beginner?
-          </span>
-
-          <span className="absolute bottom-[20px] left-[13px] font-augie text-[51px] leading-none tracking-[-0.05em] text-white [text-shadow:0px_1.5px_8px_rgba(0,0,0,0.4)]">
-            Start here!
+            <ArrowUpRight size={15} weight="bold" aria-hidden />
           </span>
         </NavigationMenuLink>
+
+        {/* cursor pill — springs in at the top-right of the pointer */}
+        <AnimatePresence>
+          {cardHover && (
+            <motion.span
+              className="pointer-events-none absolute top-0 left-0 z-30 flex h-[32px] items-center gap-[6px] rounded-[16px] rounded-bl-[5.4px] bg-black px-[15px] text-[14px] font-semibold tracking-[-0.03em] whitespace-nowrap text-white"
+              style={{ x: cursorX, y: cursorY, transformOrigin: "left bottom" }}
+              initial={{ opacity: 0, scale: 0.55 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.55 }}
+              transition={{ type: "spring", stiffness: 550, damping: 30 }}
+            >
+              Start Here
+              <ArrowUpRight size={15} weight="bold" aria-hidden />
+            </motion.span>
+          )}
+        </AnimatePresence>
 
         {/* guide links — same rows as the items-only panels */}
         <div className="flex min-w-0 flex-1 flex-col gap-[4px] pt-[6px] pl-[9px]">
