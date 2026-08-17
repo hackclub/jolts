@@ -1,0 +1,125 @@
+.page {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  isolation: isolate;
+}
+
+/* --- checkerboard backdrop ------------------------------------------- */
+
+.backdrop {
+  position: fixed;
+  /* oversized so the rotation never exposes an edge */
+  inset: -60%;
+  z-index: -1;
+  background-color: #333333;
+  background-image: conic-gradient(
+    #3b3b3b 0 25%,
+    #313131 0 50%,
+    #3b3b3b 0 75%,
+    #313131 0
+  );
+  background-size: 320px 320px;
+  transform: rotate(-13deg);
+}
+
+.page::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 90% at 45% 40%,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(0, 0, 0, 0) 45%,
+    rgba(0, 0, 0, 0.28) 100%
+  );
+}
+
+/* --- logo ------------------------------------------------------------ */
+
+.logo {
+  --ink: #0a0a0a;
+  --paper: #ffffff;
+
+  /* stroke widths are centered, so half of each extends outward.
+     halo must be wider than ink for the white rim to show. */
+  --ink-stroke: 0.095em;
+  --halo-stroke: 0.125em;
+
+  /* drop shadow offset - kept small so it welds onto the outline */
+  --shadow-x: 0.018em;
+  --shadow-y: 0.045em;
+
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  font-size: clamp(4.5rem, 15vw, 13rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  user-select: none;
+}
+
+.char {
+  position: relative;
+  display: inline-block;
+  animation: float 3.2s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * -0.42s);
+  will-change: transform;
+}
+
+/* every layer sits on top of the fill layer, which stays in flow and
+   defines the box */
+.layer {
+  display: block;
+  paint-order: stroke fill;
+  -webkit-text-stroke-color: transparent;
+}
+
+.layer:not(.layer--fill) {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.layer--halo,
+.layer--halo-shadow {
+  color: var(--paper);
+  -webkit-text-stroke-width: var(--halo-stroke);
+  -webkit-text-stroke-color: var(--paper);
+}
+
+.layer--ink,
+.layer--ink-shadow {
+  color: var(--ink);
+  -webkit-text-stroke-width: var(--ink-stroke);
+  -webkit-text-stroke-color: var(--ink);
+}
+
+.layer--halo-shadow,
+.layer--ink-shadow {
+  transform: translate(var(--shadow-x), var(--shadow-y));
+}
+
+.layer--fill {
+  position: relative;
+  color: var(--paper);
+}
+
+@keyframes float {
+  from {
+    transform: translateY(0.055em);
+  }
+  to {
+    transform: translateY(-0.055em);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .char {
+    animation: none;
+  }
+}

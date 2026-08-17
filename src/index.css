@@ -1,0 +1,26 @@
+@font-face {
+  font-family: 'Augie Pixel';
+  src: url('/augiepixel.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #313131;
+  color: #fff;
+  overflow: hidden;
+  font-family: 'Augie Pixel', ui-monospace, monospace;
+  -webkit-tap-highlight-color: transparent;
+}
