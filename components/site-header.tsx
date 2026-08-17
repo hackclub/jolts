@@ -212,10 +212,10 @@ const sections: {
     iconSize: 26,
     footer: "Check out all concepts",
     items: [
-      { title: "Voltage & Current", description: "What actually flows through a wire." },
-      { title: "Resistors", description: "Taming electrons, one ohm at a time." },
-      { title: "Microcontrollers", description: "Tiny computers that run your ideas." },
-      { title: "PCB Basics", description: "From breadboard mess to a real board." },
+      { title: "Electricity Basics", description: "Voltage, current, resistance" },
+      { title: "Components", description: "Resistors, LEDs, capacitors, switches" },
+      { title: "Microcontrollers", description: "What they are, how they think" },
+      { title: "PCBs", description: "From breadboard to printed board" },
     ],
   },
   {
@@ -224,9 +224,9 @@ const sections: {
     iconSize: 24,
     footer: "Check out all tools",
     items: [
-      { title: "Simulator", description: "Test circuits in your browser first." },
-      { title: "PCB Editor", description: "Design boards you can actually order." },
-      { title: "Firmware Flasher", description: "Get your code onto the chip." },
+      { title: "Soldering Iron", description: "First hour, technique, safety" },
+      { title: "Multimeter", description: "Measuring without guessing" },
+      { title: "Debugging Hardware", description: "When nothing works" },
     ],
   },
   {
@@ -235,9 +235,10 @@ const sections: {
     iconSize: 26,
     footer: "Check out the full library",
     items: [
-      { title: "Parts Library", description: "Every component jolts ships with." },
-      { title: "Datasheets", description: "The fine print, made readable." },
-      { title: "Community Builds", description: "What other hack clubbers made." },
+      { title: "Adafruit Guides", description: "3000+ imported guides" },
+      { title: "Codex", description: "Hack Club's hardware reference" },
+      { title: "Datasheets 101", description: "How to actually read them" },
+      { title: "Recommended Parts & Kits", description: "What to buy" },
     ],
   },
 ]
