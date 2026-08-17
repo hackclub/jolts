@@ -2,32 +2,41 @@ import './App.css'
 
 const WORD = 'jolts'
 
-// Every layer is the same glyph stacked in the same place, so the black outline
-// and the black drop shadow fuse into one silhouette instead of reading as two
-// separate shapes. Order (back -> front):
-//   1. halo of the shadow copy   (white, fat stroke)
-//   2. halo of the glyph         (white, fat stroke)
-//   3. shadow copy               (black, thin stroke)
-//   4. glyph outline             (black, thin stroke)
-//   5. glyph fill                (white, no stroke)
-const LAYERS = ['halo-shadow', 'halo', 'ink-shadow', 'ink', 'fill']
+// The wordmark is painted in three full-word passes rather than as five
+// self-contained character stacks: every character's halo goes down, then every
+// character's ink, then every fill.
+//
+// Painting pass-by-pass instead of character-by-character is what welds
+// neighbouring outlines into one continuous silhouette. With per-character
+// stacks, the next character's white halo paints straight over the previous
+// character's black outline and cuts a seam between them.
+//
+// Within a pass, `shadow` is the offset copy and `base` sits on top of it - both
+// are the same colour, so they fuse into a single shape.
+const PASSES = [
+  { key: 'halo', copies: ['shadow', 'base'] },
+  { key: 'ink', copies: ['shadow', 'base'] },
+  { key: 'fill', copies: ['base'] },
+]
 
 export default function App() {
   return (
     <main className="page">
       <div className="backdrop" aria-hidden="true" />
+      <div className="haze" aria-hidden="true" />
 
       <h1 className="logo" aria-label={WORD}>
-        {WORD.split('').map((char, i) => (
-          <span
-            className="char"
-            key={i}
-            aria-hidden="true"
-            style={{ '--i': i, '--n': WORD.length }}
-          >
-            {LAYERS.map((layer) => (
-              <span className={`layer layer--${layer}`} key={layer}>
-                {char}
+        {PASSES.map(({ key, copies }) => (
+          <span className={`pass pass--${key}`} key={key} aria-hidden="true">
+            {WORD.split('').map((char, i) => (
+              // every pass repeats the same characters with the same delay, so
+              // the three passes float in lockstep and never come apart
+              <span className="char" key={i} style={{ '--i': i }}>
+                {copies.map((copy) => (
+                  <span className={`copy copy--${copy}`} key={copy}>
+                    {char}
+                  </span>
+                ))}
               </span>
             ))}
           </span>

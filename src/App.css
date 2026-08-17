@@ -10,7 +10,7 @@
 
 .backdrop {
   position: fixed;
-  /* oversized so the rotation never exposes an edge */
+  /* oversized so neither the rotation nor the drift exposes an edge */
   inset: -60%;
   z-index: -1;
   background-color: #333333;
@@ -22,19 +22,31 @@
   );
   background-size: 320px 320px;
   transform: rotate(-13deg);
+  animation: drift 40s linear infinite;
+  will-change: transform;
 }
 
-.page::after {
-  content: '';
+/* translating inside the rotation moves along the tile's own axes, so one
+   tile's worth of travel loops seamlessly */
+@keyframes drift {
+  from {
+    transform: rotate(-13deg) translate3d(0, 0, 0);
+  }
+  to {
+    transform: rotate(-13deg) translate3d(320px, 320px, 0);
+  }
+}
+
+/* sits between the pattern and the wordmark */
+.haze {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(
-    120% 90% at 45% 40%,
-    rgba(255, 255, 255, 0.04) 0%,
-    rgba(0, 0, 0, 0) 45%,
-    rgba(0, 0, 0, 0.28) 100%
+  background: linear-gradient(
+    to bottom,
+    rgba(56, 56, 56, 0) 0%,
+    rgba(56, 56, 56, 0.6) 100%
   );
 }
 
@@ -53,14 +65,41 @@
   --shadow-x: 0.018em;
   --shadow-y: 0.045em;
 
+  --track: -0.05em;
+
+  position: relative;
   margin: 0;
-  display: flex;
-  align-items: baseline;
   font-size: clamp(4.5rem, 15vw, 13rem);
   font-weight: 400;
   line-height: 1;
-  letter-spacing: 0.03em;
+  letter-spacing: var(--track);
   user-select: none;
+}
+
+/* tracking also lands after the final character, where it is dead space that
+   pulls the word off-centre - give it back so the wordmark centres on its
+   glyphs. every pass gets it, so the passes stay aligned. */
+.char:last-child {
+  margin-right: calc(-1 * var(--track));
+}
+
+/* the three passes are identical in metrics and stack on the same origin.
+   every one of them is positioned, so DOM order alone decides paint order -
+   an unpositioned pass would drop behind the positioned ones regardless. */
+.pass {
+  display: flex;
+  align-items: baseline;
+}
+
+.pass--halo,
+.pass--ink {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.pass--fill {
+  position: relative;
 }
 
 .char {
@@ -71,41 +110,34 @@
   will-change: transform;
 }
 
-/* every layer sits on top of the fill layer, which stays in flow and
-   defines the box */
-.layer {
+.copy {
   display: block;
   paint-order: stroke fill;
   -webkit-text-stroke-color: transparent;
 }
 
-.layer:not(.layer--fill) {
+.copy--base {
+  position: relative;
+}
+
+.copy--shadow {
   position: absolute;
   top: 0;
   left: 0;
-}
-
-.layer--halo,
-.layer--halo-shadow {
-  color: var(--paper);
-  -webkit-text-stroke-width: var(--halo-stroke);
-  -webkit-text-stroke-color: var(--paper);
-}
-
-.layer--ink,
-.layer--ink-shadow {
-  color: var(--ink);
-  -webkit-text-stroke-width: var(--ink-stroke);
-  -webkit-text-stroke-color: var(--ink);
-}
-
-.layer--halo-shadow,
-.layer--ink-shadow {
   transform: translate(var(--shadow-x), var(--shadow-y));
 }
 
-.layer--fill {
-  position: relative;
+.pass--halo .copy {
+  color: var(--paper);
+  -webkit-text-stroke: var(--halo-stroke) var(--paper);
+}
+
+.pass--ink .copy {
+  color: var(--ink);
+  -webkit-text-stroke: var(--ink-stroke) var(--ink);
+}
+
+.pass--fill .copy {
   color: var(--paper);
 }
 
@@ -119,7 +151,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .char {
+  .char,
+  .backdrop {
     animation: none;
   }
 }
