@@ -170,6 +170,23 @@
   }
 }
 
+/* click flash: full brightness for a beat, then back to the resting
+   glow (class added briefly by the segment's onClick) */
+.jolts-glow.jolts-flash::before {
+  animation: jolts-glow-flash 0.4s ease-out forwards;
+}
+@keyframes jolts-glow-flash {
+  0% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.72;
+  }
+}
+
 /* ---------- page-switch view transition ---------- */
 
 /* Switching pages: the old column fades out fully, THEN the new one

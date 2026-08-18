@@ -14,6 +14,7 @@ import {
 import { SearchButton } from "@/components/search-command"
 import { AnimatePresence, motion, useMotionValue } from "motion/react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import {
   NavigationMenu,
@@ -373,6 +374,21 @@ const sections: {
 ]
 
 export function SiteHeader() {
+  const router = useRouter()
+
+  /* clicking a pill segment flashes the glow to full brightness for a
+     beat and navigates to the section's hub (hover already previews the
+     dropdown, so click means "go") */
+  const segmentClick =
+    (href?: string) => (e: React.MouseEvent<HTMLElement>) => {
+      const el = e.currentTarget
+      el.classList.remove("jolts-flash")
+      void el.offsetWidth // restart the animation if mid-flash
+      el.classList.add("jolts-flash")
+      setTimeout(() => el.classList.remove("jolts-flash"), 450)
+      if (href) router.push(href)
+    }
+
   return (
     <header className="relative z-40 h-[91px] w-full">
       {/* checkerboard background - pure CSS, no SVG involved */}
@@ -415,7 +431,10 @@ export function SiteHeader() {
         >
           <NavigationMenuList className="h-[54px] w-max flex-none justify-start gap-0 overflow-hidden rounded-[4px] bg-white/20 px-[7px]">
             <NavigationMenuItem className="h-full">
-              <NavigationMenuTrigger className={cn(segmentClass, bleedLeftClass)}>
+              <NavigationMenuTrigger
+                className={cn(segmentClass, bleedLeftClass)}
+                onClick={segmentClick("/guides")}
+              >
                 <span className={segmentContentClass}>
                   <BookOpenText size={26} weight="fill" aria-hidden />
                   Guides
@@ -433,6 +452,7 @@ export function SiteHeader() {
                     segmentClass,
                     i === sections.length - 1 && bleedRightClass
                   )}
+                  onClick={segmentClick(section.footerHref)}
                 >
                   <span className={segmentContentClass}>
                     <section.icon
