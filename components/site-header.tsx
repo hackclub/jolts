@@ -93,9 +93,12 @@ function PanelItem({
   descriptionClass?: string
   href?: string
 }) {
+  const external = href.startsWith("http")
   return (
     <NavigationMenuLink
       href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noreferrer" : undefined}
       className="flex-col items-start gap-[2px] rounded-[8px] px-[12px] py-[9px] hover:bg-[#f3f3f3] focus:bg-[#f3f3f3]"
     >
       <span className="text-[16px] font-semibold tracking-[-0.03em] text-black">
@@ -371,8 +374,11 @@ const sections: {
     iconSize: 26,
     footer: "Check out the full library",
     items: [
-      { title: "Adafruit Guides", description: "3000+ imported guides" },
-      { title: "Codex", description: "Hack Club's hardware reference" },
+      {
+        title: "Codex",
+        description: "Hack Club's hardware reference",
+        href: "https://codex.hackclub.com",
+      },
       { title: "Datasheets 101", description: "How to actually read them" },
       { title: "Recommended Parts & Kits", description: "What to buy" },
     ],

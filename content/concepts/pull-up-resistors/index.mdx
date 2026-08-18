@@ -6,46 +6,6 @@ author: anson
 tags: [fundamentals, gpio]
 ---
 
-Wire a button between a pin and ground, read the pin, and you'll get…
-garbage. Pressed reads low, sure - but *released* reads low, high, or
-random noise depending on the weather. The pin is **floating**: connected
-to nothing, it picks up whatever interference is nearby, like a radio
-antenna tuned to static.
-
 ## The fix
 
-Give the pin a default. A **pull-up resistor** connects the pin to the
-positive supply through a weak resistor (usually 10 kΩ):
-
-- Button released → nothing else drives the pin → the resistor gently
-  "pulls it up" → reads **high**, reliably.
-- Button pressed → the pin is connected straight to ground → ground wins
-  (a direct wire beats a 10 kΩ resistor) → reads **low**, reliably.
-
-The resistor's whole job is to lose politely. It sets the answer when
-nobody's talking and steps aside the moment anything real drives the
-line. That's also why the value barely matters - anything from 4.7 kΩ to
-100 kΩ works for a button.
-
-Note the logic comes out *inverted*: pressed = `False`. Every beginner
-trips on this once; it's not a bug.
-
 ## You rarely add one yourself
-
-Microcontrollers ship with pull-ups built into every pin - you enable
-them in software:
-
-```python
-import board, digitalio
-btn = digitalio.DigitalInOut(board.GP10)
-btn.switch_to_input(pull=digitalio.Pull.UP)
-```
-
-The big exception is <ConceptLink slug="i2c" />: its two shared lines
-need real, physical pull-up resistors because devices only ever pull the
-lines low. Breakout boards almost always solder them on for you.
-
-<Checkpoint title="You get it when…">
-You see `Pull.UP` in example code and know exactly why the code checks
-`if not btn.value` to detect a press.
-</Checkpoint>

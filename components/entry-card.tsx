@@ -1,5 +1,8 @@
 import Link from "next/link"
 
+import { Clock, Coins, Wrench } from "@phosphor-icons/react/dist/ssr"
+
+import { contentImageHasAlpha } from "@/lib/content-image"
 import {
   authors,
   contentImageUrl,
@@ -76,32 +79,89 @@ function CheckerHero({
   )
 }
 
-export function GuideCard({ entry }: { entry: Entry<GuideMeta> }) {
+/* The card is packaging, the project is the toy inside it: one continuous
+   graph-paper surface (same material as the guide header card), the
+   transparent render floating in the display window, and a hover that
+   picks the whole thing up - lift, extra tilt, shadow bloom. Opaque
+   photos fill the window instead; guides without art keep the checker. */
+export async function GuideCard({ entry }: { entry: Entry<GuideMeta> }) {
   const meta = entry.meta
+  const theme = typeTheme.guides
+  const heroTransparent = meta.hero
+    ? await contentImageHasAlpha(entry.contentType, entry.slug, meta.hero)
+    : false
+
   return (
     <Link
       href={`/guides/${entry.slug}`}
-      className="group flex flex-col overflow-hidden rounded-[10px] border border-black/10 bg-white transition-colors duration-150 hover:border-black/25"
+      className="group relative flex flex-col overflow-hidden rounded-[14px] border border-black/10 bg-[#FCFCFA]"
     >
-      <CheckerHero entry={entry} className="aspect-[16/9]" />
-      <div className="flex flex-1 flex-col p-[16px]">
-        <h3 className="text-[19px] font-semibold tracking-[-0.03em] text-[#16181d] group-hover:underline [text-decoration-thickness:1.5px] [text-underline-offset:3px]">
+      {/* graph paper across the whole card, fading toward the text */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(22,24,29,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(22,24,29,0.05) 1px, transparent 1px)",
+          backgroundSize: "21px 21px",
+          maskImage: "linear-gradient(180deg, black 0%, rgba(0,0,0,0.25) 100%)",
+          WebkitMaskImage:
+            "linear-gradient(180deg, black 0%, rgba(0,0,0,0.25) 100%)",
+        }}
+      />
+      {/* warm glow rising behind the display window */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(560px 320px at 50% -45%, ${theme.tint}, transparent 72%)`,
+        }}
+      />
+
+      {/* display window */}
+      <div className="relative flex aspect-[16/9] items-center justify-center overflow-hidden">
+        {meta.hero && heroTransparent ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={contentImageUrl(entry.contentType, entry.slug, meta.hero)}
+            alt=""
+            loading="lazy"
+            className="max-h-[82%] w-[70%] rotate-[-2deg] object-contain [filter:drop-shadow(0px_10px_14px_rgba(0,0,0,0.25))]"
+          />
+        ) : meta.hero ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={contentImageUrl(entry.contentType, entry.slug, meta.hero)}
+            alt=""
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <CheckerHero entry={entry} className="absolute inset-0" />
+        )}
+      </div>
+
+      <div className="relative flex flex-1 flex-col px-[16px] pt-[2px] pb-[14px]">
+        <h3 className="font-augie text-[21px] leading-[1.15] text-[#16181d] group-hover:underline [text-decoration-thickness:1.5px] [text-underline-offset:4px]">
           {meta.title}
         </h3>
-        <p className="mt-[4px] text-[13.5px] leading-[1.55] tracking-[-0.01em] text-[#5c6470]">
+        <p className="mt-[4px] line-clamp-2 text-[13.5px] leading-[1.5] tracking-[-0.01em] text-[#5c6470]">
           {meta.subtitle}
         </p>
-        <p className="mt-auto flex flex-wrap items-center gap-x-[7px] pt-[12px] text-[12.5px] tracking-[-0.01em] text-[#5c6470]">
+        <p className="mt-auto flex flex-wrap items-center gap-x-[11px] gap-y-[4px] pt-[12px] text-[12.5px] tracking-[-0.01em] text-[#5c6470]">
           <DifficultyDots meta={meta} />
-          <span aria-hidden className="text-black/20">·</span>
-          {meta.time}
-          <span aria-hidden className="text-black/20">·</span>
-          {meta.cost}
-          <span aria-hidden className="text-black/20">·</span>
-          {meta.soldering ? "soldering" : "no soldering"}
-        </p>
-        <p className="mt-[4px] text-[12.5px] tracking-[-0.01em] text-[#9aa1ab]">
-          You&rsquo;ll learn {meta.learns.join(", ")}
+          <span className="inline-flex items-center gap-[5px]">
+            <Clock size={13} weight="fill" className="text-[#9aa1ab]" aria-hidden />
+            {meta.time}
+          </span>
+          <span className="inline-flex items-center gap-[5px]">
+            <Coins size={13} weight="fill" className="text-[#9aa1ab]" aria-hidden />
+            {meta.cost}
+          </span>
+          <span className="inline-flex items-center gap-[5px]">
+            <Wrench size={13} weight="fill" className="text-[#9aa1ab]" aria-hidden />
+            {meta.soldering ? "soldering" : "no soldering"}
+          </span>
         </p>
       </div>
     </Link>
