@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -41,6 +41,18 @@ export function GuideNav({
   const current =
     items.find((item) => item.href === normalized)?.slug ?? null
   const multi = items.length > 1
+
+  /* the persistent layout means Next only scrolls the changed segment
+     into view - a page switch should land at the very top instead
+     (unless we're deep-linking to a #section) */
+  const prevPath = useRef(pathname)
+  useEffect(() => {
+    if (prevPath.current === pathname) return
+    prevPath.current = pathname
+    if (!window.location.hash) {
+      window.scrollTo({ top: 0, behavior: "instant" })
+    }
+  }, [pathname])
 
   /* scrollspy: the last section whose anchor has passed the reading line */
   const [readingId, setReadingId] = useState<string | null>(null)
