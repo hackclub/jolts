@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 
 import {
   ArrowUpRight,
@@ -36,7 +36,7 @@ import { cn } from "@/lib/utils"
    the ::after underline fades on the same clock. Class names are written out
    in full because Tailwind's scanner only sees complete literals. */
 const segmentClass = cn(
-  "jolts-glow relative flex h-full w-max items-center rounded-none px-[17px]",
+  "jolts-glow relative flex h-full w-max cursor-pointer items-center rounded-none px-[17px]",
   "text-[22.4px] font-semibold tracking-[-0.03em] text-white",
   "bg-transparent hover:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:outline-none",
   "data-popup-open:bg-transparent data-popup-open:hover:bg-transparent data-popup-open:focus:bg-transparent",
@@ -376,16 +376,40 @@ const sections: {
 export function SiteHeader() {
   const router = useRouter()
 
+  /* controlled dropdown state so a click can close the panel and HOLD it
+     closed while the pointer merely lingers post-navigation */
+  const [menuValue, setMenuValue] = useState<unknown>(null)
+  const holdRef = useRef(false)
+
   /* clicking a pill segment flashes the glow to full brightness for a
      beat and navigates to the section's hub (hover already previews the
-     dropdown, so click means "go") */
+     dropdown, so click means "go"). Afterwards, hovering "through" the
+     load doesn't count: glow and dropdown stay off until the pointer
+     leaves the segment and comes back. */
   const segmentClick =
     (href?: string) => (e: React.MouseEvent<HTMLElement>) => {
       const el = e.currentTarget
       el.classList.remove("jolts-flash")
       void el.offsetWidth // restart the animation if mid-flash
       el.classList.add("jolts-flash")
-      setTimeout(() => el.classList.remove("jolts-flash"), 450)
+
+      holdRef.current = true
+      setMenuValue(null)
+      let gone = false
+      el.addEventListener(
+        "pointerleave",
+        () => {
+          gone = true
+          holdRef.current = false
+          el.classList.remove("jolts-hold")
+        },
+        { once: true }
+      )
+      setTimeout(() => {
+        el.classList.remove("jolts-flash")
+        if (!gone) el.classList.add("jolts-hold")
+      }, 270)
+
       if (href) router.push(href)
     }
 
@@ -428,6 +452,12 @@ export function SiteHeader() {
           sideOffset={26}
           popupClassName={popupChromeClass}
           viewportClassName={viewportChromeClass}
+          value={menuValue}
+          onValueChange={(v: unknown) => {
+            // post-click hold: ignore hover-opens until the pointer left
+            if (holdRef.current && v !== null) return
+            setMenuValue(v)
+          }}
         >
           <NavigationMenuList className="h-[54px] w-max flex-none justify-start gap-0 overflow-hidden rounded-[4px] bg-white/20 px-[7px]">
             <NavigationMenuItem className="h-full">
@@ -478,7 +508,7 @@ export function SiteHeader() {
         {/* search */}
         <SearchButton
           className={cn(
-            "jolts-glow relative mt-[25px] ml-auto flex size-[49px] items-center justify-center overflow-hidden rounded-[4px] bg-white/20",
+            "jolts-glow relative mt-[25px] ml-auto flex size-[49px] cursor-pointer items-center justify-center overflow-hidden rounded-[4px] bg-white/20",
             // same brightness-overshoot gradient as the pill segments
             "before:pointer-events-none before:absolute before:inset-0",
             "before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.55)_92%,rgba(255,255,255,0.85)_100%)]",
