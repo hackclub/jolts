@@ -1,0 +1,105 @@
+---
+type: guide
+title: RP2040 Devboard
+subtitle: Design your own dev board from scratch - schematic to PCB to fab. Learn what every component on the board is actually for.
+author: KaiPereira
+difficulty: intermediate
+time: "several days"
+cost: "~$15"
+soldering: false
+learns: [KiCad, schematic design, PCB routing, footprint selection, PCB fabrication]
+hero: ./part-pcb.png
+parts:
+  - name: RP2040 SoC
+    qty: 1
+    cost: "$1"
+    note: the beginner-friendly SoC we're designing around
+    image: ./part-rp2040.jpg
+  - name: W25Q16JVZPIQ flash memory
+    qty: 1
+    cost: "$1"
+    note: quad SPI, same package the Pi Pico uses
+    image: ./part-flash.jpg
+  - name: USB-C receptacle
+    qty: 1
+    cost: "$1"
+    link: https://jlcpcb.com/partdetail/Korean_HropartsElec-TYPE_C_31_M12/C165948
+    note: "TYPE-C-31-M-12, JLC part C165948"
+    image: ./part-usb-c.jpg
+  - name: MCP1700-3.3 LDO
+    qty: 1
+    cost: "$1"
+    note: 3.3V fixed regulator, small SOT-23 package
+    image: ./part-ldo.jpg
+  - name: 12 MHz SMD crystal
+    qty: 1
+    cost: "$1"
+    link: https://jlcpcb.com/partdetail/YXC_CrystalOscillators-X322512MSB4SI/C9002
+    note: 4-pin 3225 package
+    image: ./part-crystal.jpg
+  - name: Tactile SMD button
+    qty: 1
+    cost: "$1"
+    link: https://jlcpcb.com/partdetail/XUNPU-TS_1088AR02016/C720477
+    note: for BOOTSEL
+    image: ./part-button.jpg
+  - name: 2.54mm pin headers
+    qty: 1
+    cost: "$1"
+    note: two 1x20 and one 1x3 - matches the Pi Pico footprint
+    image: ./part-headers.jpg
+  - name: Passives (caps + resistors)
+    qty: 1
+    cost: "~$1"
+    note: 0.1uF/1uF/10uF/33pF caps, 27Ω/1K/5.1K/10K resistors - JLCPCB basic parts
+    image: ./part-passives.jpg
+  - name: Your PCB, fabbed with PCBA
+    qty: 1
+    cost: "~$5"
+    note: JLCPCB, shipping included
+    image: ./part-pcb.png
+tools: [soldering-iron]
+tags: [kicad, pcb, rp2040]
+---
+
+Today, we're going to be designing our own dev board, using one of the most
+popular and beginner friendly SoC's, the RP2040. This guide doesn't serve as
+just a tutorial, but also as an opportunity to learn what everything on the
+PCB fundamentally does, and what every single component on your PCB is
+actually for!
+
+All the source files for this tutorial can be
+[found here](https://github.com/KaiPereira/build-a-devboard), so if you need
+any help, feel free to resort to the repository!
+
+![Finished RP2040 devboard](https://raw.githubusercontent.com/KaiPereira/build-a-devboard/master/journal/Pasted%20image%2020250930162537.png)
+
+<PartsList />
+
+Now let's start off with the basic question, what's an SoC! An SoC or system
+on chip, basically has all the basic components like SRAM, processors, USB
+controllers, and other peripherals you'll break out onto your board. The
+RP2040 is a good SoC to start with, because the datasheets are simple, it's
+low-cost, has good on-chip memory and is really flexible with plenty of IO's.
+
+Now let's get right into it, we'll be using KiCad for this tutorial, and I
+would suggest completing the hackpad tutorial and maybe a keyboard before
+trying to make your own devboard, not because you won't be able to make it,
+but you'll understand how it works a bit better.
+
+<Warning title="Two editors, one project">
+PCB's essentially have 2 main parts, the schematic, and the actual PCB. The
+schematic is basically a wiring diagram, that shows how everything will
+connect, but isn't like exactly where the components are placed or how thick
+your traces are, it's solely to show how everything is wired, not where. The
+PCB editor is where you'll place down all your components and route
+everything for when you get it actually manufactured.
+</Warning>
+
+*This is how our schematic will look when done the tutorial:*
+
+![Finished schematic](https://raw.githubusercontent.com/KaiPereira/build-a-devboard/master/journal/Pasted%20image%2020250930162101.png)
+
+*And this is the PCB editor:*
+
+![PCB editor](https://raw.githubusercontent.com/KaiPereira/build-a-devboard/master/journal/Pasted%20image%2020250930162139.png)

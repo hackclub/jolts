@@ -1,0 +1,188 @@
+---
+title: PCB layout
+---
+
+Now you move from the logical schematic to the physical board. Go back
+to the KiCAD project window and open the **PCB Editor**.
+
+<Step title="Import from the schematic">
+- In the PCB Editor, go to **Tools → Update PCB from Schematic** (or
+  press **F8**).
+- Click **Update PCB**. All your components will appear as a pile in
+  the center of the screen.
+- It will look messy at first. That's normal.
+
+  ![Imported pile](https://cdn.hackclub.com/019d5a51-fc10-78d8-a0c8-679a562127c9/image.png)
+</Step>
+
+## Board outline
+
+<Step title="Draw the outline on Edge.Cuts">
+- Before placing components, draw the outer edge of your PCB on the
+  `Edge.Cuts` layer.
+- In the right panel, select the `Edge.Cuts` layer.
+- Use the **Draw Rectangle** tool (or **Draw Line** for custom shapes)
+  to draw the outline of your board.
+- A standard 60% keyboard is roughly 285mm × 95mm, but size it to fit
+  your layout.
+</Step>
+
+## Placing components
+
+<Step title="Place the Pico first, then switches">
+- Start by placing the Pico, then build out from there.
+- Click and drag components into position. Use **R** to rotate.
+- Place the **Pico** at one edge of the board so its USB-C port hangs
+  slightly off the PCB. This makes it easier to plug in a cable.
+- Place **switches** according to your layout. Use a consistent spacing.
+  MX switches use a 19.05mm grid.
+- Place **stabilizers** directly under their corresponding wide keys.
+- Place **diodes** near their switches, typically just below or above
+  each one.
+- You can use whatever spacing works for you, just keep it consistent.
+
+  ![Components placed](https://cdn.hackclub.com/019d5a57-81bc-7464-b614-c262c1343e1c/image.png)
+</Step>
+
+<Step title="Renumber by position">
+- If you copy-pasted footprints, their reference numbers may be out of
+  order. Use **Geographical Reannotate** to renumber them by their
+  physical position on the board:
+- Go to **Tools → Geographical Reannotate**.
+- Choose your preferred order (left-to-right, top-to-bottom).
+- Click **OK**. The references update to match position, and KiCAD will
+  sync this back to your schematic.
+
+  ![Geographical reannotate](https://cdn.hackclub.com/019d5a64-04f1-7779-ac1d-7bf698897aff/image.png)
+</Step>
+
+<Checkpoint>
+Your PCB should look something like this after everything is laid out:
+
+![Everything laid out](https://cdn.hackclub.com/019d5a6c-46d4-70c7-98e4-12d7ad983377/image.png)
+</Checkpoint>
+
+## Routing traces
+
+Routing is the process of drawing the copper traces (wires) that connect
+all the pads together. The thin "ratsnest" lines show you which pads
+still need to be connected.
+
+<Step title="Route the matrix">
+- Press **X** to activate the Route Track tool.
+- Click a pad to start a trace, then click the destination pad to
+  complete the connection.
+- Use the `F.Cu` layer (front copper) for traces going in one direction
+  and `B.Cu` (back copper) for the other direction. This keeps things
+  organized and avoids most crossings.
+- Press **/** to switch between front and back copper mid-trace (this
+  adds a via, a small hole that connects the two layers).
+</Step>
+
+<Warning title="Routing tips">
+- Route the Pico connections first since they touch everything.
+- Keep traces as short and direct as possible.
+- Avoid sharp 90-degree corners. Use 45-degree angles instead.
+</Warning>
+
+![Full wiring](https://cdn.hackclub.com/019e944d-5ec4-74ca-b0cd-c3b093f3af74/Full%20wiring.png)
+![Pico routing](https://cdn.hackclub.com/019e944d-7bd5-7bfc-827b-b783aeb97c14/Pico%20Routing.png)
+![General routing](https://cdn.hackclub.com/019e944d-6f14-7b74-a063-b46dbcdcb443/General%20Red%20Routing.png)
+
+The USB port of the Pico should hang off the PCB edge slightly so a
+cable can plug in:
+
+![USB overhang](https://stasis.hackclub.com/019d6389-830e-7423-b611-df54d0ae55e3/paste-1775491449889.png)
+
+## Ground fill (optional)
+
+A ground fill floods any empty copper area on the board with a solid GND
+connection. It's optional but good practice.
+
+<Step title="Add filled zones on both layers">
+- Select the `F.Cu` layer.
+- Go to **Place → Add Rule Area** or use the **Add Filled Zone** tool.
+- Draw a rectangle covering your entire board outline.
+- In the dialog, set the net to `GND` and click **OK**.
+- Press **B** to fill all zones.
+- Repeat on `B.Cu`.
+</Step>
+
+<Checkpoint>
+The finished board should look something like this:
+
+![Finished board](https://stasis.hackclub.com/019d638a-2280-7df0-8a56-f0db0d094496/paste-1775491491043.png)
+</Checkpoint>
+
+## 3D preview
+
+You can attach 3D models to footprints to visualize what your board will
+look like. Many footprints already include a model. For others (like
+the Pico), download a STEP file from GrabCAD and link it in the
+footprint properties.
+
+To view your board in 3D, press **Alt+3** or go to **View → 3D Viewer**.
+
+![3D preview](https://stasis.hackclub.com/019d639b-9fe6-7c10-92d5-241a3d449c47/paste-1775492637208.png)
+
+## DRC
+
+<Step title="Run the design rule check">
+- Before exporting, run a DRC to catch any mistakes:
+- Go to **Inspect → Design Rules Checker**.
+- Click **Run DRC**.
+- Review any errors. Common ones are unconnected pads (ratsnest lines
+  you missed) or traces that are too close together.
+- Fix all errors before exporting.
+</Step>
+
+## Exporting gerbers
+
+Now that the PCB is finished, it's time to get it fabricated. Gerber
+files are the production files you send to a PCB manufacturer.
+
+<Step title="Export fabrication outputs">
+- Save your PCB, then go to
+  **File → Fabrication Outputs → Gerbers (.gbr)** and export everything
+  in that dialog.
+- If you want a known-good starting point, here are the exact settings
+  to use.
+</Step>
+
+**Include these layers:**
+
+`F.Cu`, `B.Cu`, `F.Paste`, `B.Paste`, `F.Silkscreen`, `B.Silkscreen`,
+`F.Mask`, `B.Mask`, `Edge.Cuts`
+
+**General options:**
+
+| Option | Setting |
+|---|---|
+| Plot drawing sheet | off |
+| Subtract soldermask from silkscreen | off |
+| Indicate DNP on fabrication layers | on, set to **Cross-out** |
+| Sketch pads on fabrication layers | off |
+| Check zone fills before plotting | on |
+| Drill marks | None |
+| Scaling | 1:1 |
+| Plot mode | Filled |
+
+**Gerber options:**
+
+| Option | Setting |
+|---|---|
+| Use Protel filename extensions | off |
+| Generate Gerber job file | on |
+| Use extended X2 format (recommended) | on |
+| Include netlist attributes | on |
+| Disable aperture macros | off |
+| Coordinate format | 4.6, unit mm |
+
+<Step title="Plot and zip">
+- Once your settings match, click **Plot** to generate the Gerbers.
+- Then click **Generate Drill Files** and click **Generate Drill File**
+  to export the `.drl` file.
+- Finally, zip the entire output folder. That zip is what you send to
+  the manufacturer, and you should commit it to your project alongside
+  your `bom.csv` and KiCad project files.
+</Step>

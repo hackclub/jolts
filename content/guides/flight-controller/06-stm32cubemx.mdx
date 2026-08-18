@@ -1,0 +1,176 @@
+---
+title: STM32CubeMX
+---
+
+Since we are using an STM32, there is a really cool piece of software
+called STM32CubeMX. It basically allows you to select the functions and
+types of communication that you need, and it automatically selects the
+pins so that we don't have to read the datasheet and get stuff wrong.
+
+<Step title="Install STM32CubeMX">
+- [Download it here](https://www.st.com/en/development-tools/stm32cubemx.html)
+  and wait for it to install.
+- After installing it and opening it, you should be presented with this
+  screen:
+
+  ![CubeMX startup](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_startup.png)
+</Step>
+
+<Step title="Pick the STM32F722RET6">
+- Click on `ACCESS TO MCU SELECTOR` as we are going to create a new
+  project based on the MCU that we are using: in this case,
+  `STM32F722RET`.
+- After searching for the MCU, you should see this screen:
+
+  ![MCU selector](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_mcu_selector.png)
+
+- Here, it shows different variations of that version for the STM32, but
+  we are going to select the `STM32F722RET6` version as it is the one
+  that has the most in stock on LCSC.
+
+  ![STM32F722RET6 selected](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_mcu_selected.png)
+
+- After that, hit "Start Project" at the top. If any windows pop up, say
+  yes.
+- After loading/downloading the firmware, you should be greeted with this
+  window:
+
+  ![Pinout config](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_pinout_config.png)
+</Step>
+
+This is where you will be configuring the pinout for the STM32. On the
+left, you can see the different sections that are able to be configured.
+However, the only ones that concern us for now are the `System Core`,
+`Timers`, and `Connectivity` sections.
+
+## Connectivity
+
+Here, we can see the different ways that we can connect the STM32 to
+different peripherals through `I2C`, `SPI`, `UART`, `SDMMC`,
+`USB_OTG_FS`, and more.
+
+<Step title="Enable I2C for the charger + barometer">
+- For now, enable the first <ConceptLink slug="i2c">I2C</ConceptLink>
+  channel. This will be for the battery charger and pressure sensor. It
+  should look like this:
+
+  ![I2C enabled](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_i2c_enabled.png)
+
+- Also, be sure to select pins on either side for the battery charger
+  interrupt and chip enable pins. The BQ_INT pin should be set as a
+  GPIO_EXTIx (x is any number) pin as this lets the STM32 know that this
+  pin is going to be an interrupt pin.
+
+  ![BQ_INT GPIO](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_bq_int_gpio.png)
+
+- For BQ_CE, make sure that there's a pin set to GPIO_Output. According
+  to the datasheet, when the pin is low, charging is on, and when it's
+  high, the battery doesn't charge. We can change this later in the code
+  for further customization in case you don't want the battery charge
+  controller running during flight.
+
+  ![BQ_CE GPIO](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_bq_ce_gpio.png)
+</Step>
+
+<Warning title="Don't forget the BMP580 interrupt">
+**MAKE SURE TO ADD THE INTERRUPT PIN FOR THE BMP580.**
+
+When selecting an interrupt, if it deletes another interrupt, choose
+another pin as some interrupts use multiple pins.
+
+![BMP580 interrupt](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_bmp_interrupt.png)
+</Warning>
+
+<Step title="Enable SPI for the IMU">
+- Then enable an SPI channel for the IMU. You are free to use whichever
+  channel you wish, but I am going to select the first one. Select
+  `Full Duplex Master` as the STM32 will be the master and the IMU the
+  slave, and full duplex because we are using both MOSI and MISO and not
+  just one channel for input/output (half duplex/SDIO).
+- There is also an option under the selection to activate a
+  `Hardware NSS Signal`. This is used if we have just one device under
+  the SPI bus and makes it so that the STM32 manages the `Chip Select`
+  pin instead of us having to select a GPIO for it. I enabled it as
+  `Hardware NSS Signal Output` as the IMU will be the input. After
+  selecting SPI, it should look like this (it can be different if you
+  want to use a different pin for the Chip Select):
+
+  ![SPI configured](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_spi_configured.png)
+
+- Also, don't forget to add the 2 interrupt pins on the IMU as GPIO_EXTIx
+  (x is any number):
+
+  ![IMU interrupts](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_imu_interrupts.png)
+</Step>
+
+<Step title="Enable USB_OTG_FS">
+- After you've done that, it's time to select `USB_OTG_FS`. This means
+  USB On-The-Go Full Speed, and it differs from `USB_OTG_HS` (USB
+  On-The-Go High Speed) as it is slower and doesn't need any extra pins
+  to configure. It's sufficient for our needs of flashing and sending
+  serial data.
+- Set it to host or device (you'll be changing this later depending on
+  your needs). For now, I will leave it as host, and it shows where the
+  USB pins are on the chip.
+
+  ![USB OTG](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_usb_otg.png)
+</Step>
+
+<Step title="Enable SDMMC (4-bit)">
+- Now enable `SDMMC` as this is the communication protocol that we will
+  be using to write/read to our microSD. This should be enabled and set
+  to a 4-bit bus.
+
+  ![SDMMC enabled](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_sdmmc_enabled.png)
+
+- Also, remember to add an extra pin next to it for the card detect pin
+  and make it a GPIO_Input:
+
+  ![SDMMC card detect](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_sdmmc_card_detect.png)
+</Step>
+
+## System core and timers
+
+Now that we are done with our peripherals/sensors, we are going to
+configure some other stuff that would be important in starting the STM32
+and configuring the servos.
+
+<Step title="Enable external clocks in RCC">
+- Go to the `System Core` tab, then click on `RCC`, and set both the
+  high-speed clock and low-speed clock as a crystal/ceramic resonator.
+- By doing this, we are telling the STM32 that we will have some external
+  clocks that it can use to achieve faster/stable clock timing throughout
+  the entire chip. We will edit this in KiCad later along with the pins.
+
+  ![RCC config](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_rcc_config.png)
+</Step>
+
+<Step title="Set up PWM for the servos">
+- Now go to the `Timers` section. Here is where we can edit the PWM pins
+  for the servos. Select any timer that has channels that support PWM
+  and select 2 `PWM Generation CH` channels. We will be able to edit the
+  **duty cycle** later in the firmware.
+- Also edit the `Clock Source` and set it to the internal clock. This is
+  needed for the PWM generation as it needs a clock to time the signals
+  correctly.
+
+  ![PWM config](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_pwm_config.png)
+</Step>
+
+<Warning title="Save before you go">
+**MAKE SURE TO SAVE USING CTRL+S AND CREATE A NEW FOLDER IN THE ROOT OF
+YOUR GITHUB REPOSITORY CALLED `software` OR `firmware`.**
+
+![Save location](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_save_location.png)
+</Warning>
+
+<Checkpoint>
+This is how my STM32 looks after selecting all of the pins:
+
+![Final pinout 1](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_final_pinout1.png)
+![Final pinout 2](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_final_pinout2.png)
+![Final pinout 3](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_final_pinout3.png)
+
+Keep this open while we configure the rest of the microcontroller in
+KiCad.
+</Checkpoint>

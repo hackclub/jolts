@@ -1,0 +1,86 @@
+---
+title: Exporting production files
+---
+
+To get your project ready for submission, we need to export the
+production files (gerbers, etc.). These files tell JLCPCB or whatever
+board manufacturer how to make the board and which components to place.
+
+![JLCPCB plugin icon](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/jlcpcb_plugin_icon.png)
+
+<Step title="Install the JLCPCB plugin">
+- Thankfully, there's a plugin that KiCad has to make this export easy.
+  Go to the `Plugin and Content Manager` in KiCad and search for `jlc`.
+- You should see this plugin show up:
+
+  ![JLCPCB plugin](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/jlcpcb_plugin_install.png)
+
+- Press the install button and then `Apply Pending Changes` to install
+  it. Finally, go back to your PCB screen and you should see this icon:
+
+  ![Fabrication icon](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/jlcpcb_fabrication_icon.png)
+</Step>
+
+<Step title="Generate the production files">
+- A window should open and click `Generate`:
+
+  ![Generate window](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/jlcpcb_generate_window.png)
+
+- It should create this directory in the `hardware` folder:
+
+  ![Production folder](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/jlcpcb_production_folder.png)
+
+- But I'm going to copy it out of that folder and move it to the root so
+  that reviewing is much easier.
+
+  ![Production folder moved](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/production_folder_moved.png)
+</Step>
+
+## Ordering from JLCPCB
+
+<Step title="Upload gerbers">
+- Now open [JLCPCB](https://jlcpcb.com/) and upload the gerbers (ZIP
+  file that has the name of the KiCad project) in the `production`
+  folder to see how much it costs.
+
+  ![Upload gerbers](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/jlcpcb_upload_gerbers.png)
+</Step>
+
+<Step title="Enable PCBA (order 2)">
+- Select `PCBA` and make sure that it is only one side and that you
+  order 2 and not 5 boards assembled to minimize cost:
+
+  ![PCBA settings](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/jlcpcb_pcba_settings.png)
+</Step>
+
+<Step title="Upload BOM and CPL">
+- Continue and upload the `BOM and CPL` (BOM = bom.csv, basically the
+  components and their ID; CPL = positions.csv, where exactly the
+  components are placed):
+
+  ![BOM/CPL upload](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/jlcpcb_bom_cpl_upload.png)
+
+- Depending on the sensors you use, you may have to use standard PCBA:
+
+  ![Standard PCBA](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/jlcpcb_standard_pcba.png)
+
+- If there are any components that have shortfall, then you need to
+  order them separately and add them to your library before ordering:
+
+  ![Component shortfall](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/jlcpcb_component_shortfall.png)
+
+  ![Parts list](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/jlcpcb_parts_list.png)
+</Step>
+
+<Step title="Confirm the cost">
+- Continue without placing the parts for now to get the general cost of
+  the board:
+
+  ![Final cost](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/jlcpcb_final_cost.png)
+</Step>
+
+**CONGRATS! YOU'VE MADE YOUR FIRST FLIGHT CONTROLLER!**
+
+Feel free to modify this board to include more sensors, servos,
+peripherals, microSD cards (lmao), literally anything you can put your
+mind to.

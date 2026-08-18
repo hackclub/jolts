@@ -1,0 +1,95 @@
+---
+title: Plan your keyboard
+---
+
+The point of this step is for you to have a vision of what you want to
+make, so you can easily execute on your idea.
+
+<Step title="Sketch your layout">
+- Sketch up what the layout of the switches should be, where the
+  Raspberry Pi Pico should go, etc. This could be on paper or in a 3D
+  modeling software.
+- Make it a weird shape, or add a cool feature, or silkscreen! The point
+  is that you know what you want to make, and you can change this along
+  the way.
+</Step>
+
+## Know your parts
+
+Before you start placing components in KiCAD, it helps to know what
+everything actually is and how it fits together physically.
+
+### Switches
+
+Switches are the mechanical components under each key, the part you
+actually press. When you press a key, the switch closes an electrical
+circuit that the Pico detects.
+
+There are three main types:
+
+- **Linear**: smooth and consistent from top to bottom, no bump or click.
+  Popular for gaming.
+- **Tactile**: a subtle bump partway through the press gives you feedback
+  that the key registered. Quiet but noticeable.
+- **Clicky**: has both a tactile bump and an audible click. Satisfying,
+  but loud.
+
+This project uses **MX-style switches**, which is the most common
+standard. Almost all aftermarket switches, keycaps, and plates are
+compatible with it.
+
+### Keycaps
+
+Keycaps are the plastic caps that sit on top of each switch, the part
+your fingers touch. They pull off and snap back on, so they're easy to
+swap.
+
+Keycaps come in many profiles (the shape and height), but for this
+project **DSA keycaps** are a good choice because every key is the same
+height, which means one set fits any layout without worrying about rows.
+
+### Stabilizers
+
+Wider keys (2u and above, like spacebar, backspace, left shift, and
+enter) would wobble if held only by their switch. **Stabilizers** are
+mechanical brackets that clip onto the PCB and keep both ends of the key
+moving evenly.
+
+You only need stabilizers for keys that are **2u or wider**. Anything
+smaller uses just the switch.
+
+### The Raspberry Pi Pico
+
+The **Pico** is the microcontroller, the "brain" of the keyboard. It
+reads the switch matrix, figures out which key was pressed, and sends
+that keypress to your computer over USB.
+
+The Pico solders directly onto your PCB through-hole. Its USB-C port will
+hang off the edge of the board slightly so you can plug a cable in.
+
+It has **29 GPIO pins**, which is why we use a matrix. A 60% keyboard has
+far more keys than available pins.
+
+### Diodes (1N4148)
+
+Each switch has a **1N4148 diode** wired in series with it. Diodes only
+let current flow one way, which prevents "ghosting", a problem where
+pressing multiple keys at once confuses the matrix and registers phantom
+keypresses.
+
+These are through-hole components (legs go through the PCB) and are
+straightforward to solder.
+
+### Optional add-ons
+
+If you want to go further, these parts can be added to your PCB:
+
+| Part | What it does |
+|---|---|
+| **RGB LEDs** (SK6812 MINI-E) | Individually addressable color lighting under each key |
+| **Rotary encoder** (EC11) | A dial you can turn, useful for volume, scrolling, etc. |
+| **OLED screen** | A small display showing things like current layer or a logo |
+| **Buzzer** | Audio feedback on keypresses |
+
+These are all optional. You can keep it simple and just build a clean
+typing keyboard.

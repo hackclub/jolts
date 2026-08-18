@@ -1,0 +1,102 @@
+---
+title: Sensors and microSD
+---
+
+Now that we've got power out of the way, it's time to route the sensors
+and the microSD.
+
+## BMP580
+
+Starting with the BMP580, when I try to open the datasheet, it says that
+no datasheet is defined. So you have to look it up on Google and found
+[this](https://cdn-shop.adafruit.com/product-files/6411/BMP580.pdf).
+
+Looking around the table of contents, there is no
+`Application and Implementation` section, but there is a
+`Pinout and Connection Diagrams` which is close enough:
+
+![BMP580 pinout](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/bmp580_pinout.png)
+
+Taking a look at the different schematics, there are different ways of
+connecting the chip through `SPI`, `I2C`, and `I3C`. Above in the
+**Communication Protocols** section, I explained what each of these
+mean. For this chip, I plan on using <ConceptLink slug="i2c">I2C</ConceptLink>
+as it's the default mode of communication for this chip. (This is
+personal preference; feel free to use whichever mode of communication
+you wish.)
+
+When implementing `I2C`, you need to have pull-up resistors on each line.
+However, if you recall, the battery charging circuit uses I2C as well,
+and we already put pull-up resistors there, so it isn't necessary to add
+them here. (See <ConceptLink slug="pull-up-resistors" /> if you want the
+full why.)
+
+![BMP580 I2C schematic](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/bmp580_i2c_schematic.png)
+
+<Step title="Wire the BMP580">
+- Following this schematic, after wiring it up in KiCad, you should get
+  this:
+
+  ![BMP580 wired](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/bmp580_kicad_wired.png)
+
+- I wired both VDD and VDDIO to 3.3V as that is the voltage that all of
+  the other chips are running at (microcontroller and sensors).
+</Step>
+
+## ICM-45686
+
+Looking at the `ICM-45686`
+[datasheet](https://invensense.tdk.com/wp-content/uploads/documentation/DS-000577_ICM-45686.pdf),
+it has different modes of operation like the BMP580. However, the one
+that interests us is this one:
+
+![ICM-45686 SPI](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/icm45686_spi_schematic.png)
+
+Changing things up a bit, we are going to connect the sensors to the
+microcontroller through SPI. This gives us the advantage of faster data
+and also allows us to learn how to implement it later on in code.
+
+Also, in the schematic, looking at pin 14, it serves the dual purpose of
+being a SDIO or SDI. However, in our case, we want to use it as SDI to
+use the full capacity of SPI.
+
+<Step title="Wire the ICM-45686">
+- You should end up with something like this after:
+
+  ![ICM-45686 wired](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/icm45686_kicad_wired.png)
+</Step>
+
+## MicroSD card
+
+MicroSD works on the same principle as SPI but can have more channels for
+faster data throughput. This form of communication is called SDIO
+(Secure Digital Input Output) and can work in 1-bit or 4-bit data modes
+(4-bit has more channels and faster data transfers).
+
+Here is an example schematic of how the SD card should be wired, but we
+are going to modify it a bit to fit our needs. There are 8 pins on the
+microSD, and here's a table showing their meaning:
+
+![microSD pinout table](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/microsd_pinout.png)
+
+In SDIO (SDMMC) mode, DAT0-3 are used for data transfer, CLK for clock,
+and CMD for sending/receiving commands between the microcontroller and
+microSD card. DAT3 can also be considered a CD (Card Detect) pin, but
+usually, there is a 9th pin on most symbols that uses the case directly
+to detect if there is an SD card or not.
+
+<Warning title="10K pull-ups on every microSD pin">
+Another thing to keep in mind when wiring up the microSD card: **10K
+PULL-UPS ARE REQUIRED FOR EVERY PIN ON THE MICROSD CARD** (excluding the
+9th pin/GND/VCC). See <ConceptLink slug="pull-up-resistors" /> for why.
+
+![Pull-up requirement](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/microsd_pullup_requirements.png)
+</Warning>
+
+<Step title="Wire the microSD slot">
+- After wiring it up, you should get something like this:
+
+  ![microSD wired](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/microsd_kicad_wired.png)
+</Step>
+
+Now all that's left is to connect everything to the microcontroller!

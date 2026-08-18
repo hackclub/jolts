@@ -1,0 +1,257 @@
+---
+title: Routing and ground pours
+---
+
+Before we start routing, let's configure the `Design Rules`. These are
+rules that KiCad has to impose certain restrictions like spacing between
+components and track width and via size, among other things. It is also
+where we can add default sizes for `vias` (holes that connect tracks
+between layers) and `tracks` (copper lines that connect components).
+
+<Step title="Add pre-defined sizes">
+- Go to the `Pre-defined Sizes` section:
+
+  ![Pre-defined sizes](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_predefined_sizes.png)
+
+- I am going to add `0.6mm`, `0.4mm` and `0.2mm` track widths. For vias,
+  I usually go with vias that have `0.6mm Diameter / 0.3mm Hole` and
+  `0.4 Diameter / 0.2mm Hole`.
+</Step>
+
+<Step title="Loosen constraints for smaller vias">
+- Now after that we have to edit the `constraints` of the board so that
+  KiCad doesn't throw an error when we try to place them. Go to the
+  `Board Setup` and then `Constraints`.
+
+  ![Board setup constraints](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_board_setup_constraints.png)
+
+  ![Constraints settings](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_constraints_settings.png)
+
+- Here we are going to change a couple of settings due to the size of
+  our board. We need to be able to place smaller vias and traces, so
+  change the `Minimum via diameter` to `0.4mm` and the
+  `Minimum through hole` to `0.2mm`. After that's done, click OK and
+  you can start routing!
+</Step>
+
+## How to route
+
+Basically connect each of the pads to their connections and try to use
+as few vias as possible. I usually try to route the signal stuff (USB,
+sensors, microSD, crystals, etc.) first and then the power.
+
+(Press x to start routing or use the buttons on the side).
+
+<Step title="Route the USB-C differential pair">
+- Starting with the USB-C data lines, these are what's known as a
+  `differential pair`, so they have to be the same length as they carry
+  a signal that needs to be in sync with the other and the only way for
+  that to happen is if they're the same length. Start connecting them
+  like so:
+
+  ![USB differential start](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_usb_differential_start.png)
+
+- Then go to `Route > Route Differential Pair`
+
+  ![Route diff pair menu](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_route_differential_pair_menu.png)
+
+- and then click on the USB_DP to the far right:
+
+  ![USB diff routing](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_usb_differential_routing.png)
+
+- Then route it to the STM32. That's basically the only component that
+  needs differential routing.
+</Step>
+
+Moving on, just some general tips. I personally like to use `0.6mm` or
+`0.4mm` width for power stuff, mainly anything that runs either
+<ConceptLink slug="voltage">5V (0.6mm) or 3.3V (0.4mm)</ConceptLink>, and
+you can change the track width or via size from these drop downs at the
+top.
+
+![Track width dropdown](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_track_width_dropdown.png)
+
+![Via size dropdown](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_via_size_dropdown.png)
+
+I also like to do the same as in the layout where I route all of the
+passive components to their respective ICs before then routing those
+groups together. For example, routing the decoupling capacitors to the
+IMU before connecting it to the STM32:
+
+![IMU decoupling routed](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_imu_decoupling_routed.png)
+
+You might have to rotate components as well to get a good placement.
+For vias, I aim to use a maximum of 2 per line like so:
+
+![Via placement example](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_via_placement_example.png)
+
+Don't worry about connecting the GNDs for now, as we are going to use
+what's called a `ground plane` (a copper area of GND that can connect to
+pins/pads).
+
+<Step title="Handle tight-clearance vias">
+- Sometimes for VBUS on USB-C or any other component, you might have
+  vias that can't pass through, so I added a `0.3mm` track width in the
+  board settings and it works:
+
+  ![VBUS routing issue](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_vbus_routing_issue.png)
+
+  ![VBUS routing fixed](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_vbus_routing_fixed.png)
+
+- If KiCad doesn't let you place a via on a pad for whatever reason, you
+  can edit the clearance in `Board Setup > Net Classes`. I set it to
+  0.15, but try not to set it any lower as the minimum for JLCPCB is
+  `0.1mm`:
+
+  ![Net classes clearance](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_net_classes_clearance.png)
+
+  ![Via on pad placed](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_via_on_pad_placed.png)
+</Step>
+
+<Step title="Route the charger, sensors, and microSD">
+- This is how I routed the Battery charger:
+
+  ![Battery charger routed](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_battery_charger_routed.png)
+
+- See how I used wider traces for power lines and thinner traces for the
+  other pins. I plan on wiring the I2C lines and INT pins connecting to
+  the BMP580 like so:
+
+  ![BMP580 I2C routing](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_bmp580_i2c_routing.png)
+
+- I connected them to the STM32 through the underside to save space
+  (very useful sometimes). Also, I hid the silkscreen layer so that I
+  can route easier.
+- Then routed the microSD card:
+
+  ![microSD routed](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_microsd_routed.png)
+</Step>
+
+<Step title="Route the 3.3V rail">
+- Then finally I routed the 3.3V line, using 0.6mm tracks and then
+  branching off into smaller 0.3mm tracks to connect to the different
+  ICs.
+</Step>
+
+<Warning title="Caps first, then the pin">
+**REMEMBER THAT THE 3.3V MUST GO THROUGH THE DECOUPLING CAPACITORS FIRST
+BEFORE REACHING THE PIN LIKE SO:**
+
+![3.3V through decoupling](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_3v3_through_decoupling_caps.png)
+</Warning>
+
+After routing your board should look something like this:
+
+![All routed](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_all_routed_complete.png)
+
+## Ground pours
+
+Now we are going to add the ground pours. This is so that we don't have
+to manually connect all of the ground pads and it also helps with
+interference and noise across the board.
+
+<Step title="Draw the filled zone">
+- Go to the right and click on `Draw filled zones` and click on one
+  corner and a window should pop up:
+
+  ![Ground pour settings](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_ground_pour_settings.png)
+
+- Here you need to select both layers of copper and select the GND net.
+  Then you need to change the clearance and minimum width to both 0.2mm
+  and also change the `Pad connection` to `Solid` or `Thermal reliefs`.
+  Solid allows the ground plane to connect to the pads better but
+  Thermal reliefs is good if you need to solder/fix the board as the
+  solid ground plane makes it difficult to heat up specific components.
+  For this tutorial I am going to use `Solid` but feel free to use
+  `Thermal reliefs` if you want to be able to solder it later. Press OK
+  and start creating the zone like so:
+
+  ![Ground pour outline](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_ground_pour_outline.png)
+
+- You want it to look something like this:
+
+  ![Ground pour outline again](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_ground_pour_outline.png)
+
+- Then press `b` on your keyboard and it should fill the zone
+  automatically (`Ctrl-b` to clear them).
+
+  ![Ground pour complete](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_ground_pour_complete.png)
+</Step>
+
+Now you should check if you have any `ratlines` (blue lines that signal
+unconnected pins) and fix them. In my case, I forgot to connect the
+servos so I will do that now.
+
+<Step title="Add stitching vias">
+- Now you need to check if there are any holes that don't have any
+  ground plane and add a `stitching via` (via that connects
+  ground/power planes to cover everything) like so:
+
+  ![Stitching via location](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_stitching_via_location.png)
+
+  ![Stitching via placed](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_stitching_via_placed.png)
+
+- You also might see a ratline connecting a piece of the ground plane.
+  This usually means that you need a stitching via in that area.
+
+  ![Ground plane disconnected](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_ground_plane_disconnected.png)
+
+- As you can see, the ground plane connecting to Pin 18 isn't connected
+  to the rest of the ground plane, so we need to add a stitching via
+  there like so:
+
+  ![Ground plane connected](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_ground_plane_connected.png)
+</Step>
+
+<Warning title="Thermal pad → GND">
+**SUPER IMPORTANT: FOR ANY COMPONENTS THAT HAVE A THERMAL PAD, CONNECT
+IT TO GND WITH A STITCHING VIA (depends on the chip but check the
+datasheet to be sure):**
+
+![Thermal pad via](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_thermal_pad_via.png)
+
+(You can edit the properties by right clicking the pad and editing the
+`Net name`.)
+
+![Thermal pad net edit](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_thermal_pad_net_edit.png)
+</Warning>
+
+Also Notice how I didn't connect the grounds together and connected both
+PGND and GND, that was made automatically by KiCad when I connected the
+EP Pin of the battery charger:
+
+![PGND/GND connection](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_pgnd_gnd_connection.png)
+
+## DRC
+
+<Step title="Run design rule check">
+- After connecting everything we are going to run `Check DRC` which
+  basically checks the design rules and makes sure our board is ready
+  for production.
+
+  ![DRC check button](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_drc_check_button.png)
+
+- Then click on `Run DRC`:
+
+  ![DRC run](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_drc_run_button.png)
+
+  ![DRC results](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_drc_results.png)
+
+- Unselect the warnings and look at the errors. If there are any errors
+  about unconnected pads then you should probably go back and make sure
+  that everything is connected. There are some errors but those are
+  from the parts that we imported like the USB-C and microSD card that
+  KiCad is complaining about the holes:
+
+  ![DRC import errors](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/pcb_drc_errors_from_imports.png)
+
+- Those errors are safe to ignore but any others you should probably fix.
+</Step>
+
+<Checkpoint>
+And with that out of the way, congrats! You've finished the PCB!
+
+Now all that's left is to add silkscreen and make it look pretty and
+then get the files ready so you can order it on JLCPCB (or any other
+board manufacturer).
+</Checkpoint>

@@ -1,0 +1,41 @@
+---
+title: KiCAD setup
+---
+
+<Step title="Install KiCAD">
+- Download and install the latest version of KiCAD from
+  [kicad.org](https://www.kicad.org/).
+</Step>
+
+## Installing marbastlib
+
+marbastlib is a KiCAD library with pre-made symbols and footprints for
+keyboard components. Without it, you won't have access to the switch,
+stabilizer, or LED parts you need.
+
+[Marbastlib](https://github.com/ebastler/marbastlib)
+
+<Step title="Add the marbastlib repository">
+- Open KiCAD and go to **Plugin and Content Manager** in the main window.
+- Click **Manage** next to Repositories, then hit the **+** button.
+- Paste this URL into the field:
+  `https://raw.githubusercontent.com/ebastler/ebastler-KiCad-repository/main/repository.json`
+
+  ![KiCAD plugin manager](https://cdn.hackclub.com/019ea7dc-7ca1-71d0-bf87-ffbbb29ef360/kicadlibrary.png)
+</Step>
+
+<Step title="Install and restart">
+- Switch to the **ebastler KiCAD Repository** tab, find the marbastlib
+  library, and click **Install**.
+- Click **Apply Pending Changes**, then close and fully reopen KiCAD for
+  the libraries to load.
+</Step>
+
+## Create the project
+
+<Step title="New project">
+- In the KiCAD main window, go to **File → New Project**.
+- Choose a folder and give your project a name (e.g. `my-keeb`).
+- KiCAD creates two main files: a `.kicad_sch` (schematic) and a
+  `.kicad_pcb` (board layout). You'll work in both.
+</Step>

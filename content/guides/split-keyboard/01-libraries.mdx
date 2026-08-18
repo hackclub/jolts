@@ -1,0 +1,41 @@
+---
+title: Install libraries
+---
+
+After you created the KiCad project, we need to install some libraries.
+
+<Step title="Install the OPL libraries">
+- We will be installing the same OPL libraries as in the hackpad
+  tutorial, here is the
+  [link](https://hackpad.hackclub.com/guide#pcb_design) for that
+  section.
+</Step>
+
+## Custom XIAO footprint
+
+Unlike in the hackpad tutorial, where we used the official seeed
+footprints, this time we need to install a custom footprint based on the
+official ones. Because the battery charging pins are on the bottom of
+the board, which we will be using to charge the battery, they are not
+accessible if we use the official footprints.
+
+<Step title="Add the modified XIAO-nRF52840 footprint">
+- You can download it from
+  [github](https://github.com/mito-keyboard/mito-simplified/blob/main/modified-XIAO-nRF52840-SMD.kicad_mod),
+  move it into your KiCad project folder, and add it like the OPL
+  library.
+</Step>
+
+## Switches and mousebites
+
+<Step title="Install marbastlib for the switches">
+- We also need to download the library for the switches, we will be
+  using [marbastlib](https://github.com/ebastler/marbastlib), you can
+  find the installation instructions in the repo.
+</Step>
+
+<Step title="Install panelization.pretty for mousebites">
+- Also install
+  [panelization.pretty](https://github.com/madworm/Panelization.pretty)
+  for mousebites.
+</Step>

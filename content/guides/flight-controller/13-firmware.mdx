@@ -1,0 +1,66 @@
+---
+title: Firmware
+---
+
+Now you can either write your firmware through STM32CubeMX/VSCode or use
+[STM32duino](https://github.com/stm32duino/Arduino_Core_STM32).
+
+## STM32CubeMX
+
+After you have received your board, you need to write the firmware to
+communicate with the STM32.
+
+<Step title="Switch the toolchain to Makefile">
+- From STM32CubeMX, go to the `Project Manager` section, then click on
+  `Toolchain / IDE` and select `Makefile`. This allows you to use
+  `VSCode` or any other code editor to edit the files much more easily
+  without having to use ST's software.
+
+  ![Toolchain makefile](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/stm32cubemx_toolchain_makefile.png)
+
+- Now click the `Generate Code` button at the top and download/install
+  any packages that are required.
+</Step>
+
+<Step title="Open in VSCode and install the STM32 extension">
+- After that's done, open `VSCode` and open the `software` directory.
+  You're also going to want to install this extension to make building
+  the software much easier:
+
+  ![VSCode STM32 extension](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/vscode_stm32_extension.png)
+
+- Then you should see this button on the side:
+
+  ![VSCode STM32 sidebar](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/vscode_stm32_sidebar_button.png)
+
+- This will allow you to build and flash your flight controller all
+  from VSCode!
+
+  ![VSCode build and flash](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/vscode_stm32_build_flash.png)
+</Step>
+
+<Warning title="Keep user code inside the guarded blocks">
+If you need to edit the pinout or functions of any pin, remember to
+generate the code again from STM32CubeMX.
+
+Edit `main.c` and remember to keep your code inside the commented
+sections that say `USER CODE BEGIN` and `USER CODE END` to prevent it
+from being overwritten when you generate the code again. There are many
+tutorials online/on YouTube on how to program with STM32, so I'd
+recommend looking there. You will also need files called `drivers` to
+control each of the chips/sensors that you use, but those can be found
+on the internet/GitHub and can be imported into your project easily.
+([example](https://youtu.be/dnfuNT1dPiM?t=1343))
+</Warning>
+
+## STM32duino
+
+Follow the instructions in the
+[GitHub](https://github.com/stm32duino/Arduino_Core_STM32#getting-started).
+
+<ShipIt>
+If you have any questions feel free to DM me on Slack (@NotARoomba) and
+if you want to check out my other projects, here's my
+[GitHub](https://github.com/notaroomba) /
+[Website](https://notaroomba.dev).
+</ShipIt>

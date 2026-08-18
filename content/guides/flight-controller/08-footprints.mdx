@@ -1,0 +1,67 @@
+---
+title: Footprint assignment
+---
+
+Before continuing on to the PCB, we have to `Assign Footprints` which
+basically tells KiCad how big each component is physically and how the
+connections look in real life to be able to solder it.
+
+<Step title="Open the footprint assigner">
+- Click on this button to open the footprint selection screen:
+
+  ![Footprint assignment button](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/footprint_assignment_button.png)
+
+- The lines in yellow are components whose footprints we have to assign:
+
+  ![Footprint assignment list](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/footprint_assignment_list.png)
+
+- But since it's mainly resistors and capacitors, that makes it a lot
+  easier.
+</Step>
+
+Since we're designing a flight controller, this has to be as small as
+possible, so I am going to be choosing the smallest footprints I can
+(while staying within good practices). The smaller the footprint, the
+more it can heat up and the less it can tolerate (for resistors and
+capacitors). A rule of thumb that I go by is any resistors under 80K I
+assign a 0201 footprint, over that and it's 0402. For capacitors, any
+`bulk capacitors` (capacitors that have high values like 4.7 µF or 10 µF)
+I usually assign 0402. Any bigger than 10 µF and I assign 0805, but it
+depends on the datasheet of the component. Under the application and
+implementation section there is usually a table that specifies which
+footprints/components to use.
+
+Now all that's left is to finish adding the footprints for these symbols:
+
+![Remaining symbols](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/footprint_remaining_symbols.png)
+
+For the LED, I am going to have it in a 0402 package. And for the
+headers, I am going to use these footprints (basically the standard
+headers for jumper cables):
+
+![Header footprints](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/header_footprints.png)
+
+## Inductors
+
+The inductors are a bit trickier. For this, you're gonna have to go into
+the datasheet and see where it says the size:
+
+![Inductor datasheet size](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/inductor_datasheet_size.png)
+
+For that `5.6uH` inductor, I am going to be using `C18236327` (LCSC Part
+Number).
+
+For the 5V buck-boost, I am going to be using `C3033018`. I also noticed
+that I had the inductor value wrong from the datasheet. **THIS IS WHY
+DOUBLE CHECKING IS IMPORTANT:**
+
+![Inductor value correction](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/inductor_value_correction.png)
+
+For the final inductor in the battery charging IC, I am going to use
+`C435392`.
+
+<Step title="Save and re-import the new parts">
+- Press `Apply, Save Schematic & Continue` to save the footprints you
+  have already placed and then import the new inductors that you have
+  selected.
+</Step>

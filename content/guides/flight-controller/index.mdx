@@ -1,0 +1,112 @@
+---
+type: guide
+title: Flight Controller
+subtitle: Build a rocket flight controller from scratch - STM32, IMU, barometer, microSD, and 2S LiPo power management on a 40x46mm board.
+author: notaroomba
+difficulty: advanced
+time: "1-2 weeks"
+cost: "~$50"
+soldering: false
+learns: [KiCad, schematic design, STM32CubeMX, PCB routing, differential pairs, PCB fabrication]
+hero: ./hero.webp
+parts:
+  - name: STM32F722RET6 MCU
+    qty: 1
+    cost: "$8"
+    link: https://www.lcsc.com/product-detail/C118207.html
+    note: high clock speed, lots of peripherals
+    image: ./part-stm32.jpg
+  - name: ICM-45686 IMU
+    qty: 1
+    cost: "$5"
+    link: https://www.lcsc.com/product-detail/C22459454.html
+    note: robust 6-axis, SPI
+    image: ./part-imu.jpg
+  - name: BMP580 barometer
+    qty: 1
+    cost: "$3"
+    link: https://www.lcsc.com/product-detail/C22391138.html
+    note: altitude via pressure, I2C
+    image: ./part-barometer.jpg
+  - name: microSD slot
+    qty: 1
+    cost: "$1"
+    link: https://www.lcsc.com/product-detail/C91145.html
+    note: TF-01A, for flight logs
+    image: ./part-microsd.jpg
+  - name: BQ25883 battery charger
+    qty: 1
+    cost: "$3"
+    link: https://www.lcsc.com/product-detail/C544362.html
+    note: 2-cell Li-Ion/LiPo, charges from 5V
+    image: ./part-charger.jpg
+  - name: TPS63070 5V buck-boost
+    qty: 1
+    cost: "$4"
+    link: https://www.lcsc.com/product-detail/C109322.html
+    note: steady 5V for servos across battery voltage
+    image: ./part-regulator.jpg
+  - name: LMR51430 3.3V buck
+    qty: 1
+    cost: "$2"
+    note: high-current 3.3V for MCU and sensors
+  - name: USB-C receptacle
+    qty: 1
+    cost: "$1"
+    link: https://www.lcsc.com/product-detail/C2765186.html
+    note: for programming and charging
+    image: ./part-usb-c.jpg
+  - name: Boot / reset buttons
+    qty: 2
+    cost: "$1"
+    link: https://www.lcsc.com/product-detail/C720477.html
+    image: ./part-button.jpg
+  - name: 25 MHz + 32.768 kHz crystals
+    qty: 2
+    cost: "$1"
+    note: high-speed clock + low-speed clock
+    image: ./part-crystal.jpg
+  - name: Inductors, ferrite bead, passives
+    qty: 1
+    cost: "~$3"
+    note: from lcsc.txt in the source repo
+    image: ./part-inductor.jpg
+  - name: 2S LiPo battery + connector
+    qty: 1
+    cost: "$8"
+    note: 7.4V nominal, screw terminal on the board
+  - name: 3-pin servo headers
+    qty: 3
+    cost: "$1"
+    note: 5V / PWM / GND
+  - name: Your PCB, fabbed with PCBA
+    qty: 1
+    cost: "~$10"
+    note: JLCPCB, one-sided, order 2
+tags: [kicad, pcb, stm32, rocketry, flight-controller]
+---
+
+This is an advanced project. I recommend learning the basics of KiCad by
+making a small dev board or breadboard first. That said, anyone can follow
+along, as I'll go **_in-depth_** on how to build a flight controller.
+
+I'm [@NotARoomba](https://github.com/notaroomba) and I have a (sort of)
+obsession with making flight controllers so heres a guide so that you too
+have the knowledge of making something [cool](https://github.com/notaroomba/athena).
+The files for this guide can be found
+[here](https://github.com/notaroomba/simpleflightcontroller).
+
+First, define what type of flight controller you want: for a rocket or a
+drone? Keep that in mind when starting your own design. In this guide,
+we'll build a flight controller specifically for rockets.
+
+<PartsList />
+
+<Step title="Set up the repo and KiCad project">
+- Create a new repository on GitHub and add two folders: `hardware` and
+  `software`. These folders will hold most of the project files.
+- Create a new KiCad project inside the `hardware` folder.
+
+  ![Folder structure](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/folder-structure.png)
+  ![KiCad project files](https://raw.githubusercontent.com/notaroomba/simpleflightcontroller/main/assets/kicad-project-files.png)
+</Step>

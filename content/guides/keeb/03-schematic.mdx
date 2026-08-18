@@ -1,0 +1,134 @@
+---
+title: Schematic
+---
+
+The schematic is where you define all the electrical connections. Think
+of it as the wiring diagram before you worry about physical placement.
+
+<Step title="Open the schematic editor">
+- From the KiCAD project window, click the **Schematic Editor** button
+  (the icon that looks like a circuit diagram), or double-click your
+  `.kicad_sch` file.
+</Step>
+
+## Adding symbols
+
+<Step title="Bring in the core parts">
+- Press **A** (or go to **Place → Add Symbol**) to open the symbol
+  chooser.
+- In the search bar, type the part you want:
+  - `RaspberryPi_Pico` for the Pico microcontroller
+  - `SW_Push` for a key switch
+  - `MX_stab` for a stabilizer (from marbastlib)
+  - `1N4148` for a diode
+- Select the symbol and click **OK**. It will attach to your cursor.
+  Click to place it on the schematic.
+- Press **Escape** when you're done placing.
+
+  ![Core parts placed](https://cdn.hackclub.com/019d5a05-bb5a-78df-9991-555673b3b395/image.png)
+</Step>
+
+## Understanding the keyboard matrix
+
+A full 60% keyboard has around 61 keys, but the Pico only has 29 GPIO
+pins, which is not enough for one wire per switch. The solution is a
+**keyboard matrix**.
+
+In a matrix, switches are arranged in rows and columns. You only need
+one pin per row and one pin per column. A 6-row × 11-column matrix can
+handle 66 keys using just 17 pins.
+
+To make the matrix work correctly, each switch needs a **diode** wired
+in series with it. Without diodes, pressing multiple keys at once causes
+"ghosting", phantom keypresses that shouldn't be there.
+
+For a deeper explanation of how matrices work, see
+[this guide](https://www.dribin.org/dave/keyboard/one_html/).
+
+## Wiring a switch-diode unit
+
+<Step title="Wire one key">
+- Each key is a pair: one switch and one diode. Wire them like this:
+- Place a `SW_Push` symbol and a `1N4148` diode next to each other.
+- Connect one leg of the diode to one pin of the switch using the
+  **Wire** tool (press **W**).
+- The other leg of the diode connects to the row line. The other switch
+  pin connects to the column line.
+
+  ![Switch + diode unit](https://blueprint.hackclub.com/old-cdn/33681c7410a242de5ab273f34b54981f62390f1e_image.webp)
+</Step>
+
+<Step title="Replicate for every key">
+- Replicate the switch-diode unit for every key in your layout. Arrange
+  them to match the physical layout of your keyboard from your sketch,
+  with rows going left to right and columns going top to bottom.
+
+  ![Layout replicated](https://cdn.hackclub.com/019d5a20-1615-7758-a98a-e6e13774825d/image.png)
+
+  ![Layout continued](https://cdn.hackclub.com/019d5a20-13c5-794d-891f-65e7dc9524c6/image.png)
+</Step>
+
+## Using net labels
+
+Instead of drawing a wire all the way from each row/column to the Pico
+(which would make the schematic unreadable), use **Net Labels**:
+
+<Step title="Label rows and columns">
+- Press **L** (or go to **Place → Net Label**) to add a label.
+- Name your rows `ROW0`, `ROW1`, `ROW2`, etc. and your columns `COL0`,
+  `COL1`, etc.
+- Attach matching labels to the corresponding pins on the Pico.
+</Step>
+
+KiCAD treats any two wires with the same label as electrically
+connected, even if they aren't physically drawn touching. The small
+green dots you see are junctions that confirm two wires are connected.
+If wires cross without a dot, they are not connected.
+
+![Net labels attached](https://cdn.hackclub.com/019d5a2f-7776-72b7-b1be-2a70b4d8385e/image.png)
+
+## Adding stabilizers
+
+Stabilizers need to be placed in the schematic too so they get
+footprints on the PCB.
+
+Only add a stabilizer for each key that is **2u or wider** (spacebar,
+backspace, left shift, enter). For a standard 60% layout, that's
+usually 3-4 stabilizers.
+
+<Step title="Place MX_stab symbols">
+- Press **A** and search for `MX_stab`.
+- Place one for each wide key in your layout.
+
+  ![Stabilizers placed](https://cdn.hackclub.com/019d5a37-3a12-7eb0-a1f1-432d97299137/image.png)
+</Step>
+
+## Adding mounting holes
+
+If you're building a tray-mount case, add mounting holes to your
+schematic so they appear on the PCB.
+
+<Step title="Add 4-6 mounting holes">
+- Press **A** and search for `MountingHole`.
+- Place 4-6 holes around the edges and corners of where your board will
+  be.
+- There are several mount styles, and each one changes the typing feel
+  of the finished keyboard:
+
+  ![Mount styles](https://cdn.hackclub.com/019d5a3e-353c-7eb9-ad7a-745c287e6495/image.png)
+</Step>
+
+## Annotate
+
+Before you can move to the PCB layout, every component needs a unique
+reference designator (like `SW1`, `D1`, `U1`). This is called
+annotation.
+
+<Step title="Auto-annotate">
+- Go to **Tools → Annotate Schematic**.
+- Leave the default settings and click **Annotate**.
+- KiCAD will automatically number all your components.
+
+  ![Annotation dialog](https://cdn.hackclub.com/019d5a64-00ca-7a8b-a6c2-54472a8aec7f/image.png)
+  ![Annotated schematic](https://cdn.hackclub.com/019d5a64-0303-73ac-9eae-925b731c66ff/image.png)
+</Step>

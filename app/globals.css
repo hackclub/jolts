@@ -260,3 +260,82 @@
 .jolts-step-body > *:last-child {
   margin-bottom: 0;
 }
+/* ---------- entry iris reveal ---------- */
+
+.entry-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* set by the inline script in app/layout.tsx when arriving from another
+   jolts page — internal navigation skips the entry animation entirely */
+html[data-entry-skip] .entry-reveal {
+  display: none;
+}
+
+/* The pixelated iris is drawn on this canvas by EntryReveal. The CSS
+   background keeps the first paint black until JS takes over drawing. */
+.entry-reveal-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: black;
+}
+
+/* Stacked character SVGs reconstruct the logo. Each character pops up
+   slightly then collapses to nothing — no fades; the wave is what removes
+   the logo before the iris finishes opening. */
+.entry-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: min(320px, 64vw);
+  aspect-ratio: 283 / 148;
+  /* on the container, not the imgs: the filter outlines the composited
+     union of all characters, so it reads as one group outline. Chained
+     shadows compound, so four orthogonals also cover the diagonals. */
+  filter: drop-shadow(2px 0 0 white) drop-shadow(-2px 0 0 white)
+    drop-shadow(0 2px 0 white) drop-shadow(0 -2px 0 white);
+}
+
+/* paused until EntryReveal's effect adds .entry-play — the pulse must share
+   its t=0 with the canvas iris clock, which can't start until hydration */
+.entry-logo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: entry-char-pop 600ms calc(180ms + var(--char-i) * 60ms) both
+    paused;
+}
+
+.entry-play .entry-logo img {
+  animation-play-state: running;
+}
+
+/* ease-in-out on both segments: velocity hits zero at the 1.14 peak and the
+   collapse glides out, so there is no kink in the motion */
+@keyframes entry-char-pop {
+  0% {
+    transform: scale(1);
+    animation-timing-function: ease-in-out;
+  }
+  40% {
+    transform: scale(1.14);
+    animation-timing-function: ease-in-out;
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry-logo,
+  .entry-logo img {
+    animation: none;
+  }
+}

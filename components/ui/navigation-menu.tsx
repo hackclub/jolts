@@ -1,5 +1,6 @@
 import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/navigation-menu"
 import { cva } from "class-variance-authority"
+import Link from "next/link"
 
 import { cn } from "@/lib/utils"
 
@@ -144,11 +145,21 @@ function NavigationMenuPositioner({
 
 function NavigationMenuLink({
   className,
+  href,
+  render,
+  closeOnClick = true,
   ...props
 }: NavigationMenuPrimitive.Link.Props) {
+  // internal hrefs render through next/link so navigation is client-side
+  // instead of a full page load. closeOnClick defaults to false upstream —
+  // full reloads used to hide that; client-side nav needs the panel closed.
+  const nextLink = !render && typeof href === "string" && href.startsWith("/")
   return (
     <NavigationMenuPrimitive.Link
       data-slot="navigation-menu-link"
+      href={nextLink ? undefined : href}
+      render={nextLink ? <Link href={href} /> : render}
+      closeOnClick={closeOnClick}
       className={cn(
         "flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none hover:bg-muted focus:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 in-data-[slot=navigation-menu-content]:rounded-md data-active:bg-muted/50 data-active:hover:bg-muted data-active:focus:bg-muted [&_svg:not([class*='size-'])]:size-4",
         className

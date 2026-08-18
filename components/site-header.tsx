@@ -277,6 +277,12 @@ function GuidesPanel() {
             descriptionClass="w-[160px]"
             href="/guides/tamagotchi"
           />
+          <PanelItem
+            title="RP2040 Devboard"
+            description="Design your own dev board - schematic to fab."
+            descriptionClass="w-[160px]"
+            href="/guides/devboard"
+          />
           <PanelFooter href="/guides">Check out all guides</PanelFooter>
         </div>
     </div>

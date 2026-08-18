@@ -1,0 +1,40 @@
+---
+title: Footprints
+---
+
+Now it's time to assign some footprints! First, open the footprint
+assigner tool.
+
+<Step title="Assign the XIAO">
+- For the Xiao, assign the custom footprint that you downloaded
+  earlier; its name should be `modified-XIAO-nRF52840-SMD`.
+</Step>
+
+<Step title="Assign the switches">
+- For the buttons I used chalk hotswap sockets from `marbastlib`, but
+  you can use any other keyswitch.
+</Step>
+
+<Step title="Assign the diodes">
+- For the diodes I used `1N5819` which are SMD, so it's a bit harder
+  to solder, but I recommend them if you want a compact design. If you
+  go for THT diodes, don't place them next to the switches but rather
+  somewhere else on the PCB. The footprint for this is
+  `Diode_SMD:D_SOD-123`.
+</Step>
+
+<Step title="Assign the resistors">
+- For the resistors, I recommend `Resistor_SMD:R_0805_2012Metric`, but
+  you can use any other package.
+</Step>
+
+<Step title="Assign the mousebites">
+- For the mousebites/breakoffs, assign the
+  `panelization:mouse-bite-5mm-slot` footprints from the library that
+  we downloaded earlier.
+</Step>
+
+<Step title="Assign the battery pads">
+- For the testpoints/battery pads, I used
+  `TestPoint:TestPoint_Pad_D2.0mm`, but you can use larger.
+</Step>

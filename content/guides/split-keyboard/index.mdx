@@ -1,0 +1,82 @@
+---
+type: guide
+title: Wireless Split Keyboard
+subtitle: Build a wireless split keyboard with the XIAO nRF52840 - split matrix, mousebites, and ZMK firmware. Extension of the hackpad guide.
+author: KOEGlike
+difficulty: advanced
+time: "2-3 weekends"
+cost: "~$50"
+soldering: true
+learns: [KiCad, hierarchical sheets, keyboard matrices, mousebite panelization, ZMK]
+hero: ./hero.webp
+parts:
+  - name: XIAO-nRF52840
+    qty: 2
+    cost: "$20"
+    note: wireless MCU with built-in battery management
+    image: ./part-xiao.jpg
+  - name: MX-style hotswap sockets
+    qty: 42
+    cost: "$8"
+    note: chalk hotswap sockets from marbastlib recommended
+  - name: 1N5819 SMD diodes
+    qty: 42
+    cost: "$2"
+    link: https://www.lcsc.com/product-detail/C14516.html
+    note: SMD (SOD-123) - compact but harder to solder
+    image: ./part-diode.jpg
+  - name: LiPo battery
+    qty: 2
+    cost: "$10"
+    note: small, connects to VBAT
+  - name: Resistors for voltage divider (optional)
+    qty: 4
+    cost: "$1"
+    note: for reading battery voltage from the XIAO
+  - name: Test points / battery pads
+    qty: 4
+    cost: "$1"
+    note: TestPoint_Pad_D2.0mm or larger
+  - name: M2-M3 mounting screws
+    qty: 12
+    cost: "$1"
+    note: 4-6 per half
+  - name: Your PCBs, fabbed
+    qty: 2
+    cost: "~$8"
+    note: two halves, mousebite panel
+tags: [keyboard, split, kicad, nrf52840, bluetooth, wireless]
+---
+
+Hii! Do you not want to get carpal tunnel? Or just think that split
+keyboard are cool? Then you are in the right place!
+
+In this guide you will be learning how to make a wireless split keyboard.
+
+This guide is meant to be an extension to the
+[hackpad guide](https://hackpad.hackclub.com/guide), so if you are a
+total beginner to keyboards/electronics, read that first, and then come
+back here :)
+
+In this tutorial we are going to use the same form factor board as in
+the hackpad tutorial, but with different internals. Instead of a rp2040
+it has a nrf52840 chip inside, which has wireless capabilities.
+
+<PartsList />
+
+If you want to dive a little bit deeper before starting, Joe Scotto has
+some good videos on
+[how keyboards work](https://www.youtube.com/watch?v=7LyziNdFlew&list=PLBD2IS_t_iWZDMdG_ZF57x9Ebm3kxKqxF)
+and on
+[how KiCad works](https://www.youtube.com/watch?v=8WXpGTIbxlQ&list=PLBD2IS_t_iWZDMdG_ZF57x9Ebm3kxKqxF&index=2).
+
+This guide is made by @koeg on Slack, so if you have any questions about
+this ask in #stasis-support and tag me. The source files of this project
+can be found in this [repo](https://github.com/mito-keyboard/mito-simplified).
+
+<Warning title="Hot iron, real fumes">
+Solder in a ventilated space and put the iron in its stand every time it
+leaves your hand. If SMD is new to you, spend fifteen minutes with
+<Tool slug="soldering-iron" /> first - the 1N5819 SOD-123 diodes are
+small.
+</Warning>

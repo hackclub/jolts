@@ -1,0 +1,216 @@
+---
+title: Design the case
+---
+
+The case is the outer shell that protects your PCB and gives your
+keyboard its look and feel. You'll design it in Onshape, a free
+browser-based CAD tool, and 3D print it.
+
+## Setting up Onshape
+
+Onshape runs entirely in your browser so there's nothing to install.
+
+<Step title="Create an Education account">
+- Go to
+  [onshape.com/education](https://www.onshape.com/en/education/) and
+  create a free Education account.
+- Verify your email and sign in.
+- You'll land on your Onshape home page where all your documents live.
+</Step>
+
+## Creating a document
+
+<Step title="New Onshape document">
+- Click the **Create** button in the top left corner of the home page.
+
+  ![Onshape home](https://cdn.hackclub.com/019e6eda-af2c-7f76-880c-0fccf6bc3f02/onshape.png)
+
+- Select **Document** from the dropdown.
+- Give it a name, something like `my-keeb-case`.
+- Click **OK**.
+
+- A new document opens with two default tabs at the bottom: a
+  **Part Studio** and an **Assembly**. You'll use both.
+</Step>
+
+## Importing your PCB
+
+Before designing the case, import your PCB into Onshape so you can model
+the case around its exact shape and dimensions.
+
+<Step title="Export STEP from KiCAD">
+- Open your project in the KiCAD **PCB Editor**.
+- Go to **File → Export → STEP**.
+- Leave the default settings and click **Export**.
+- Save the `.step` file somewhere easy to find.
+</Step>
+
+<Step title="Import STEP into Onshape">
+- In your Onshape document, click the **+** button in the bottom left
+  corner of the screen.
+- Select **Import**.
+- Choose the `.step` file you just exported from KiCAD.
+- Onshape will process it and add a new tab to your document. It may
+  take a moment.
+- Once imported, your PCB appears as a 3D model you can view and
+  reference.
+
+  ![PCB imported](https://cdn.hackclub.com/019e6abb-e49a-7b38-a30f-e0ac0d157e26/Keebmainpic.png)
+</Step>
+
+## Part Studios vs Assemblies
+
+Onshape has two main workspace types and it's important to know the
+difference:
+
+- **Assembly**: where you combine multiple parts together and check how
+  they fit. Your imported PCB lives here.
+- **Part Studio**: where you actually model and design new parts.
+  You'll build your case here.
+
+You can't model new geometry in an Assembly. You need a Part Studio for
+that.
+
+## Set up the Part Studio
+
+To design the case while being able to see and snap to your PCB, you
+need to bring the PCB's geometry into your Part Studio as a reference.
+
+<Step title="Create Part Studio in context">
+- Open the **Assembly** tab that contains your imported PCB.
+- Click the **+** button at the bottom left and select
+  **Create Part Studio in Context**.
+- Click the white origin dot floating in the assembly viewport and
+  press **Enter**.
+
+- This creates a new Part Studio that is linked to the Assembly. You
+  can now see your PCB as a transparent reference while you model, and
+  snap directly to its edges and faces.
+
+  ![Reference PCB in Part Studio](https://cdn.hackclub.com/019e6abd-2afb-7606-947b-4a5efa2d2b60/Referencepic.png)
+</Step>
+
+## Design the case
+
+The case needs to do three things: hold the PCB securely, leave the
+switches accessible from the top, and expose the USB port on the side.
+
+There are several mount styles to choose from, and each one changes how
+the keyboard feels and sounds when typing:
+
+![Mount styles](https://cdn.hackclub.com/019d5a3e-353c-7eb9-ad7a-745c287e6495/image.png)
+
+<Step title="Sketch the bottom profile">
+- Click **Sketch** in the top toolbar.
+- Select the top face of your PCB (or the front plane if you prefer) as
+  the sketch plane.
+- Use the **Rectangle** tool to draw the outer boundary of your case.
+  Make it 2-4mm larger than the PCB on all sides to leave room for
+  walls.
+- Click **Finish Sketch**.
+</Step>
+
+<Step title="Extrude the base">
+- Select your sketch and click **Extrude** in the toolbar.
+- Set the depth to around **3-5mm** for the base plate thickness.
+- Extrude downward (away from the PCB) so the PCB will sit on top.
+- Click the green checkmark to confirm.
+</Step>
+
+<Step title="Add walls">
+- Create a new sketch on the top face of the base you just extruded.
+- Draw a rectangle matching the outer boundary of the case.
+- Draw another rectangle slightly inside it (2-3mm inset) to define
+  wall thickness.
+- Select both rectangles. This creates a hollow profile.
+- Extrude the wall profile upward to the height of your PCB plus a few
+  mm to contain it (usually 10-15mm total height depending on your
+  switch and keycap height).
+</Step>
+
+<Step title="Cut the switch holes">
+- Each switch needs a 14mm × 14mm square hole in the top plate for the
+  switch stem to poke through.
+- Create a new sketch on the top face of your case.
+- Draw a **14mm × 14mm square** centered on where one switch sits.
+  Reference the PCB footprint positions to get accurate locations.
+- Use the **Linear Pattern** tool to duplicate the square across your
+  entire switch grid:
+  - Set the X spacing to **19.05mm** (standard MX switch spacing).
+  - Set the Y spacing to **19.05mm**.
+  - Set the count to match your row and column count.
+- Click **Finish Sketch**, then **Extrude** with **Remove** mode to cut
+  through the top plate.
+
+  ![Switch references](https://cdn.hackclub.com/019e6abe-734b-77e7-86e0-e762896cb175/switchesreferecnec.png)
+
+- Here is an example of what the switch hole sketch looks like using
+  the Linear Pattern tool:
+
+  ![Switch hole sketch](https://cdn.hackclub.com/019e6abf-0ff0-7133-944f-034629a60110/onshapesketch.png)
+</Step>
+
+<Step title="Cut the USB port opening">
+- The Pico's USB-C port hangs off the edge of the PCB. You need to cut
+  a slot in the case wall so a cable can reach it.
+- Create a sketch on the side wall where the USB port is.
+- Draw a rectangle roughly **10mm wide × 5mm tall** centered on the USB
+  port location (measure from your PCB if needed).
+- Extrude with **Remove** mode to cut through the wall.
+</Step>
+
+<Step title="Add screw mounts (optional)">
+- If you want to screw the top and bottom together rather than glue or
+  snap-fit them, add cylindrical bosses for heatset inserts.
+- Create a sketch on the base.
+- Draw small circles (3.5mm diameter for M3 heatset inserts) at each
+  corner and midpoints along the edges.
+- Extrude them upward as cylinders.
+- When you 3D print the case, press M3 heatset inserts into these holes
+  using a soldering iron.
+</Step>
+
+<Step title="Model the top plate (optional)">
+- If you want a separate top plate that sandwiches the switches, create
+  a second part in the same Part Studio:
+- Create a new sketch on a new plane at switch height.
+- Draw the outer boundary of the plate.
+- Cut the switch holes using the same Linear Pattern method as before.
+- Extrude to 1.5-2mm thickness.
+- This is optional. Many simple cases skip a separate plate.
+</Step>
+
+## Size limits for 3D printing
+
+Most consumer 3D printers have a bed size of around 220mm × 220mm. A
+full 60% keyboard is roughly 285mm wide, which is too wide to print in
+one piece.
+
+<Step title="Split larger cases">
+- If your case is wider than about 200mm you'll need to split it:
+- Use the **Split** tool in Onshape (under the Part menu) to cut the
+  case into two halves.
+- Add alignment pins or a tongue-and-groove joint along the split edge
+  so the pieces line up when glued.
+</Step>
+
+## Export STL for printing
+
+<Step title="Export each part as STL">
+- When your case is ready, export each part as an STL file:
+- Right-click the part in the left panel (the Part Studio feature
+  tree).
+- Select **Export**.
+- Choose **STL** format, set units to **mm**, and resolution to
+  **Fine**.
+- Click **Export** and save the file.
+- Repeat for each separate part (bottom case, top plate, etc.).
+- Upload the STL files to your slicer software (like Cura or Bambu
+  Studio), orient the parts flat-side down, and slice for printing.
+</Step>
+
+<Checkpoint>
+Here is an example of a finished case, simple but functional:
+
+![Finished case](https://cdn.hackclub.com/019e6ac0-514b-7328-a064-7fe474023357/Keyboard.png)
+</Checkpoint>

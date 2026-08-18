@@ -1,0 +1,53 @@
+---
+title: Assigning footprints
+---
+
+A footprint tells KiCAD the physical size and pad layout for each
+component on the PCB. Every symbol in your schematic needs one.
+
+<Step title="Open the footprint assigner">
+- Go to **Tools → Assign Footprints** (or click the footprint icon in
+  the toolbar).
+
+  ![Footprint assigner](https://cdn.hackclub.com/019d5a45-5db7-7166-a353-789bad1b1e10/image.png)
+
+- The left panel lists your component types. The right panel shows
+  available footprints. The center panel shows your components.
+</Step>
+
+## Assigning the Pico
+
+<Step title="Assign the Pico footprint">
+- Click `RaspberryPi_Pico` in the left panel.
+- In the search bar on the right, type `RaspberryPi_Pico_Common_THT`.
+- Double-click the result to assign it.
+</Step>
+
+## Assigning diodes
+
+<Step title="Assign 1N4148 to every diode">
+- Click `D_1N4148` (or whatever your diode symbol is named) in the left
+  panel.
+- Hold **Ctrl** and click every diode in the center panel to select
+  them all at once.
+- Search for `Diode_THT:D_DO-35_SOD27_P7.62mm_Horizontal` on the right.
+- Double-click to assign it to all selected diodes at once.
+</Step>
+
+## Assigning switches
+
+<Step title="Assign SW_MX_1u to every switch">
+- Select all switch symbols (`SW_Push`) in the center panel.
+- Search for `PCM_marbastlib-mx:SW_MX_1u` on the right.
+- Double-click to assign.
+</Step>
+
+## Assigning stabilizers
+
+<Step title="Assign STAB_MX to every stabilizer">
+- Select all stabilizer symbols in the center panel.
+- Search for `PCM_marbastlib-mx:STAB_MX` on the right.
+- Double-click to assign.
+</Step>
+
+Click **OK** when all footprints are assigned.

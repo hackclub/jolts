@@ -1,0 +1,60 @@
+---
+title: The crystal oscillator
+---
+
+Now to make our USB and other peripherals actually work properly, we need
+to have what's called a crystal oscillator. This is a little piezoelectric
+quartz crystal that vibrates very precisely, and then it's amplified and
+fed into the MCU to act as a clock signal that controls the digital
+peripherals.
+
+For example, you definitely want a crystal oscillator if you're using
+USB-C, because the data needs to come in at specific times, so it makes
+sure no data is incorrectly received. Because the clock is such a precise
+component, you want to wire it really carefully. That means it should be
+as close to the MCU as possible on the PCB (schematic doesn't matter, it's
+just a reference), and it needs really small capacitors, to smooth out the
+signals.
+
+<Step title="Label XIN and XOUT">
+- First add the global labels to the MCU XIN and XOUT, just called their
+  relative name. XOUT is the output from the crystal so an input to the
+  MCU, and XIN is an output from the MCU to help the crystal oscillate
+  properly:
+
+  ![XIN and XOUT labelled](https://raw.githubusercontent.com/KaiPereira/build-a-devboard/master/journal/Pasted%20image%2020250926064501.png)
+
+- Remember to accurately represent your global label direction, but just
+  keep in mind it doesn't actually change your schematic, it's only for
+  whoever is reading it!
+</Step>
+
+<Step title="Place the crystal symbol">
+- Based off the RP2040 datasheet, we're going to be using a 12 MHz crystal
+  with two, 15pF (I switch these later to 33pF because we use a different
+  crystal than the Pi Pico) decoupling capacitors.
+
+  ![Crystal symbol placed](https://raw.githubusercontent.com/KaiPereira/build-a-devboard/master/journal/Pasted%20image%2020250926063705.png)
+</Step>
+
+<Warning title="Right footprint, right pins">
+Make sure to use the crystal footprint with 4 pins and 1 and 3, as the
+input/output pins so pay attention to the symbol I use.
+</Warning>
+
+<Step title="Wire the crystal">
+- Pins 2, and 4 just go to GND, pins 1 and 3 need a 15pF cap in series,
+  and XOUT will have a 1K resistor. This resistor is called a damping
+  resistor and it prevents the crystal from being damaged and ensures
+  good signal integrity:
+
+  ![Crystal fully wired](https://raw.githubusercontent.com/KaiPereira/build-a-devboard/master/journal/Pasted%20image%2020250926064920.png)
+
+- Remember all your schematic good practices and make sure everything
+  looks clean.
+</Step>
+
+We haven't actually seen these types of caps yet, these are called external
+load capacitors, and they're placed in series with the crystal I/O's,
+these basically just ensure that the crystal resonates at it's proper
+frequency, I'd suggest researching a bit more if you're interested!
