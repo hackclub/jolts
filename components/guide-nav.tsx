@@ -42,13 +42,12 @@ export function GuideNav({
     items.find((item) => item.href === normalized)?.slug ?? null
   const multi = items.length > 1
 
-  /* the persistent layout means Next only scrolls the changed segment
-     into view - a page switch should land at the very top instead
-     (unless we're deep-linking to a #section) */
-  const prevPath = useRef(pathname)
+  /* Next scrolls the changed segment into view, which lands mid-page:
+     entering a guide from a scrolled hub stops at the title, and page
+     switches keep the old depth. Always land at the very top instead -
+     both on mount (entering the guide) and on page switches - unless
+     we're deep-linking to a #section. */
   useEffect(() => {
-    if (prevPath.current === pathname) return
-    prevPath.current = pathname
     if (!window.location.hash) {
       window.scrollTo({ top: 0, behavior: "instant" })
     }
