@@ -42,6 +42,43 @@ export function GuideNav({
     items.find((item) => item.href === normalized)?.slug ?? null
   const multi = items.length > 1
 
+  /* hybrid pinning: the panel starts in flow (below the header, scrolls
+     away with it), and the moment it reaches 28px from the viewport top
+     it goes fixed - and unlike position:sticky, it never detaches when
+     the content column ends. The holder keeps the grid column and marks
+     where "in flow" would be. */
+  const navRef = useRef<HTMLElement>(null)
+  const holderRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const nav = navRef.current
+    const holder = holderRef.current
+    if (!nav || !holder) return
+    const mq = window.matchMedia("(min-width: 1024px)")
+    const unpin = () => {
+      nav.style.position = ""
+      nav.style.top = ""
+      nav.style.width = ""
+    }
+    const onScroll = () => {
+      if (!mq.matches) return unpin()
+      if (holder.getBoundingClientRect().top <= 28) {
+        nav.style.position = "fixed"
+        nav.style.top = "28px"
+        nav.style.width = "190px"
+      } else {
+        unpin()
+      }
+    }
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    window.addEventListener("resize", onScroll)
+    return () => {
+      unpin()
+      window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("resize", onScroll)
+    }
+  }, [])
+
   /* the persistent layout means Next only scrolls the changed segment
      into view - a page switch should land at the very top instead
      (unless we're deep-linking to a #section) */
@@ -79,14 +116,11 @@ export function GuideNav({
   }, [items, current])
 
   return (
-    /* the placeholder keeps the grid column; the nav itself is fixed on
-       desktop (left: auto = its static position, so it stays aligned with
-       the column) - unlike sticky it never detaches when the content
-       column ends, no matter how tall the expanded TOC is */
-    <div className="min-w-0 lg:relative">
+    <div ref={holderRef} className="min-w-0">
     <nav
+      ref={navRef}
       aria-label="Guide pages"
-      className="relative overflow-hidden rounded-[12px] p-[5px] shadow-[0px_3px_13px_0px_rgba(0,0,0,0.14)] lg:fixed lg:top-[119px] lg:flex lg:max-h-[calc(100vh-147px)] lg:w-[190px] lg:flex-col"
+      className="relative overflow-hidden rounded-[12px] p-[5px] shadow-[0px_3px_13px_0px_rgba(0,0,0,0.14)] lg:flex lg:max-h-[calc(100vh-56px)] lg:flex-col"
     >
       <CheckerFrame
         theme={theme}
