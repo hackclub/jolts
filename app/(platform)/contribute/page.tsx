@@ -3,6 +3,8 @@ import Link from "next/link"
 
 import { ArrowUpRight, GitPullRequest } from "@phosphor-icons/react/dist/ssr"
 
+import { Breadcrumb } from "@/components/breadcrumb"
+
 export const metadata: Metadata = {
   title: "Contribute - jolts",
   description:
@@ -29,7 +31,8 @@ const registry = [
 
 export default function ContributePage() {
   return (
-    <div className="mx-auto w-full max-w-[820px] px-[32px] pt-[46px]">
+    <div className="mx-auto w-full max-w-[820px] px-[32px] pt-[40px]">
+      <Breadcrumb trail={[{ label: "Contribute", href: "/contribute" }]} />
       <h1 className="text-[38px] leading-[1.08] font-semibold tracking-[-0.03em] text-black">
         Write a guide
       </h1>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 
+import { Breadcrumb } from "@/components/breadcrumb"
 import { EntryList } from "@/components/entry-card"
 import { HubHero } from "@/components/hub-hero"
 import { listConcepts } from "@/lib/content"
@@ -13,7 +14,11 @@ export const metadata: Metadata = {
 export default function ConceptsPage() {
   const concepts = listConcepts()
   return (
-    <div className="mx-auto w-full max-w-[760px] px-[28px] pt-[46px]">
+    <div className="mx-auto w-full max-w-[760px] px-[28px] pt-[40px]">
+      <Breadcrumb
+        trail={[{ label: "Concepts", href: "/concepts" }]}
+        accent="#A633D6"
+      />
       <HubHero
         type="concepts"
         title="Concepts"

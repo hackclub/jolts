@@ -4,8 +4,9 @@ import { ViewTransition } from "react"
 import Link from "next/link"
 import { notFound, permanentRedirect } from "next/navigation"
 
-import { ArrowLeft, PencilSimple } from "@phosphor-icons/react/dist/ssr"
+import { PencilSimple } from "@phosphor-icons/react/dist/ssr"
 
+import { Breadcrumb } from "@/components/breadcrumb"
 import { AuthorLine } from "@/components/entry-card"
 import { GuideNav, type NavItem } from "@/components/guide-nav"
 import { Difficulty, getMDXComponents } from "@/components/mdx/registry"
@@ -139,14 +140,7 @@ function PageFooterNav({
 
 /* ---------- headers ---------- */
 
-function OverviewHeader({
-  entry,
-  backLink = true,
-}: {
-  entry: Entry
-  /** guides get a persistent breadcrumb from the layout instead */
-  backLink?: boolean
-}) {
+function OverviewHeader({ entry }: { entry: Entry }) {
   const meta = entry.meta
   const theme = typeTheme[entry.contentType]
   const facts: React.ReactNode[] = []
@@ -166,16 +160,6 @@ function OverviewHeader({
 
   return (
     <header>
-      {backLink && (
-        <Link
-          href={`/${entry.contentType}`}
-          className="mb-[14px] inline-flex items-center gap-[6px] text-[13.5px] font-semibold tracking-[-0.01em] hover:underline [text-underline-offset:3px]"
-          style={{ color: theme.accent }}
-        >
-          <ArrowLeft size={13} weight="bold" aria-hidden />
-          All {theme.labelPlural.toLowerCase()}
-        </Link>
-      )}
       <h1 className="text-[38px] leading-[1.08] font-semibold tracking-[-0.03em] text-[#16181d] text-balance">
         {meta.title}
       </h1>
@@ -257,7 +241,7 @@ export async function GuideContent({
           </h1>
         </header>
       ) : (
-        <OverviewHeader entry={entry} backLink={false} />
+        <OverviewHeader entry={entry} />
       )}
       <article
         className="jolts-guide pt-[6px] pb-[10px]"
@@ -306,9 +290,15 @@ export async function GuidePage({
   const navItems = buildNavItems(entry, [])
   const showPanel = navItems.some((item) => item.toc.length > 0)
 
+  const trail = [
+    { label: theme.labelPlural, href: `/${entry.contentType}` },
+    { label: entry.meta.title, href: `/${entry.contentType}/${entry.slug}` },
+  ]
+
   if (!showPanel) {
     return (
       <div className="mx-auto w-full max-w-[720px] px-[28px] pt-[40px]">
+        <Breadcrumb trail={trail} accent={theme.accent} />
         <OverviewHeader entry={entry} />
         <article className="jolts-guide pt-[8px] pb-[30px]" style={accentStyle}>
           {body}
@@ -324,17 +314,20 @@ export async function GuidePage({
         theme={theme}
         items={navItems}
       />
-      <ViewTransition default="jolts-content">
-        <div className="min-w-0 max-w-[720px]">
-          <OverviewHeader entry={entry} />
-          <article
-            className="jolts-guide pt-[8px] pb-[30px]"
-            style={accentStyle}
-          >
-            {body}
-          </article>
-        </div>
-      </ViewTransition>
+      <div className="min-w-0 max-w-[720px]">
+        <Breadcrumb trail={trail} accent={theme.accent} />
+        <ViewTransition default="jolts-content">
+          <div className="min-w-0">
+            <OverviewHeader entry={entry} />
+            <article
+              className="jolts-guide pt-[8px] pb-[30px]"
+              style={accentStyle}
+            >
+              {body}
+            </article>
+          </div>
+        </ViewTransition>
+      </div>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
+import { Breadcrumb } from "@/components/breadcrumb"
 import { GuideCard } from "@/components/entry-card"
 import { listGuides } from "@/lib/content"
 
@@ -40,7 +41,11 @@ export default function StartPage() {
   )
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-[28px] pt-[46px]">
+    <div className="mx-auto w-full max-w-[1100px] px-[28px] pt-[40px]">
+      <Breadcrumb
+        trail={[{ label: "Start here", href: "/start" }]}
+        accent="#FF902F"
+      />
       {/* hero - the "Start here!" card's yellow checker family, the page's
           one loud moment */}
       <div className="relative overflow-hidden rounded-[12px]">
