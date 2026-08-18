@@ -6,11 +6,12 @@ import {
   ArrowUpRight,
   BookOpenText,
   Lightbulb,
-  MagnifyingGlass,
   Package,
   Wrench,
   type Icon,
 } from "@phosphor-icons/react"
+
+import { SearchButton } from "@/components/search-command"
 import { AnimatePresence, motion, useMotionValue } from "motion/react"
 import Link from "next/link"
 
@@ -39,10 +40,11 @@ const segmentClass = cn(
   "bg-transparent hover:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:outline-none",
   "data-popup-open:bg-transparent data-popup-open:hover:bg-transparent data-popup-open:focus:bg-transparent",
   "data-open:bg-transparent data-open:hover:bg-transparent data-open:focus:bg-transparent",
-  // gradient overlay
-  "before:pointer-events-none before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-150 before:ease-out",
+  // gradient overlay - rises from the bottom with a springy overshoot
+  "before:pointer-events-none before:absolute before:inset-0 before:translate-y-[45%] before:opacity-0",
+  "before:transition-[transform,opacity] before:duration-[380ms] before:[transition-timing-function:cubic-bezier(0.2,1.9,0.35,1)]",
   "before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.4)_92%,rgba(255,255,255,0.6)_100%)]",
-  "hover:before:opacity-100 data-popup-open:before:opacity-100",
+  "hover:before:translate-y-0 hover:before:opacity-100 data-popup-open:before:translate-y-0 data-popup-open:before:opacity-100",
   // underline
   "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white after:opacity-0 after:transition-opacity after:duration-150 after:ease-out",
   "hover:after:opacity-100 data-popup-open:after:opacity-100"
@@ -455,30 +457,22 @@ export function SiteHeader() {
         </NavigationMenu>
 
         {/* search */}
-        <button
-          type="button"
-          aria-label="Search"
+        <SearchButton
           className={cn(
             "relative mt-[25px] ml-auto flex size-[49px] items-center justify-center overflow-hidden rounded-[4px] bg-white/20",
-            // same fading gradient overlay as the pill segments
-            "before:pointer-events-none before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-150 before:ease-out",
+            // same springy gradient overlay as the pill segments
+            "before:pointer-events-none before:absolute before:inset-0 before:translate-y-[45%] before:opacity-0",
+            "before:transition-[transform,opacity] before:duration-[380ms] before:[transition-timing-function:cubic-bezier(0.2,1.9,0.35,1)]",
             "before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.4)_92%,rgba(255,255,255,0.6)_100%)]",
-            "hover:before:opacity-100",
+            "hover:before:translate-y-0 hover:before:opacity-100",
             // pressed: swap the overlay for a stronger gradient
             "active:before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.55)_92%,rgba(255,255,255,0.8)_100%)]",
-            "active:before:opacity-100",
+            "active:before:translate-y-0 active:before:opacity-100",
             // and the line thing
             "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white after:opacity-0 after:transition-opacity after:duration-150 after:ease-out",
             "hover:after:opacity-100 active:after:opacity-100"
           )}
-        >
-          <MagnifyingGlass
-            size={22}
-            weight="bold"
-            aria-hidden
-            className="relative z-10 text-white [filter:drop-shadow(0px_1.5px_4px_rgba(0,0,0,0.35))]"
-          />
-        </button>
+        />
       </div>
     </header>
   )
