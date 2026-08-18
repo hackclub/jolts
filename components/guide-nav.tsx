@@ -79,9 +79,14 @@ export function GuideNav({
   }, [items, current])
 
   return (
+    /* the placeholder keeps the grid column; the nav itself is fixed on
+       desktop (left: auto = its static position, so it stays aligned with
+       the column) - unlike sticky it never detaches when the content
+       column ends, no matter how tall the expanded TOC is */
+    <div className="min-w-0 lg:relative">
     <nav
       aria-label="Guide pages"
-      className="relative overflow-hidden rounded-[12px] p-[5px] shadow-[0px_3px_13px_0px_rgba(0,0,0,0.14)] lg:sticky lg:top-[28px] lg:self-start"
+      className="relative overflow-hidden rounded-[12px] p-[5px] shadow-[0px_3px_13px_0px_rgba(0,0,0,0.14)] lg:fixed lg:top-[119px] lg:flex lg:max-h-[calc(100vh-147px)] lg:w-[190px] lg:flex-col"
     >
       <CheckerFrame
         theme={theme}
@@ -97,7 +102,7 @@ export function GuideNav({
         {entryTitle}
       </p>
 
-      <div className="relative rounded-[7px] bg-white px-[13px] py-[9px] shadow-[0px_2px_4px_0px_rgba(0,0,0,0.15)]">
+      <div className="relative min-h-0 overflow-y-auto rounded-[7px] bg-white px-[13px] py-[9px] shadow-[0px_2px_4px_0px_rgba(0,0,0,0.15)]">
         <ol className="space-y-[1px]">
           {items.map((item, i) => {
             const active = item.slug === current
@@ -179,5 +184,6 @@ export function GuideNav({
         </ol>
       </div>
     </nav>
+    </div>
   )
 }
