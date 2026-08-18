@@ -1,6 +1,6 @@
 "use client"
 
-import { House } from "@phosphor-icons/react"
+import { House, PencilSimple } from "@phosphor-icons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -15,12 +15,15 @@ export function GuideBreadcrumb({
   base,
   pages,
   accent,
+  editBase,
 }: {
   guideTitle: string
   /** e.g. /guides/macropad */
   base: string
-  pages: { slug: string; title: string }[]
+  pages: { slug: string; title: string; file: string }[]
   accent: string
+  /** GitHub editor URL for the guide folder, without the filename */
+  editBase?: string
 }) {
   const pathname = usePathname().replace(/\/$/, "")
   const pageSlug = pathname.startsWith(`${base}/`)
@@ -78,6 +81,17 @@ export function GuideBreadcrumb({
             {page.title}
           </Link>
         </>
+      )}
+      {editBase && (
+        <a
+          href={`${editBase}/${page?.file ?? "index.mdx"}`}
+          target="_blank"
+          rel="noreferrer"
+          className="ml-auto inline-flex items-center gap-[5px] text-[#9aa1ab] transition-colors duration-150 hover:text-[#16181d]"
+        >
+          <PencilSimple size={13} weight="fill" aria-hidden />
+          Edit
+        </a>
       )}
     </nav>
   )

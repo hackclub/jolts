@@ -155,6 +155,7 @@ function Avatar({ name }: { name: string }) {
 
 export function AuthorLine({ meta }: { meta: EntryMeta }) {
   const names = authors(meta)
+  if (names.length === 0) return null
   return (
     <span className="inline-flex items-center gap-[7px] text-[13px] tracking-[-0.01em] text-[#5c6470]">
       by

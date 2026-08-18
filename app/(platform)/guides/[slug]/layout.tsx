@@ -36,8 +36,13 @@ export default async function GuideLayout({
         <GuideBreadcrumb
           guideTitle={entry.meta.title}
           base={`/guides/${entry.slug}`}
-          pages={pages.map((p) => ({ slug: p.slug, title: p.title }))}
+          pages={pages.map((p) => ({
+            slug: p.slug,
+            title: p.title,
+            file: p.file,
+          }))}
           accent={typeTheme.guides.accent}
+          editBase={`https://github.com/hackclub/jolts/edit/main/content/guides/${entry.slug}`}
         />
         <ViewTransition default="jolts-content">
           <div className="min-w-0">{children}</div>

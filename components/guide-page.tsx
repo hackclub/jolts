@@ -4,8 +4,6 @@ import { ViewTransition } from "react"
 import Link from "next/link"
 import { notFound, permanentRedirect } from "next/navigation"
 
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr"
-
 import { Breadcrumb } from "@/components/breadcrumb"
 import { AuthorLine, ContributorsLine } from "@/components/entry-card"
 import { GuideNav, type NavItem } from "@/components/guide-nav"
@@ -191,15 +189,6 @@ function OverviewHeader({ entry }: { entry: Entry }) {
       <div className="mt-[16px] flex flex-wrap items-center gap-x-[18px] gap-y-[8px] border-b border-black/10 pb-[16px]">
         <AuthorLine meta={meta} />
         <ContributorsLine names={meta.contributors} />
-        <a
-          href={`${REPO}/edit/main/content/${entry.contentType}/${entry.slug}/index.mdx`}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-[5px] text-[13px] tracking-[-0.01em] text-[#9aa1ab] transition-colors duration-150 hover:text-[#16181d]"
-        >
-          <PencilSimple size={13} weight="bold" aria-hidden />
-          Improve this guide
-        </a>
       </div>
     </header>
   )
@@ -299,7 +288,11 @@ export async function GuidePage({
   if (!showPanel) {
     return (
       <div className="mx-auto w-full max-w-[720px] px-[28px] pt-[40px]">
-        <Breadcrumb trail={trail} accent={theme.accent} />
+        <Breadcrumb
+          trail={trail}
+          accent={theme.accent}
+          editUrl={`${REPO}/edit/main/content/${entry.contentType}/${entry.slug}/index.mdx`}
+        />
         <OverviewHeader entry={entry} />
         <article className="jolts-guide pt-[8px] pb-[30px]" style={accentStyle}>
           {body}
@@ -316,7 +309,11 @@ export async function GuidePage({
         items={navItems}
       />
       <div className="min-w-0 max-w-[720px]">
-        <Breadcrumb trail={trail} accent={theme.accent} />
+        <Breadcrumb
+          trail={trail}
+          accent={theme.accent}
+          editUrl={`${REPO}/edit/main/content/${entry.contentType}/${entry.slug}/index.mdx`}
+        />
         <ViewTransition default="jolts-content">
           <div className="min-w-0">
             <OverviewHeader entry={entry} />

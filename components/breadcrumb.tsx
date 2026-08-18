@@ -1,4 +1,4 @@
-import { House } from "@phosphor-icons/react/dist/ssr"
+import { House, PencilSimple } from "@phosphor-icons/react/dist/ssr"
 import Link from "next/link"
 
 /* Server-side breadcrumb for pages whose trail is known at render time:
@@ -9,10 +9,13 @@ import Link from "next/link"
 export function Breadcrumb({
   trail,
   accent = "#16181d",
+  editUrl,
 }: {
   /** in order, current page last */
   trail: { label: string; href: string }[]
   accent?: string
+  /** GitHub editor link for the page's source, shown at the row's end */
+  editUrl?: string
 }) {
   return (
     <nav
@@ -48,6 +51,17 @@ export function Breadcrumb({
           </span>
         )
       })}
+      {editUrl && (
+        <a
+          href={editUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="ml-auto inline-flex items-center gap-[5px] text-[#9aa1ab] transition-colors duration-150 hover:text-[#16181d]"
+        >
+          <PencilSimple size={13} weight="fill" aria-hidden />
+          Edit
+        </a>
+      )}
     </nav>
   )
 }

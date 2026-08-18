@@ -23,8 +23,8 @@ const baseSchema = z.object({
   title: z.string().min(1),
   /** One-to-two lines selling the outcome. Shown on cards and page headers. */
   subtitle: z.string().min(1),
-  /** GitHub username(s). Contributors get credited on the page. */
-  author: authorSchema,
+  /** GitHub username(s). Credited on the page; optional. */
+  author: authorSchema.optional(),
   /** GitHub usernames of everyone who improved the guide after the
       author - rendered as an avatar stack on the page. */
   contributors: z.array(z.string()).default([]),
@@ -133,6 +133,7 @@ export const listConcepts = () => listEntries("concepts") as Entry<ConceptMeta>[
 export const listTools = () => listEntries("tools") as Entry<ToolMeta>[]
 
 export function authors(meta: EntryMeta): string[] {
+  if (!meta.author) return []
   return Array.isArray(meta.author) ? meta.author : [meta.author]
 }
 

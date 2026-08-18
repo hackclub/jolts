@@ -16,7 +16,7 @@ const author = z.union([z.string(), z.array(z.string()).min(1)])
 const base = {
   title: z.string().min(1),
   subtitle: z.string().min(1),
-  author,
+  author: author.optional(),
   contributors: z.array(z.string()).default([]),
   aliases: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
