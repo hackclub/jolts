@@ -35,16 +35,15 @@ import { cn } from "@/lib/utils"
    the ::after underline fades on the same clock. Class names are written out
    in full because Tailwind's scanner only sees complete literals. */
 const segmentClass = cn(
-  "relative flex h-full w-max items-center rounded-none px-[17px]",
+  "jolts-glow relative flex h-full w-max items-center rounded-none px-[17px]",
   "text-[22.4px] font-semibold tracking-[-0.03em] text-white",
   "bg-transparent hover:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:outline-none",
   "data-popup-open:bg-transparent data-popup-open:hover:bg-transparent data-popup-open:focus:bg-transparent",
   "data-open:bg-transparent data-open:hover:bg-transparent data-open:focus:bg-transparent",
-  // gradient overlay - rises from the bottom with a springy overshoot
-  "before:pointer-events-none before:absolute before:inset-0 before:translate-y-[45%] before:opacity-0",
-  "before:transition-[transform,opacity] before:duration-[380ms] before:[transition-timing-function:cubic-bezier(0.2,1.9,0.35,1)]",
-  "before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.4)_92%,rgba(255,255,255,0.6)_100%)]",
-  "hover:before:translate-y-0 hover:before:opacity-100 data-popup-open:before:translate-y-0 data-popup-open:before:opacity-100",
+  // gradient overlay - brightness overshoot handled by .jolts-glow
+  // (stops raised so the 0.72 resting opacity matches the old look)
+  "before:pointer-events-none before:absolute before:inset-0",
+  "before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.55)_92%,rgba(255,255,255,0.85)_100%)]",
   // underline
   "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white after:opacity-0 after:transition-opacity after:duration-150 after:ease-out",
   "hover:after:opacity-100 data-popup-open:after:opacity-100"
@@ -459,15 +458,12 @@ export function SiteHeader() {
         {/* search */}
         <SearchButton
           className={cn(
-            "relative mt-[25px] ml-auto flex size-[49px] items-center justify-center overflow-hidden rounded-[4px] bg-white/20",
-            // same springy gradient overlay as the pill segments
-            "before:pointer-events-none before:absolute before:inset-0 before:translate-y-[45%] before:opacity-0",
-            "before:transition-[transform,opacity] before:duration-[380ms] before:[transition-timing-function:cubic-bezier(0.2,1.9,0.35,1)]",
-            "before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.4)_92%,rgba(255,255,255,0.6)_100%)]",
-            "hover:before:translate-y-0 hover:before:opacity-100",
+            "jolts-glow relative mt-[25px] ml-auto flex size-[49px] items-center justify-center overflow-hidden rounded-[4px] bg-white/20",
+            // same brightness-overshoot gradient as the pill segments
+            "before:pointer-events-none before:absolute before:inset-0",
+            "before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.55)_92%,rgba(255,255,255,0.85)_100%)]",
             // pressed: swap the overlay for a stronger gradient
-            "active:before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.55)_92%,rgba(255,255,255,0.8)_100%)]",
-            "active:before:translate-y-0 active:before:opacity-100",
+            "active:before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.75)_92%,rgba(255,255,255,1)_100%)]",
             // and the line thing
             "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white after:opacity-0 after:transition-opacity after:duration-150 after:ease-out",
             "hover:after:opacity-100 active:after:opacity-100"

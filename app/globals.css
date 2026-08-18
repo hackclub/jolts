@@ -143,6 +143,33 @@
 
 /* The hover-preview pane's corner cutout lives in components/preview-link.tsx - the notch SVG is generated per label width, so the mask is inline. */
 
+/* ---------- header hover glow ---------- */
+
+/* The white gradient overshoots in brightness: it flashes past its
+   resting intensity, then settles. Peak = opacity 1, rest = 0.72 (the
+   gradient's stops are raised to compensate, so the resting look matches
+   the original). Fade-out on unhover is a plain transition. */
+.jolts-glow::before {
+  opacity: 0;
+  transition: opacity 0.18s ease-out;
+}
+.jolts-glow:hover::before,
+.jolts-glow:active::before,
+.jolts-glow[data-popup-open]::before {
+  animation: jolts-glow-in 0.45s ease-out forwards;
+}
+@keyframes jolts-glow-in {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.72;
+  }
+}
+
 /* ---------- page-switch view transition ---------- */
 
 /* Switching pages: the old column fades out fully, THEN the new one
