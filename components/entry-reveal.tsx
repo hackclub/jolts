@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { LOGO_CHAR_PATHS } from "@/components/entry-logo-chars";
+
 const PIXEL = 14; // block size in CSS px — constant, never scales with the circle
 // chars wave from 180ms to ~1020ms (see entry-char-pop); iris opens while
 // the characters are still popping
@@ -10,16 +12,6 @@ const DURATION_MS = 900;
 
 const easeInOutQuint = (t: number) =>
   t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
-
-// Every character SVG shares the full 283x148 logo canvas, so stacking them
-// reconstructs the logo; each scales around the shared canvas center.
-const CHARS = [
-  "/entry/j.svg",
-  "/entry/o.svg",
-  "/entry/l.svg",
-  "/entry/t.svg",
-  "/entry/s.svg",
-];
 
 // Full-screen black cover: the centered logo characters pulse in a stagger,
 // then a pixelated center hole grows to reveal the page while the logo fades.
@@ -128,15 +120,19 @@ export function EntryReveal() {
   return (
     <div ref={wrapperRef} aria-hidden className="entry-reveal">
       <canvas ref={canvasRef} className="entry-reveal-canvas" />
+      {/* every character shares the full 283x148 logo canvas, so stacking
+          them reconstructs the logo; inlined so no image fetches happen */}
       <div className="entry-logo">
-        {CHARS.map((src, i) => (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            key={src}
-            src={src}
-            alt=""
+        {LOGO_CHAR_PATHS.map((Char, i) => (
+          <svg
+            key={i}
+            viewBox="0 0 283 148"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
             style={{ "--char-i": i } as React.CSSProperties}
-          />
+          >
+            <Char />
+          </svg>
         ))}
       </div>
     </div>

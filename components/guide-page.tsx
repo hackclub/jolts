@@ -4,11 +4,15 @@ import { ViewTransition } from "react"
 import Link from "next/link"
 import { notFound, permanentRedirect } from "next/navigation"
 
+import { Clock, Coins, Wrench } from "@phosphor-icons/react/dist/ssr"
+
 import { Breadcrumb } from "@/components/breadcrumb"
 import { AuthorLine, ContributorsLine } from "@/components/entry-card"
 import { GuideNav, type NavItem } from "@/components/guide-nav"
-import { Difficulty, getMDXComponents } from "@/components/mdx/registry"
+import { getMDXComponents } from "@/components/mdx/registry"
+import { contentImageHasAlpha } from "@/lib/content-image"
 import {
+  contentImageUrl,
   extractToc,
   getEntry,
   getGuidePage,
@@ -138,59 +142,175 @@ function PageFooterNav({
 
 /* ---------- headers ---------- */
 
-function OverviewHeader({ entry }: { entry: Entry }) {
-  const meta = entry.meta
-  const theme = typeTheme[entry.contentType]
-  const facts: React.ReactNode[] = []
-  if (meta.type === "guide") {
-    facts.push(
-      <Difficulty key="difficulty" level={meta.difficulty} />,
-      <span key="time">{meta.time}</span>,
-      <span key="cost">{meta.cost}</span>,
-      <span key="solder">
-        {meta.soldering ? "soldering required" : "no soldering"}
+/* a pill tag with a dark tooltip that floats up on hover */
+function FactTag({
+  info,
+  children,
+}: {
+  info: string
+  children: React.ReactNode
+}) {
+  return (
+    <span className="group relative inline-flex h-[29px] cursor-default items-center gap-[7px] rounded-full border border-black/10 bg-white px-[12px] text-[13px] tracking-[-0.01em] text-[#33383f]">
+      {children}
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute bottom-[calc(100%+7px)] left-1/2 z-10 -translate-x-1/2 translate-y-[3px] rounded-[7px] bg-[#16181d] px-[10px] py-[5.5px] text-[12px] leading-[1.4] whitespace-nowrap text-white opacity-0 shadow-[0px_4px_12px_rgba(0,0,0,0.25)] transition-[opacity,transform] duration-150 ease-out group-hover:translate-y-0 group-hover:opacity-100"
+      >
+        {info}
       </span>
+    </span>
+  )
+}
+
+const DIFFICULTY_INFO = {
+  beginner: "No experience needed - every step is spelled out",
+  intermediate: "Assumes you've built something simple before",
+  advanced: "Sparse hand-holding - expect to debug on your own",
+} as const
+
+function FactTags({ meta }: { meta: Entry["meta"] }) {
+  const tags: React.ReactNode[] = []
+  if (meta.type === "guide") {
+    const filled = { beginner: 1, intermediate: 2, advanced: 3 }[
+      meta.difficulty
+    ]
+    tags.push(
+      <FactTag key="difficulty" info={DIFFICULTY_INFO[meta.difficulty]}>
+        <span className="flex gap-[2.5px]" aria-hidden>
+          {[1, 2, 3].map((i) => (
+            <span
+              key={i}
+              className="size-[6px] rounded-full"
+              style={{
+                background:
+                  i <= filled ? typeTheme.guides.accent : "rgba(0,0,0,0.12)",
+              }}
+            />
+          ))}
+        </span>
+        <span className="capitalize">{meta.difficulty}</span>
+      </FactTag>,
+      <FactTag
+        key="time"
+        info="Hands-on time - spread it over as many sessions as you like"
+      >
+        <Clock size={14} weight="fill" className="text-[#9aa1ab]" aria-hidden />
+        {meta.time}
+      </FactTag>,
+      <FactTag key="cost" info="Approximate parts cost - shipping not included">
+        <Coins size={14} weight="fill" className="text-[#9aa1ab]" aria-hidden />
+        {meta.cost}
+      </FactTag>,
+      <FactTag
+        key="solder"
+        info={
+          meta.soldering
+            ? "You'll need an iron and basic soldering"
+            : "The fab assembles everything - no iron needed"
+        }
+      >
+        <Wrench size={14} weight="fill" className="text-[#9aa1ab]" aria-hidden />
+        {meta.soldering ? "soldering required" : "no soldering"}
+      </FactTag>
     )
   }
   if (meta.type === "tool" && meta.cost) {
-    facts.push(<span key="cost">{meta.cost}</span>)
+    tags.push(
+      <FactTag key="cost" info="What this tool costs to use">
+        <Coins size={14} weight="fill" className="text-[#9aa1ab]" aria-hidden />
+        {meta.cost}
+      </FactTag>
+    )
   }
+  if (tags.length === 0) return null
+  return (
+    <div className="mt-[12px] flex flex-wrap items-center gap-[7px]">{tags}</div>
+  )
+}
+
+async function OverviewHeader({ entry }: { entry: Entry }) {
+  const meta = entry.meta
+  const theme = typeTheme[entry.contentType]
+  const heroTransparent = meta.hero
+    ? await contentImageHasAlpha(entry.contentType, entry.slug, meta.hero)
+    : false
 
   return (
-    <header>
-      <h1 className="text-[38px] leading-[1.08] font-semibold tracking-[-0.03em] text-[#16181d] text-balance">
-        {meta.title}
-      </h1>
-      <p className="mt-[8px] text-[17px] leading-[1.55] tracking-[-0.01em] text-[#5c6470]">
-        {meta.subtitle}
-      </p>
+    <>
+    <header className="relative overflow-hidden rounded-[12px] border border-black/10 bg-[#FCFCFA]">
+      {/* graph-paper grid, fading out toward the bottom so the meta rows
+          sit on quieter ground */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(22,24,29,0.055) 1px, transparent 1px), linear-gradient(to bottom, rgba(22,24,29,0.055) 1px, transparent 1px)",
+          backgroundSize: "21px 21px",
+          maskImage:
+            "linear-gradient(180deg, black 0%, rgba(0,0,0,0.3) 100%)",
+          WebkitMaskImage:
+            "linear-gradient(180deg, black 0%, rgba(0,0,0,0.3) 100%)",
+        }}
+      />
+      {/* soft accent glow behind the photo corner */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(880px 560px at 90% -10%, ${theme.tint}, transparent 72%)`,
+        }}
+      />
 
-      {facts.length > 0 && (
-        <p className="mt-[14px] flex flex-wrap items-center gap-x-[8px] gap-y-[4px] text-[14px] tracking-[-0.01em] text-[#5c6470]">
-          {facts.map((fact, i) => (
-            <span key={i} className="flex items-center gap-[8px]">
-              {i > 0 && (
-                <span aria-hidden className="text-black/20">
-                  ·
-                </span>
-              )}
-              {fact}
-            </span>
+      <div className="relative flex items-center gap-[26px] px-[24px] pt-[22px] pb-[16px]">
+        <div className="min-w-0 flex-1">
+          <h1 className="font-augie text-[40px] leading-[1.02] text-[#16181d] text-balance">
+            {meta.title}
+          </h1>
+          <p className="mt-[10px] text-[16px] leading-[1.55] tracking-[-0.01em] text-[#5c6470]">
+            {meta.subtitle}
+          </p>
+
+          {meta.type === "guide" && (
+            <p className="mt-[10px] text-[14px] tracking-[-0.01em] text-[#9aa1ab]">
+              You&rsquo;ll learn {meta.learns.join(", ")}
+            </p>
+          )}
+        </div>
+
+        {meta.hero &&
+          (heroTransparent ? (
+            /* transparent render: no frame - larger, floating on the grid
+               with its own drop shadow. Negative margin lets it use the
+               card's padding without growing the card. */
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={contentImageUrl(entry.contentType, entry.slug, meta.hero)}
+              alt=""
+              className="hidden aspect-[4/3] w-[252px] shrink-0 -my-[10px] -mr-[4px] rotate-[2.5deg] object-contain [filter:drop-shadow(0px_12px_16px_rgba(0,0,0,0.28))] md:block"
+            />
+          ) : (
+            /* opaque photo: polaroid frame */
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={contentImageUrl(entry.contentType, entry.slug, meta.hero)}
+              alt=""
+              className="hidden aspect-[4/3] w-[196px] shrink-0 rotate-[2.5deg] rounded-[9px] border-[5px] border-white object-cover shadow-[0px_6px_18px_-4px_rgba(0,0,0,0.28)] md:block"
+            />
           ))}
-        </p>
-      )}
+      </div>
 
-      {meta.type === "guide" && (
-        <p className="mt-[6px] text-[14px] tracking-[-0.01em] text-[#9aa1ab]">
-          You&rsquo;ll learn {meta.learns.join(", ")}
-        </p>
-      )}
-
-      <div className="mt-[16px] flex flex-wrap items-center gap-x-[18px] gap-y-[8px] border-b border-black/10 pb-[16px]">
+      <div className="relative flex flex-wrap items-center gap-x-[18px] gap-y-[8px] border-t border-black/[0.07] px-[24px] py-[11px]">
         <AuthorLine meta={meta} />
         <ContributorsLine names={meta.contributors} />
       </div>
     </header>
+
+    <div className="mb-[14px]">
+      <FactTags meta={meta} />
+    </div>
+    </>
   )
 }
 

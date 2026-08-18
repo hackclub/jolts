@@ -304,7 +304,7 @@ html[data-entry-skip] .entry-reveal {
 
 /* paused until EntryReveal's effect adds .entry-play — the pulse must share
    its t=0 with the canvas iris clock, which can't start until hydration */
-.entry-logo img {
+.entry-logo svg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -313,7 +313,7 @@ html[data-entry-skip] .entry-reveal {
     paused;
 }
 
-.entry-play .entry-logo img {
+.entry-play .entry-logo svg {
   animation-play-state: running;
 }
 
