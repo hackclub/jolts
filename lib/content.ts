@@ -196,25 +196,59 @@ export function slugifyHeading(text: string): string {
 
 export type TocEntry = { id: string; title: string }
 
-/** Section list of one page: ## headings and <Step> titles, in order. */
-export function extractToc(body: string): TocEntry[] {
-  const re = /^##\s+(.+)$|<Step\s[^>]*?title="([^"]+)"/gm
-  const out: TocEntry[] = []
-  for (const m of body.matchAll(re)) {
-    const title = (m[1] ?? m[2])
-      .replace(/[`*_]/g, "")
-      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-      .trim()
-    out.push({ id: slugifyHeading(title), title })
-  }
-  return out
+/** The two things that become anchors on a page: ## headings and <Step>
+    titles. Shared by the toc and the search index so they never drift. */
+const SECTION_RE = /^##\s+(.+)$|<Step\s[^>]*?title="([^"]+)"/gm
+
+function cleanHeading(raw: string): string {
+  return raw
+    .replace(/[`*_]/g, "")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .trim()
 }
 
-/** Plain-text opening of a guide's body - used by the hover previews on
-    cross-links, Wikipedia-style. Strips MDX blocks, markdown syntax, and
-    code fences, then cuts at a word boundary. */
-export function plainExcerpt(body: string, maxLength = 220): string {
-  const text = body
+/** Section list of one page: ## headings and <Step> titles, in order. */
+export function extractToc(body: string): TocEntry[] {
+  return [...body.matchAll(SECTION_RE)].map((m) => {
+    const title = cleanHeading(m[1] ?? m[2])
+    return { id: slugifyHeading(title), title }
+  })
+}
+
+export type Section = TocEntry & {
+  /** The section's own prose, plain text, up to the next heading. */
+  text: string
+}
+
+/** extractToc's sections, each carrying the prose that follows it. The
+    search index needs the text, not just the anchor - matching headings
+    alone misses almost everything a page actually says. */
+export function extractSections(body: string): Section[] {
+  const matches = [...body.matchAll(SECTION_RE)]
+  return matches.map((m, i) => {
+    const title = cleanHeading(m[1] ?? m[2])
+    const from = m.index + m[0].length
+    const to = matches[i + 1]?.index ?? body.length
+    return {
+      id: slugifyHeading(title),
+      title,
+      text: plainText(body.slice(from, to)),
+    }
+  })
+}
+
+/** Everything before the first section heading - the page's own intro.
+    Kept separate from extractSections so the index stores each run of
+    prose exactly once. */
+export function leadText(body: string): string {
+  const [first] = body.matchAll(SECTION_RE)
+  return plainText(first ? body.slice(0, first.index) : body)
+}
+
+/** MDX body → readable prose. Strips code fences, comments, JSX tags,
+    headings, images, and markdown punctuation. */
+export function plainText(body: string): string {
+  return body
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/\{\/\*[\s\S]*?\*\/\}/g, " ")
     .replace(/<[^>]+>/g, " ")
@@ -224,6 +258,12 @@ export function plainExcerpt(body: string, maxLength = 220): string {
     .replace(/[*_`>#]/g, "")
     .replace(/\s+/g, " ")
     .trim()
+}
+
+/** Plain-text opening of a guide's body - used by the hover previews on
+    cross-links, Wikipedia-style. Cuts at a word boundary. */
+export function plainExcerpt(body: string, maxLength = 220): string {
+  const text = plainText(body)
   if (text.length <= maxLength) return text
   const cut = text.slice(0, maxLength)
   return cut.slice(0, cut.lastIndexOf(" ")) + " …"

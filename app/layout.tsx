@@ -3,6 +3,9 @@ import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+
 const openRunde = localFont({
   src: [
     { path: "./fonts/OpenRunde-Regular.woff2", weight: "400", style: "normal" },
@@ -31,7 +34,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${openRunde.variable} ${augiePixel.variable} h-full scroll-smooth antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
+        {/* one header/footer instance for every route, so the header's
+            post-click hover-hold state survives navigating from anywhere
+            (including the home page) */}
+        <SiteHeader />
         {children}
+        <SiteFooter />
         <Analytics />
       </body>
     </html>

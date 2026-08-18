@@ -1,5 +1,3 @@
-import { SiteFooter } from "@/components/site-footer"
-import { SiteHeader } from "@/components/site-header"
 import { cn } from "@/lib/utils"
 
 /* The home page, all skeleton for now: the layout is blocked out with
@@ -17,10 +15,7 @@ function Skeleton({ className }: { className?: string }) {
 
 export default function Home() {
   return (
-    <>
-      <SiteHeader />
-      <main className="flex-1 bg-white">
-        <div className="mx-auto w-full max-w-[1100px] px-[28px] pt-[40px]">
+    <div className="mx-auto w-full max-w-[1100px] px-[28px] pt-[40px]">
           {/* hero container */}
           <div className="rounded-[14px] border border-black/[0.08] p-[28px]">
             <Skeleton className="h-[14px] w-[120px]" />
@@ -72,9 +67,6 @@ export default function Home() {
               </div>
             ))}
           </div>
-        </div>
-      </main>
-      <SiteFooter />
-    </>
+    </div>
   )
 }

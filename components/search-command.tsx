@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import {
   ArrowElbowDownLeft,
@@ -9,10 +9,10 @@ import {
   MagnifyingGlass,
 } from "@phosphor-icons/react"
 import { useRouter } from "next/navigation"
+import MiniSearch from "minisearch"
 
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandItem,
   CommandList,
@@ -25,7 +25,13 @@ import { cn } from "@/lib/utils"
    checker chrome, DocSearch-style - grouped results, two-line items,
    kbd footer. The index is a static JSON route, fetched once on first
    open and cached for the session. Opens from the header button or
-   Ctrl/Cmd+K. */
+   Ctrl/Cmd+K.
+
+   Ranking is MiniSearch, not cmdk. cmdk's built-in filter scores
+   characters rather than words, so it matches scattered letters across a
+   row's whole value and buries the real answer under near-misses. Here it
+   runs with shouldFilter={false} and does only what it is good at -
+   roving selection and keyboard nav - over a list ordered in this file. */
 
 type SearchDoc = {
   href: string
@@ -33,14 +39,119 @@ type SearchDoc = {
   crumb: string
   group: string
   kind: "page" | "section"
-  excerpt?: string
+  text: string
 }
 
-let cachedDocs: SearchDoc[] | null = null
+/** A doc plus the id MiniSearch keys results by: its index in the array. */
+type Indexed = SearchDoc & { id: number }
+
+let cachedDocs: Indexed[] | null = null
+let cachedIndex: MiniSearch<Indexed> | null = null
+
+function buildIndex(docs: Indexed[]): MiniSearch<Indexed> {
+  const index = new MiniSearch<Indexed>({
+    fields: ["title", "crumb", "text"],
+    /* Nothing is stored: hits come back as ids and we read the doc out of
+       the array, so the corpus lives in memory exactly once. */
+    storeFields: [],
+    searchOptions: {
+      boost: { title: 5, crumb: 2 },
+      /* Prefix-match as you type, but not on a lone letter - "i" should
+         not pull in every word starting with i. */
+      prefix: (term) => term.length > 1,
+      /* Typo tolerance only where a typo is plausible. Short electronics
+         terms ("i2c", "5v", "gnd") stay exact or they collide. */
+      fuzzy: (term) => (term.length > 4 ? 0.2 : false),
+      /* Every word has to match something. This is the precision knob
+         cmdk was missing. */
+      combineWith: "AND",
+    },
+  })
+  index.addAll(docs)
+  return index
+}
+
+const RESULT_LIMIT = 30
+const SNIPPET_TAIL = 100
+const SNIPPET_LEAD = 32
+
+/** The stretch of prose around the first matched term, so a result's
+    second line shows why it matched instead of the same opening every
+    time. Null when the match was in the title or crumb only. */
+function snippetAround(text: string, terms: string[]) {
+  if (!text) return null
+  const haystack = text.toLowerCase()
+  let at = -1
+  let length = 0
+  for (const term of terms) {
+    const found = haystack.indexOf(term.toLowerCase())
+    if (found !== -1 && (at === -1 || found < at)) {
+      at = found
+      length = term.length
+    }
+  }
+  if (at === -1) return null
+
+  let from = Math.max(0, at - SNIPPET_LEAD)
+  if (from > 0) {
+    // open on a word boundary rather than mid-word
+    const space = text.indexOf(" ", from)
+    from = space !== -1 && space < at ? space + 1 : from
+  }
+  return {
+    lead: (from > 0 ? "…" : "") + text.slice(from, at),
+    hit: text.slice(at, at + length),
+    tail: text.slice(at + length, at + length + SNIPPET_TAIL),
+  }
+}
+
+type Result = {
+  doc: Indexed
+  snippet: ReturnType<typeof snippetAround>
+}
+
+const GROUP_ORDER = ["Guides", "Concepts", "Tools", "Pages"]
+
+/* Groups come out ordered by their best-scoring member, so the first row
+   of the list is always the strongest match site-wide. A fixed group order
+   would be steadier to look at but can bury the answer three headings
+   down, which was the old palette's worst habit. */
+function rank(
+  index: MiniSearch<Indexed>,
+  docs: Indexed[],
+  query: string
+): [string, Result[]][] {
+  const groups = new Map<string, Result[]>()
+  for (const hit of index.search(query).slice(0, RESULT_LIMIT)) {
+    const doc = docs[hit.id as number]
+    if (!doc) continue
+    const list = groups.get(doc.group) ?? []
+    list.push({ doc, snippet: snippetAround(doc.text, hit.terms) })
+    groups.set(doc.group, list)
+  }
+  return [...groups.entries()]
+}
+
+/* Empty query: the pages, not every section on the site. Listing all of
+   the section rows up front is a wall of text nobody reads. */
+function browse(docs: Indexed[]): [string, Result[]][] {
+  const groups = new Map<string, Result[]>()
+  for (const doc of docs) {
+    if (doc.kind !== "page") continue
+    const list = groups.get(doc.group) ?? []
+    list.push({ doc, snippet: null })
+    groups.set(doc.group, list)
+  }
+  return [...groups.entries()].sort(
+    (a, b) => GROUP_ORDER.indexOf(a[0]) - GROUP_ORDER.indexOf(b[0])
+  )
+}
 
 export function SearchButton({ className }: { className?: string }) {
   const [open, setOpen] = useState(false)
-  const [docs, setDocs] = useState<SearchDoc[] | null>(cachedDocs)
+  const [query, setQuery] = useState("")
+  const [docs, setDocs] = useState<Indexed[] | null>(cachedDocs)
+  const [selected, setSelected] = useState("")
   const router = useRouter()
 
   useEffect(() => {
@@ -59,18 +170,38 @@ export function SearchButton({ className }: { className?: string }) {
     fetch("/search-index.json")
       .then((r) => r.json())
       .then((data: SearchDoc[]) => {
-        cachedDocs = data
-        setDocs(data)
+        cachedDocs = data.map((doc, id) => ({ ...doc, id }))
+        cachedIndex = buildIndex(cachedDocs)
+        setDocs(cachedDocs)
       })
       .catch(() => setDocs([]))
   }, [open])
 
-  const groups = new Map<string, SearchDoc[]>()
-  for (const doc of docs ?? []) {
-    const list = groups.get(doc.group) ?? []
-    list.push(doc)
-    groups.set(doc.group, list)
+  const groups = useMemo(() => {
+    if (!docs?.length) return []
+    const trimmed = query.trim()
+    if (!trimmed) return browse(docs)
+    cachedIndex ??= buildIndex(docs)
+    return rank(cachedIndex, docs, trimmed)
+  }, [docs, query])
+
+  /* cmdk leaves its selection where it was when the list changes under it,
+     stranding the highlight on a row that has scrolled away - and on the
+     very first open it highlights nothing at all, so Enter is dead. Pin the
+     highlight to the top result whenever the result set is rebuilt: on each
+     keystroke, and once when the index finishes loading. Adjusted during
+     render rather than in an effect so the list never paints unpinned. */
+  const topId = groups[0]?.[1][0]?.doc.id
+  const topValue = topId === undefined ? "" : String(topId)
+  const resultsKey = `${docs?.length ?? 0}:${query}`
+  // "" can never be a resultsKey, so the first render always pins
+  const [lastKey, setLastKey] = useState("")
+  if (lastKey !== resultsKey) {
+    setLastKey(resultsKey)
+    setSelected(topValue)
   }
+
+  const empty = docs !== null && groups.length === 0
 
   return (
     <>
@@ -88,7 +219,14 @@ export function SearchButton({ className }: { className?: string }) {
         />
       </button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next)
+          // reopening starts clean, not on the last search
+          if (!next) setQuery("")
+        }}
+      >
         <DialogTitle className="sr-only">Search</DialogTitle>
         <DialogContent
           showCloseButton={false}
@@ -113,6 +251,9 @@ export function SearchButton({ className }: { className?: string }) {
               <Command
                 className="rounded-none! bg-white p-0"
                 loop
+                shouldFilter={false}
+                value={selected}
+                onValueChange={setSelected}
               >
                 {/* input row */}
                 <div className="flex items-center gap-[10px] border-b border-black/[0.07] px-[16px]">
@@ -124,6 +265,8 @@ export function SearchButton({ className }: { className?: string }) {
                   />
                   <CommandPrimitive.Input
                     autoFocus
+                    value={query}
+                    onValueChange={setQuery}
                     placeholder="Search guides, concepts, tools…"
                     className="h-[52px] w-full bg-transparent text-[15.5px] tracking-[-0.01em] text-[#16181d] outline-none placeholder:text-[#9aa1ab]"
                   />
@@ -133,21 +276,34 @@ export function SearchButton({ className }: { className?: string }) {
                 </div>
 
                 <CommandList className="max-h-[380px] scroll-py-2 p-[6px]">
-                  <CommandEmpty className="py-[32px] text-center text-[14px] tracking-[-0.01em] text-[#9aa1ab]">
-                    {docs === null ? "Loading…" : "No results."}
-                  </CommandEmpty>
-                  {[...groups.entries()].map(([group, items]) => (
+                  {/* ours, not CommandEmpty - that one is tied to cmdk's filter */}
+                  {(docs === null || empty) && (
+                    <div className="py-[32px] text-center text-[14px] tracking-[-0.01em] text-[#9aa1ab]">
+                      {docs === null ? (
+                        "Loading…"
+                      ) : (
+                        <>
+                          No results for{" "}
+                          <span className="font-medium text-[#16181d]">
+                            {query.trim()}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {groups.map(([group, items]) => (
                     <CommandGroup
                       key={group}
                       heading={group}
                       className="p-0 pt-[6px] **:[[cmdk-group-heading]]:px-[10px] **:[[cmdk-group-heading]]:pb-[4px] **:[[cmdk-group-heading]]:text-[11.5px] **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:tracking-[0.02em] **:[[cmdk-group-heading]]:text-[#9aa1ab] **:[[cmdk-group-heading]]:uppercase"
                     >
-                      {items.map((doc) => (
+                      {items.map(({ doc, snippet }) => (
                         <CommandItem
-                          key={doc.href + doc.title}
-                          value={`${doc.title} ${doc.crumb} ${doc.excerpt ?? ""}`}
+                          key={doc.id}
+                          value={String(doc.id)}
                           onSelect={() => {
                             setOpen(false)
+                            setQuery("")
                             router.push(doc.href)
                           }}
                           className={cn(
@@ -177,7 +333,17 @@ export function SearchButton({ className }: { className?: string }) {
                               {doc.title}
                             </span>
                             <span className="block truncate text-[12px] tracking-[-0.01em] text-[#9aa1ab] group-data-selected/result:text-white/70">
-                              {doc.excerpt ?? doc.crumb}
+                              {snippet ? (
+                                <>
+                                  {snippet.lead}
+                                  <mark className="bg-transparent font-semibold text-[#16181d] group-data-selected/result:text-white">
+                                    {snippet.hit}
+                                  </mark>
+                                  {snippet.tail}
+                                </>
+                              ) : (
+                                doc.crumb
+                              )}
                             </span>
                           </span>
                           <ArrowElbowDownLeft
