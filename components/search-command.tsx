@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
   ArrowElbowDownLeft,
@@ -56,9 +56,8 @@ function buildIndex(docs: Indexed[]): MiniSearch<Indexed> {
     storeFields: [],
     searchOptions: {
       boost: { title: 5, crumb: 2 },
-      /* Prefix-match as you type, but not on a lone letter - "i" should
-         not pull in every word starting with i. */
-      prefix: (term) => term.length > 1,
+      // match half-typed words; MIN_QUERY keeps this off a lone letter
+      prefix: true,
       /* Typo tolerance only where a typo is plausible. Short electronics
          terms ("i2c", "5v", "gnd") stay exact or they collide. */
       fuzzy: (term) => (term.length > 4 ? 0.2 : false),
@@ -71,6 +70,10 @@ function buildIndex(docs: Indexed[]): MiniSearch<Indexed> {
   return index
 }
 
+/* A single letter can't say anything useful about an electronics guide, so
+   the browse list stays up until the second character. It also keeps prefix
+   matching from having to answer "everything starting with i". */
+const MIN_QUERY = 2
 const RESULT_LIMIT = 30
 const SNIPPET_TAIL = 100
 const SNIPPET_LEAD = 32
@@ -180,7 +183,7 @@ export function SearchButton({ className }: { className?: string }) {
   const groups = useMemo(() => {
     if (!docs?.length) return []
     const trimmed = query.trim()
-    if (!trimmed) return browse(docs)
+    if (trimmed.length < MIN_QUERY) return browse(docs)
     cachedIndex ??= buildIndex(docs)
     return rank(cachedIndex, docs, trimmed)
   }, [docs, query])
@@ -200,6 +203,16 @@ export function SearchButton({ className }: { className?: string }) {
     setLastKey(resultsKey)
     setSelected(topValue)
   }
+
+  /* The other half of that fix. cmdk keeps the selected row in view by
+     calling scrollIntoView on it, so as the results churn under you the
+     list scrolls itself to wherever the highlight ended up - which reads as
+     the palette lurching downwards mid-word. The highlight is pinned to the
+     top row above, so send the scroll position back with it. */
+  const listRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: 0 })
+  }, [resultsKey])
 
   const empty = docs !== null && groups.length === 0
 
@@ -275,19 +288,30 @@ export function SearchButton({ className }: { className?: string }) {
                   </kbd>
                 </div>
 
-                <CommandList className="max-h-[380px] scroll-py-2 p-[6px]">
-                  {/* ours, not CommandEmpty - that one is tied to cmdk's filter */}
+                <CommandList
+                  ref={listRef}
+                  className="max-h-[380px] scroll-py-2 p-[6px]"
+                >
+                  {/* ours, not CommandEmpty - that one is tied to cmdk's
+                      filter, which is off. role=presentation keeps a
+                      non-option out of the listbox. */}
                   {(docs === null || empty) && (
-                    <div className="py-[32px] text-center text-[14px] tracking-[-0.01em] text-[#9aa1ab]">
+                    <div
+                      role="presentation"
+                      className="py-[32px] text-center text-[14px] tracking-[-0.01em] text-[#9aa1ab]"
+                    >
                       {docs === null ? (
                         "Loading…"
-                      ) : (
+                      ) : query.trim() ? (
                         <>
                           No results for{" "}
                           <span className="font-medium text-[#16181d]">
                             {query.trim()}
                           </span>
                         </>
+                      ) : (
+                        // blank query and still nothing: the index failed to load
+                        "Search is unavailable right now."
                       )}
                     </div>
                   )}
@@ -313,18 +337,23 @@ export function SearchButton({ className }: { className?: string }) {
                             "[&>svg:last-child]:hidden"
                           )}
                         >
+                          {/* The icon colours need `!`: the base CommandItem
+                              carries data-selected:*:[svg]:text-foreground,
+                              which lands on `.item[data-selected] > svg` and
+                              outweighs a group-data-selected variant, painting
+                              both icons near-black on the blue row. */}
                           {doc.kind === "page" ? (
                             <FileText
                               size={17}
                               weight="regular"
-                              className="shrink-0 text-[#9aa1ab] group-data-selected/result:text-white/80"
+                              className="shrink-0 text-[#9aa1ab] group-data-selected/result:text-white/80!"
                               aria-hidden
                             />
                           ) : (
                             <HashStraight
                               size={16}
                               weight="bold"
-                              className="ml-[2px] shrink-0 text-[#c2c7ce] group-data-selected/result:text-white/70"
+                              className="ml-[2px] shrink-0 text-[#c2c7ce] group-data-selected/result:text-white/70!"
                               aria-hidden
                             />
                           )}
@@ -349,7 +378,7 @@ export function SearchButton({ className }: { className?: string }) {
                           <ArrowElbowDownLeft
                             size={14}
                             weight="bold"
-                            className="shrink-0 text-transparent group-data-selected/result:text-white/80"
+                            className="shrink-0 text-transparent group-data-selected/result:text-white/80!"
                             aria-hidden
                           />
                         </CommandItem>
@@ -368,7 +397,11 @@ export function SearchButton({ className }: { className?: string }) {
                     <kbd className="rounded-[4px] border border-black/10 bg-[#fafafa] px-[4px] py-[1px] font-medium">↵</kbd>
                     open
                   </span>
-                  <span className="ml-auto font-semibold tracking-[-0.02em] text-[#01A6FF]">
+                  {/* AugiePixel: a bitmap face, so no faux-bold to smear the
+                      pixel grid and no negative tracking to collide it. Sized
+                      up from the footer's 11.5px because pixel fonts read
+                      small at a given em. */}
+                  <span className="ml-auto font-augie text-[15px] text-black">
                     jolts
                   </span>
                 </div>

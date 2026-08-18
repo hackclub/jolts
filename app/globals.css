@@ -141,6 +141,15 @@
   border-radius: 2px;
 }
 
+/* The command palette input is the only focusable thing in its dialog and is
+   focused the instant the dialog opens, so the ring above just draws a box
+   around the whole search field - it reads as an error state. The caret and
+   the dialog itself already say where you are. The attribute selector
+   outranks the bare :focus-visible above, so no !important is needed. */
+[cmdk-input]:focus-visible {
+  outline: none;
+}
+
 /* The hover-preview pane's corner cutout lives in components/preview-link.tsx - the notch SVG is generated per label width, so the mask is inline. */
 
 /* ---------- header hover glow ---------- */
