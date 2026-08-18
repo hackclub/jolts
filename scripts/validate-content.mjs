@@ -17,6 +17,7 @@ const base = {
   title: z.string().min(1),
   subtitle: z.string().min(1),
   author,
+  contributors: z.array(z.string()).default([]),
   aliases: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
   updated: z.union([z.string(), z.date()]).optional(),

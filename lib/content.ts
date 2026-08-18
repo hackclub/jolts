@@ -25,6 +25,9 @@ const baseSchema = z.object({
   subtitle: z.string().min(1),
   /** GitHub username(s). Contributors get credited on the page. */
   author: authorSchema,
+  /** GitHub usernames of everyone who improved the guide after the
+      author - rendered as an avatar stack on the page. */
+  contributors: z.array(z.string()).default([]),
   /** Old slugs that should keep working after a rename. */
   aliases: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),

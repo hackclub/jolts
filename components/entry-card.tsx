@@ -139,26 +139,31 @@ export function EntryList({ entries }: { entries: Entry[] }) {
   )
 }
 
+function Avatar({ name }: { name: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`https://github.com/${name}.png?size=48`}
+      alt=""
+      width={22}
+      height={22}
+      loading="lazy"
+      className="size-[22px] rounded-full border-2 border-white bg-black/5"
+    />
+  )
+}
+
 export function AuthorLine({ meta }: { meta: EntryMeta }) {
   const names = authors(meta)
   return (
-    <span className="inline-flex items-center gap-[8px]">
+    <span className="inline-flex items-center gap-[7px] text-[13px] tracking-[-0.01em] text-[#5c6470]">
+      by
       <span className="flex -space-x-[6px]">
         {names.map((name) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={name}
-            src={`https://github.com/${name}.png?size=48`}
-            alt=""
-            width={22}
-            height={22}
-            loading="lazy"
-            className="size-[22px] rounded-full border-2 border-white bg-black/5"
-          />
+          <Avatar key={name} name={name} />
         ))}
       </span>
-      <span className="text-[13px] tracking-[-0.01em] text-[#5c6470]">
-        by{" "}
+      <span>
         {names.map((name, i) => (
           <span key={name}>
             {i > 0 && ", "}
@@ -171,6 +176,31 @@ export function AuthorLine({ meta }: { meta: EntryMeta }) {
               @{name}
             </a>
           </span>
+        ))}
+      </span>
+    </span>
+  )
+}
+
+/* everyone who improved the guide after the author - avatar stack only,
+   names on hover */
+export function ContributorsLine({ names }: { names: string[] }) {
+  if (names.length === 0) return null
+  return (
+    <span className="inline-flex items-center gap-[8px] text-[13px] tracking-[-0.01em] text-[#5c6470]">
+      Contributors
+      <span className="flex -space-x-[6px]">
+        {names.map((name) => (
+          <a
+            key={name}
+            href={`https://github.com/${name}`}
+            target="_blank"
+            rel="noreferrer"
+            title={`@${name}`}
+            className="transition-transform duration-150 hover:-translate-y-[2px]"
+          >
+            <Avatar name={name} />
+          </a>
         ))}
       </span>
     </span>

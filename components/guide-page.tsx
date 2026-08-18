@@ -7,7 +7,7 @@ import { notFound, permanentRedirect } from "next/navigation"
 import { PencilSimple } from "@phosphor-icons/react/dist/ssr"
 
 import { Breadcrumb } from "@/components/breadcrumb"
-import { AuthorLine } from "@/components/entry-card"
+import { AuthorLine, ContributorsLine } from "@/components/entry-card"
 import { GuideNav, type NavItem } from "@/components/guide-nav"
 import { Difficulty, getMDXComponents } from "@/components/mdx/registry"
 import {
@@ -190,6 +190,7 @@ function OverviewHeader({ entry }: { entry: Entry }) {
 
       <div className="mt-[16px] flex flex-wrap items-center gap-x-[18px] gap-y-[8px] border-b border-black/10 pb-[16px]">
         <AuthorLine meta={meta} />
+        <ContributorsLine names={meta.contributors} />
         <a
           href={`${REPO}/edit/main/content/${entry.contentType}/${entry.slug}/index.mdx`}
           target="_blank"
