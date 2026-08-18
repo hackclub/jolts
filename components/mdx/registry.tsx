@@ -3,6 +3,7 @@ import {
   CheckCircle,
   Lightbulb,
   Package,
+  PencilSimple,
   RocketLaunch,
   Warning as WarningIcon,
   Wrench,
@@ -43,15 +44,36 @@ import { cn } from "@/lib/utils"
 
 /* ---------- Step - the iFixit-style unit of instruction ---------- */
 
+/* pen-on-hover for section headings - links to the source file on GitHub */
+function EditPen({ editUrl, className }: { editUrl?: string; className?: string }) {
+  if (!editUrl) return null
+  return (
+    <a
+      href={editUrl}
+      target="_blank"
+      rel="noreferrer"
+      aria-label="Edit this section on GitHub"
+      className={cn(
+        "text-[#c2c7ce] opacity-0 transition-opacity duration-150 group-hover/heading:opacity-100 hover:!text-[#16181d]",
+        className
+      )}
+    >
+      <PencilSimple size={16} weight="bold" aria-hidden />
+    </a>
+  )
+}
+
 export function Step({
   title,
   image,
   alt,
+  editUrl,
   children,
 }: {
   title: string
   image?: string
   alt?: string
+  editUrl?: string
   children?: React.ReactNode
 }) {
   return (
@@ -62,7 +84,7 @@ export function Step({
       {/* the step heading is one two-segment tab: "Step N" in the guide
           accent with the tilted flag edge, continuing into a grey segment
           that carries the title */}
-      <h3 className="flex items-stretch text-[17px] font-semibold tracking-[-0.03em]">
+      <h3 className="group/heading flex items-stretch text-[17px] font-semibold tracking-[-0.03em]">
         {/* accent segment: the body's right edge is clipped diagonally so
             nothing can leak past the seam, and a skewed rounded cap rides
             the same diagonal (outside the clipped span - clip-path clips
@@ -87,6 +109,7 @@ export function Step({
         <span className="-ml-[20px] min-w-0 rounded-r-[8px] bg-[#f3f3f3] py-[5px] pr-[16px] pl-[30px] text-[#16181d]">
           {title}
         </span>
+        <EditPen editUrl={editUrl} className="ml-auto self-center pl-[10px]" />
       </h3>
       <div
         className={cn(
@@ -570,14 +593,17 @@ function textOf(node: React.ReactNode): string {
   return ""
 }
 
-function proseComponents(entry: Entry): MDXComponents {
+function proseComponents(entry: Entry, editUrl?: string): MDXComponents {
   return {
-    h2: (props) => (
+    h2: ({ children, ...props }) => (
       <h2
-        id={slugifyHeading(textOf(props.children))}
-        className="mt-[48px] mb-[12px] scroll-mt-[24px] text-[26px] font-semibold tracking-[-0.03em] text-[#16181d]"
+        id={slugifyHeading(textOf(children))}
+        className="group/heading mt-[48px] mb-[12px] flex items-baseline gap-[10px] scroll-mt-[24px] text-[26px] font-semibold tracking-[-0.03em] text-[#16181d]"
         {...props}
-      />
+      >
+        <span className="min-w-0">{children}</span>
+        <EditPen editUrl={editUrl} className="ml-auto shrink-0 self-center" />
+      </h2>
     ),
     h3: (props) => (
       <h3
@@ -654,12 +680,17 @@ function proseComponents(entry: Entry): MDXComponents {
 
 /* ---------- the registry, bound to one guide ---------- */
 
-export function getMDXComponents(entry: Entry): MDXComponents {
+export function getMDXComponents(
+  entry: Entry,
+  sourceFile = "index.mdx"
+): MDXComponents {
+  const editUrl = `https://github.com/hackclub/jolts/edit/main/content/${entry.contentType}/${entry.slug}/${sourceFile}`
   return {
-    ...proseComponents(entry),
+    ...proseComponents(entry, editUrl),
     Step: ({ image, ...props }: React.ComponentProps<typeof Step>) => (
       <Step
         {...props}
+        editUrl={editUrl}
         image={
           image ? contentImageUrl(entry.contentType, entry.slug, image) : undefined
         }

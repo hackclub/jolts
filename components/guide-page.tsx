@@ -229,7 +229,7 @@ export async function GuideContent({
 
   const body = await renderMDX(
     page ? page.body : entry.body,
-    getMDXComponents(entry)
+    getMDXComponents(entry, page?.file)
   )
 
   return (

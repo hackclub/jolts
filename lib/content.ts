@@ -147,6 +147,8 @@ export type GuidePageEntry = {
   order: number
   title: string
   body: string
+  /** filename within the guide folder, e.g. "02-soldering.mdx" */
+  file: string
 }
 
 export const listGuidePages = cache((guideSlug: string): GuidePageEntry[] => {
@@ -166,6 +168,7 @@ export const listGuidePages = cache((guideSlug: string): GuidePageEntry[] => {
         order: Number(m[1]),
         title: meta.title,
         body: content,
+        file: m[0],
       }
     })
     .sort((a, b) => a.order - b.order)
