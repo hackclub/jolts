@@ -46,11 +46,7 @@ export function GuideNav({
   const [readingId, setReadingId] = useState<string | null>(null)
   useEffect(() => {
     const item = items.find((i) => i.slug === current)
-    if (!item || item.toc.length === 0) {
-      setReadingId(null)
-      return
-    }
-    const targets = item.toc
+    const targets = (item?.toc ?? [])
       .map((t) => document.getElementById(t.id))
       .filter((el): el is HTMLElement => el !== null)
     const onScroll = () => {
@@ -60,9 +56,14 @@ export function GuideNav({
       }
       setReadingId(id)
     }
-    onScroll()
+    // initial read deferred a frame: no sync setState inside the effect,
+    // and the new page's sections exist in the DOM by then
+    const raf = requestAnimationFrame(onScroll)
     window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener("scroll", onScroll)
+    }
   }, [items, current])
 
   return (

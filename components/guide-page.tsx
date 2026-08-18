@@ -139,7 +139,14 @@ function PageFooterNav({
 
 /* ---------- headers ---------- */
 
-function OverviewHeader({ entry }: { entry: Entry }) {
+function OverviewHeader({
+  entry,
+  backLink = true,
+}: {
+  entry: Entry
+  /** guides get a persistent breadcrumb from the layout instead */
+  backLink?: boolean
+}) {
   const meta = entry.meta
   const theme = typeTheme[entry.contentType]
   const facts: React.ReactNode[] = []
@@ -159,15 +166,17 @@ function OverviewHeader({ entry }: { entry: Entry }) {
 
   return (
     <header>
-      <Link
-        href={`/${entry.contentType}`}
-        className="inline-flex items-center gap-[6px] text-[13.5px] font-semibold tracking-[-0.01em] hover:underline [text-underline-offset:3px]"
-        style={{ color: theme.accent }}
-      >
-        <ArrowLeft size={13} weight="bold" aria-hidden />
-        All {theme.labelPlural.toLowerCase()}
-      </Link>
-      <h1 className="mt-[14px] text-[38px] leading-[1.08] font-semibold tracking-[-0.03em] text-[#16181d] text-balance">
+      {backLink && (
+        <Link
+          href={`/${entry.contentType}`}
+          className="mb-[14px] inline-flex items-center gap-[6px] text-[13.5px] font-semibold tracking-[-0.01em] hover:underline [text-underline-offset:3px]"
+          style={{ color: theme.accent }}
+        >
+          <ArrowLeft size={13} weight="bold" aria-hidden />
+          All {theme.labelPlural.toLowerCase()}
+        </Link>
+      )}
+      <h1 className="text-[38px] leading-[1.08] font-semibold tracking-[-0.03em] text-[#16181d] text-balance">
         {meta.title}
       </h1>
       <p className="mt-[8px] text-[17px] leading-[1.55] tracking-[-0.01em] text-[#5c6470]">
@@ -243,19 +252,12 @@ export async function GuideContent({
     <>
       {page ? (
         <header>
-          <Link
-            href={`/guides/${entry.slug}`}
-            className="text-[13.5px] font-semibold tracking-[-0.01em] hover:underline [text-underline-offset:3px]"
-            style={{ color: theme.accent }}
-          >
-            {entry.meta.title}
-          </Link>
-          <h1 className="mt-[6px] text-[32px] leading-[1.1] font-semibold tracking-[-0.03em] text-[#16181d] text-balance">
+          <h1 className="text-[32px] leading-[1.1] font-semibold tracking-[-0.03em] text-[#16181d] text-balance">
             {page.title}
           </h1>
         </header>
       ) : (
-        <OverviewHeader entry={entry} />
+        <OverviewHeader entry={entry} backLink={false} />
       )}
       <article
         className="jolts-guide pt-[6px] pb-[10px]"
