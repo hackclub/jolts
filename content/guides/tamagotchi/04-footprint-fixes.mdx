@@ -1,0 +1,95 @@
+---
+title: Footprint fixes
+---
+
+<Warning title="Verify footprints before you route">
+Even when a component looks correct in the schematic, the footprint may
+carry wrong pad numbering that makes your circuit fail silently. The red
+flag: any pin without a net almost always means an import went wrong.
+</Warning>
+
+## The button footprint mismatch
+
+After importing the button from EasyEDA, the footprint looks fine at
+first glance:
+
+![KiCad imported switch footprint](https://cdn.hackclub.com/019d64e0-1e84-77a2-b640-9ae44ec2f111/image.png)
+
+EasyEDA uses a **redundant 4-pin symbol**, showing all four pins even
+though two pairs are internally shorted:
+
+![EasyEDA button symbol](https://cdn.hackclub.com/019d64e1-af44-78ba-9264-cd050bf0913b/image.png)
+
+KiCad uses a **cleaner 2-pin representation**:
+
+![KiCad button symbol](https://cdn.hackclub.com/019d64e4-065a-7b78-947d-76c2c4166b31/image.png)
+
+When imported, EasyEDA's pins 1 and 2 land on opposite footprint pads - but on the physical switch they're on the **same side**, internally
+shorted. Pads that should be separate end up sharing a net, and the
+button does nothing because one side is permanently shorted to itself.
+
+| EasyEDA pins | Physical side    | KiCad net |
+| :----------: | :--------------: | :-------: |
+| 1, 2         | Side A (shorted) | Net 1     |
+| 3, 4         | Side B (shorted) | Net 2     |
+
+The switch connects Side A to Side B when pressed - the footprint must
+reflect that. Confirm with the
+[datasheet](https://www.lcsc.com/datasheet/C2888493.pdf) from the
+[product page](https://www.lcsc.com/product-detail/C2888493.html):
+
+![Physical pin diagram](https://cdn.hackclub.com/019d64f2-0ab2-7a97-a6a2-c0e4637bd711/image.png)
+![Internal schematic](https://cdn.hackclub.com/019d64f2-5c5b-7c82-8d01-eba0fbff8d62/image.png)
+
+<Step title="Fix the button pad numbering">
+- Double-click the footprint in the PCB editor and choose **Edit Library
+  Footprint**.
+
+  ![Edit Library Footprint dialog](https://cdn.hackclub.com/019d64f5-e570-70fe-a8fb-22ab0854085b/image.png)
+
+- Renumber the pads: both pads on one physical side become **1**, both on
+  the other side become **2**.
+
+  ![Corrected pad numbering](https://cdn.hackclub.com/019d64f7-c4ab-78f2-adc6-450d63ee774e/image.png)
+
+- **Ctrl+S** to save, then **Tools → Update Footprint from Library** and
+  click **Update**.
+
+  ![Update Footprint from Library menu](https://cdn.hackclub.com/019d64f9-6a84-7663-a0b4-69b215dbb021/image.png)
+
+- Not working? Delete the buttons and update from schematic again.
+
+  ![](https://cdn.hackclub.com/019d6529-b11d-7d96-830f-c7431f1d8092/image.png)
+</Step>
+
+<Step title="Fix the XIAO footprint">
+- Same idea for the XIAO:
+
+  ![Xiao](https://files.catbox.moe/5e2aze.png)
+
+- Double-click each BAT pad, set it to **through-hole (THT)**, and give
+  it a drill diameter of **0.889mm** - that's what lets you solder the
+  XIAO on by melting solder into the pads.
+
+  ![Fixing Footprint](https://cdn.hackclub.com/019dae19-2ecf-7620-a4d3-4fd2b2442dec/recording_2026-04-20_232848.gif)
+
+- The pin numbers also disagree with the official Seeed diagram - fix
+  them to match. The footprint is mirrored, so temporarily move it to the
+  back layer to orient it the same way as the diagram:
+
+  ![Footprints](https://files.seeedstudio.com/wiki/XIAO_WiFi/back-label-6.png)
+
+- Useful diagrams:
+
+  ![](https://cdn.hackclub.com/019e9092-784f-741c-8e92-4dabde84ffb6/image.png)
+
+  ![](https://cdn.hackclub.com/019e9092-573a-7d08-a428-c32b4c5da3f0/image.png)
+</Step>
+
+<Checkpoint>
+Every pad has a net, the button pads read 1/1 and 2/2 by physical side,
+and the XIAO's BAT pads are through-hole. Save and update the PCB from
+schematic:
+
+![Final result](https://user-cdn.hackclub-assets.com/019dae24-0e74-7c16-9f29-a181bbd5ce82/image.png)
+</Checkpoint>

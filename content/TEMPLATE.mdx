@@ -1,0 +1,95 @@
+---
+# ── Pick ONE type and delete the other two blocks. ──────────────────
+# CI validates this frontmatter; a malformed PR fails before it ships.
+
+# GUIDE ("make this specific thing")
+type: guide
+title: My Cool Thing
+subtitle: One or two lines selling the outcome. What will they hold at the end?
+author: your-github-username        # or a list: [alice, bob]
+difficulty: beginner                # beginner | intermediate | advanced
+time: "3–4 hours"
+cost: "~$25"
+soldering: false                    # declared on the card - no surprises
+learns: [soldering, firmware flashing]
+parts:
+  - name: Raspberry Pi Pico
+    qty: 1
+    cost: "$4"
+    link: https://www.adafruit.com/product/4864
+    image: ./pico.jpg               # part photo, colocated (optional)
+  - name: MX-style switches
+    qty: 4
+    note: any brand works
+tools: [soldering-iron]             # slugs of pages under content/tools/
+hero: ./hero.jpg                    # photo of the FINISHED thing, colocated
+aliases: []                         # old slugs that should keep resolving
+tags: []
+
+# CONCEPT ("understand this idea") - only: type, title, subtitle, author,
+#   and optionally hero/aliases/tags. No parts list, no difficulty gate.
+# type: concept
+
+# TOOL ("how to use this specific thing") - same as concept, plus an
+#   optional cost band for physical tools:
+# type: tool
+# cost: "$15–40"
+---
+
+Open with two or three plain-markdown sentences: what this is, why it's
+worth building, what it'll feel like when it works. Then get moving.
+
+{/*
+  Guides are small books: this index.mdx is the Overview page (intro +
+  parts + safety), and each stage lives in a numbered sibling file - 01-how-it-works.mdx, 02-soldering.mdx, … - with just a `title` in its
+  frontmatter. The number sets the order, the rest becomes the URL, and
+  the left panel lists every page automatically.
+*/}
+
+<PartsList />
+
+<Warning title="Unplug first">
+Anything you should not learn the hard way goes in one of these.
+</Warning>
+
+## Build it
+
+Guides are made of steps - one photo, one action each, like iFixit.
+Numbering is automatic.
+
+<Step title="Solder the switches" image="./step-1.jpg" alt="Switches soldered to the PCB">
+- Each bullet is one action. Keep them short.
+- Never explain a concept inline - link it: this works because of
+  <ConceptLink slug="pull-up-resistors" />.
+- Never teach a tool inline either: <Tool slug="soldering-iron" />
+</Step>
+
+<Checkpoint>
+Every few steps, tell them what they should have and how to know it's
+right - before they build three more steps on a mistake.
+</Checkpoint>
+
+<PinTable
+  pins={[
+    { pin: "GP0", signal: "Row 0", note: "any GPIO works" },
+    { pin: "GP4", signal: "Column 0", note: "" },
+  ]}
+/>
+
+<Schematic src="./wiring.png" alt="Wiring diagram" caption="One caption line." />
+
+<Video id="dQw4w9WgXcQ" title="Watching the technique beats reading about it" />
+
+<ReadMore>
+  <ExternalGuide href="https://jolts.hackclub.com" title="Deep dive elsewhere" source="codex">
+    Jolts guides stay short - the reference shelf lives on Codex and beyond.
+  </ExternalGuide>
+</ReadMore>
+
+<ShipIt />
+
+{/*
+  License: by submitting this guide you agree that text, images and design
+  files are CC BY-SA 4.0 and code snippets are MIT. You keep credit - your
+  name renders on the page.
+*/}

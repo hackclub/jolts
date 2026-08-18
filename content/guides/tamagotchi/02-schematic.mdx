@@ -1,0 +1,136 @@
+---
+title: Schematic
+---
+
+The schematic is the circuit as an idea: which pin connects to what, and
+why. Everything you draw here becomes the PCB in the next page.
+
+<Step title="Import the XIAO">
+- Download the XIAO-ESP32-C3 symbol from the
+  [SeeedStudio Wiki](https://wiki.seeedstudio.com/XIAO_ESP32C3_Getting_Started/) - there's also an [excellent video tutorial](https://www.youtube.com/watch?v=lnCvyGIQong)
+  on using the board.
+
+  ![](https://cdn.hackclub.com/019d848c-2e6a-7afd-ab8b-fc6f28d32ac7/image.png)
+
+- Press **A** (Add Symbol), search for the part, and place it:
+
+  ![Xiao](https://cdn.hackclub.com/019d985d-8af2-746a-901e-c897ece4b3fa/image.png)
+
+- Most symbols won't label every pin with its function (SDA, SCL, MOSI…) - they just show pin numbers. When that happens, google the MCU name +
+  "pinout" and cross-reference which number maps to which function.
+</Step>
+
+<Step title="Wire up power">
+- Connect GND to GND, 5V to +5V, +3V3 to 3V3, and BAT to +BATT:
+
+  ![Power connections](https://files.catbox.moe/kgmyi6.png)
+
+- Ground is the **reference point** for the entire circuit - the zero
+  level everything else is measured against. Current flows from power,
+  through components, back to ground; without it there's no return path
+  and nothing works. If volts and rails are still fuzzy, read
+  <ConceptLink slug="voltage" /> before continuing.
+- The XIAO exposes two rails: **5V** comes from USB-C (on battery it gets
+  nothing - a LiPo's ~3.7V can't supply it), while **3V3** is a stable
+  3.3V generated on-board, available on USB or battery. The OLED, sensors,
+  and logic pins are rated for 3.3V, so they connect to 3V3 - too much
+  voltage means too much current, which damages components.
+</Step>
+
+**Why not connect the top pads?**
+
+![](https://files.catbox.moe/ozimcj.png)
+
+Those are JTAG debug pads - a special cable connects them to your computer
+so you can pause your program mid-run and inspect the chip line by line.
+USB-C handles everything this project needs, and wiring them would
+complicate the PCB for little benefit. Use them if you hit a bug Serial
+printing can't catch, or if you run out of GPIO pins.
+
+<Step title="Add the OLED display">
+- Import the [0.96" OLED](https://www.lcsc.com/product-detail/C5248080.html)
+  from EasyEDA into KiCad - follow the
+  [easyeda2kicad guide](https://hwdocs.hackclub.dev/user-contrib-guides/easyeda2kicad/).
+- Connect GND to GND, SDA to SDA, and SCL to SCL with **W**. Those two
+  data lines are <ConceptLink slug="i2c" /> - one carries data, one
+  carries the clock.
+- I2C normally needs <ConceptLink slug="pull-up-resistors" /> on both
+  lines, but the XIAO includes internal pull-ups, so no external ones here.
+- The [datasheet](https://www.lcsc.com/datasheet/C5248080.pdf) on the LCSC
+  page says VCC wants 3V3, so:
+
+  ![](https://files.catbox.moe/34nu2g.png)
+</Step>
+
+<Step title="Add the buttons">
+- A Tamagotchi has three buttons. Wire each one **active-low**: one side
+  to **GND**, the other to a **GPIO pin** with the XIAO's internal
+  pull-up enabled.
+
+  ![](https://files.catbox.moe/bclgxg.png)
+
+- "Active-low" means pressed = LOW (0V): idle, the pull-up holds the pin
+  HIGH at 3.3V; pressing connects it to ground. It's the most common
+  approach because it needs nothing but the button and a ground wire.
+- GPIO stands for General Purpose Input/Output - the programmable pins
+  that read buttons or drive buzzers. On the XIAO, D0–D10 are GPIOs.
+</Step>
+
+<Step title="Add the buzzer">
+- Add a buzzer ([this one](https://www.lcsc.com/product-detail/C49246964.html)) - one pin to a GPIO output, the other to GND, so the GPIO can drive it
+  with a square-wave tone.
+
+  ![](https://files.catbox.moe/4ksaud.png)
+</Step>
+
+<Step title="Power & battery">
+- The XIAO has built-in battery charging: connect a LiPo directly to the
+  **BAT** pin. The board runs wirelessly and recharges whenever USB-C is
+  plugged in.
+- BAT connects *only* to the battery - it's a dedicated charging pin,
+  separate from the 3.3V rail. GND is shared across everything; every
+  component needs the common reference.
+
+  ![](https://files.catbox.moe/wbgbys.png)
+
+- Place no-connect flags on every unused pin: press **Q**, then click the
+  pin.
+
+  ![](https://files.catbox.moe/3dtovm.png)
+</Step>
+
+<Warning title="Schematic hygiene">
+Inputs generally go on the left, outputs on the right - signal flows like
+reading a book. You don't have to follow it strictly, but consistency
+makes your schematic much easier to debug later. And don't forget those
+no-connect flags!
+</Warning>
+
+<Step title="Assign footprints">
+- The schematic is done - now every symbol needs a physical footprint.
+  Click this:
+
+  ![](https://github.com/user-attachments/assets/7fdab501-5c92-4df0-b032-ab40fdc7018a)
+
+- **Battery connector:** 2.54mm male headers - the standard pin spacing
+  on most hobby electronics.
+- **Buzzer:** the [AliExpress listing](https://www.aliexpress.us/item/3256810135642750.html)
+  says 12 × 9.5mm (12mm diameter, 9.5mm pin spacing) - that's the
+  `Buzzer_12x9.5RM7.6` footprint. Careful: EasyEDA's buzzer footprint uses
+  7mm spacing instead of 9.5mm.
+- **Buttons:** import from [LCSC C2888493](https://www.lcsc.com/product-detail/C2888493.html).
+- **XIAO:** the `XIAO-ESP32-C3-DIP-SMD` footprint from the
+  [official footprint library](https://files.seeedstudio.com/wiki/XIAO-KiCad-Library/New_XIAO_Series_Footprints.zip) - we'll modify its SMD pads to through-hole later so the XIAO solders on
+  directly.
+- **OLED:** the EasyEDA import from earlier.
+
+  ![Footprint assignment](https://files.catbox.moe/mfchm6.png)
+</Step>
+
+<Checkpoint>
+Every symbol has a footprint assigned, power and ground reach every
+component, and unused pins carry no-connect flags. Open the PCB editor
+with this button and meet your board:
+
+![Open PCB viewer](https://github.com/user-attachments/assets/5bbc50fa-dbe2-4ab1-b301-5c360a974529)
+</Checkpoint>

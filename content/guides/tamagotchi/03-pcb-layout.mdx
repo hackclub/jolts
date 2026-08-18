@@ -1,0 +1,46 @@
+---
+title: PCB layout
+---
+
+<Warning title="100 × 100 mm, max">
+Your finished board must fit within 100 × 100 mm - lay everything out
+against that boundary from the start.
+</Warning>
+
+Opening the PCB editor, you should see something like this:
+
+![PCB editor](https://cdn.hackclub.com/019dae27-a243-7319-835c-ff4e05737e34/screenshot_2026-04-20_225259.png)
+
+Any time you change the schematic, press **F8** (or click **Update PCB
+from Schematic**) to pull the changes into the layout. The two circles you
+see are M3 mounting holes - press **A** to add your own.
+
+<Step title="Define the board outline">
+- The white outline is the **Edge Cuts** layer - the physical boundary
+  where the PCB gets cut. Draw it by selecting `Edge.Cuts` on the right
+  and using the drawing tools.
+- Want something more custom than rectangles? This outline was drawn in
+  Figma, converted with an image-to-DXF converter, imported into KiCad,
+  then scaled against a 100 × 100 mm reference box using the measuring
+  tool:
+
+  ![cutout](https://cdn.hackclub.com/019d6fcf-c1dc-7c1b-be3c-a8aac74ded7a/image.png)
+
+- KiCad's own drawing tools work well too - a cool, unique border is
+  worth the detour though. Try it!
+
+  ![](https://cdn.hackclub.com/019d6fd1-62ad-753b-81ce-07980f6496e3/image.png)
+</Step>
+
+<Step title="Place the components">
+- Place every component inside the outline. The thin straight blue lines
+  are **ratlines** (ratsnest lines) - unrouted connections showing which
+  pads must eventually be joined by copper.
+- Arrange components so the ratlines are short and don't cross - that's
+  the whole game, and it makes routing dramatically easier.
+- **M** moves, **R** rotates, **F** flips a component to the other side
+  of the board, and **Ctrl+S** saves - do that often.
+- Here's the result:
+
+  ![](https://files.catbox.moe/hww8o3.png)
+</Step>

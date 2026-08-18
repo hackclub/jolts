@@ -1,0 +1,53 @@
+---
+title: Order your board
+---
+
+<Step title="Gather your files">
+- Take a screenshot of your 3D view: **View → 3D Viewer → Edit → Copy 3D
+  Image**.
+- Collect `.kicad_pro` (project), `.kicad_sch` (schematic), and
+  `.kicad_pcb` (layout).
+- Export Gerbers - the industry-standard fabrication format carrying your
+  copper layers, silkscreen, solder mask, drill locations, and outline:
+  **File → Fabrication Outputs → Gerbers (.gbr)**, set an output folder,
+  keep the default layers, click **Plot**, then **Generate Drill Files**,
+  and zip the folder.
+</Step>
+
+<Step title="Upload to GitHub">
+- In your repo: **Add File → Upload files**, then drag in the 3D
+  screenshot, the three KiCad files, and the zipped Gerbers. Commit.
+- Edit your README to include: what the project is, why you made it, how
+  to use it, a screenshot of the full 3D model, a screenshot of your PCB,
+  a wiring diagram if anything lives off-board, and a **BOM table with
+  links** at the end.
+</Step>
+
+<Warning title="Fallout submissions">
+Every project you make for Fallout must have a project photo in its
+README.
+</Warning>
+
+<Step title="Get a JLCPCB quote">
+- Make an account at [jlcpcb.com](https://jlcpcb.com/) and upload your
+  zipped Gerbers for an instant quote:
+
+  ![JLCPCB upload](https://cdn.hackclub.com/019c5535-24e8-75f6-b7c0-adec3e312dc5/baaa0ca887d51110c30cba9d862968acbef618f8_image.webp)
+
+- Keep every default setting. The only thing worth changing is the **PCB
+  color**:
+
+  ![PCB color](https://cdn.hackclub.com/019d69c3-8a8d-72bd-b620-ac8daa1d780e/image.png)
+
+- Keep the high-spec options default too:
+
+  ![High-spec options](https://cdn.hackclub.com/019c5535-28a4-787e-8bf4-ba4fcbce1653/053061912ca84c66c46323ccef5b12cb71c7d721_image.webp)
+
+- On the right, set shipping to **Global Standard Direct** (or **Air
+  Registered Mail** if cheaper).
+</Step>
+
+<Warning title="Do NOT click PCB assembly">
+You're ordering bare boards and soldering the parts yourself - the
+assembly service is a different (much pricier) thing.
+</Warning>

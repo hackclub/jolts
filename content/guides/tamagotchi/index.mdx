@@ -1,0 +1,66 @@
+---
+type: guide
+title: Tamagotchi
+subtitle: Design and fab your own Tamagotchi from scratch - schematic, PCB, and a 3D-printed case. Then make it weirder.
+author: TaniWanKenobi
+difficulty: intermediate
+time: "2–3 weekends"
+cost: "~$25"
+soldering: true
+learns: [KiCad, schematic design, PCB routing, footprints, CAD & 3D printing]
+parts:
+  - name: XIAO-ESP32-C3
+    qty: 1
+    cost: "$5"
+    link: https://wiki.seeedstudio.com/XIAO_ESP32C3_Getting_Started/
+    note: WiFi, BLE, and battery charging built in
+  - name: 0.96" OLED display (I2C)
+    qty: 1
+    cost: "$2"
+    link: https://www.lcsc.com/product-detail/C5248080.html
+  - name: Tactile buttons
+    qty: 3
+    cost: "$1"
+    link: https://www.lcsc.com/product-detail/C2888493.html
+  - name: Buzzer (12mm)
+    qty: 1
+    cost: "$1"
+    link: https://www.lcsc.com/product-detail/C49246964.html
+  - name: LiPo battery
+    qty: 1
+    cost: "$5"
+    note: charges over the XIAO's USB-C
+  - name: 2.54mm male headers
+    qty: 1
+    cost: "$1"
+  - name: Your PCB, fabbed
+    qty: 1
+    cost: "~$10"
+    note: JLCPCB, shipping included
+tools: [soldering-iron]
+tags: [kicad, pcb, esp32, cad, fallout]
+---
+
+A Tamagotchi you designed yourself: your own circuit board with a screen,
+three buttons, and a buzzer, in a case you modeled and printed. This guide
+walks the whole journey - schematic → PCB → fabrication → enclosure - and
+by the end you'll know KiCad well enough to design boards that don't exist
+yet.
+
+<Warning title="Make it yours">
+Your board should NOT look like this one at the end. This is the base
+Tamagotchi - you're expected to add your own components and switch it up
+to personalize it. Spice it up! Add some flavor!
+</Warning>
+
+<PartsList />
+
+The XIAO-ESP32-C3 is the MCU - the tiny computer that runs your code and
+drives everything else. It wins here because it's affordable, has WiFi and
+BLE built in, and includes onboard LiPo charging, so no external charger
+chip is needed. (If you don't need wireless, the RP2040 is a great pick
+with excellent documentation; the nRF52840 is the go-to for low-power BLE.)
+
+Design is an iterative process - the original build took 20+ hours of
+adjusting to look this pretty. That's normal, and you're not alone:
+the #fallout channel on the Hack Club Slack is there when you're stuck.

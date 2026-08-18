@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils"
    pill and its dropdown panels are Figma × 0.8. */
 
 /* Pill segment. Hover previews the same white gradient + underline the open
-   state uses — no separate hover tint — so the trigger reads as one motion
+   state uses - no separate hover tint - so the trigger reads as one motion
    when the panel opens (Root has delay={0}). The gradient lives on a ::before
    overlay (background-image itself cannot transition) so it can fade in fast;
    the ::after underline fades on the same clock. Class names are written out
@@ -54,7 +54,7 @@ const segmentClass = cn(
 const bleedLeftClass = "before:-left-[7px] after:-left-[7px]"
 const bleedRightClass = "before:-right-[7px] after:-right-[7px]"
 
-/* Drop shadow lives on the icon+label row, NOT the whole segment — on the
+/* Drop shadow lives on the icon+label row, NOT the whole segment - on the
    segment it would also shadow the white gradient rectangle and smear a dark
    rim around the text. z-10 keeps the row above the gradient overlay. */
 const segmentContentClass =
@@ -62,7 +62,7 @@ const segmentContentClass =
 
 /* The blue checker border chrome and the white surface live on the POPUP and
    VIEWPORT (see popupClassName / viewportClassName on <NavigationMenu>), not
-   inside each panel — the popup is the element whose size actually animates
+   inside each panel - the popup is the element whose size actually animates
    during a panel-to-panel morph, so chrome attached to it stretches smoothly
    instead of clipping or flashing white. Panels below are pure content. */
 const popupChromeClass = cn(
@@ -79,19 +79,21 @@ const popupChromeClass = cn(
 const viewportChromeClass =
   "z-10 rounded-[8px] bg-white shadow-[0px_3px_5px_0px_rgba(0,0,0,0.25)]"
 
-/* One hoverable link row — shared by every panel's item list. */
+/* One hoverable link row - shared by every panel's item list. */
 function PanelItem({
   title,
   description,
   descriptionClass,
+  href = "#",
 }: {
   title: string
   description: string
   descriptionClass?: string
+  href?: string
 }) {
   return (
     <NavigationMenuLink
-      href="#"
+      href={href}
       className="flex-col items-start gap-[2px] rounded-[8px] px-[12px] py-[9px] hover:bg-[#f3f3f3] focus:bg-[#f3f3f3]"
     >
       <span className="text-[16px] font-semibold tracking-[-0.03em] text-black">
@@ -109,11 +111,17 @@ function PanelItem({
   )
 }
 
-/* "Check out all …" footer button — shared by every panel. */
-function PanelFooter({ children }: { children: React.ReactNode }) {
+/* "Check out all …" footer button - shared by every panel. */
+function PanelFooter({
+  children,
+  href = "#",
+}: {
+  children: React.ReactNode
+  href?: string
+}) {
   return (
     <NavigationMenuLink
-      href="#"
+      href={href}
       className="mt-auto flex h-[36px] w-full shrink-0 items-center justify-center gap-[6px] rounded-[7px] bg-[#f3f3f3] p-0 text-[13px] font-medium tracking-[-0.03em] text-[#5b5b5b] hover:bg-[#ececec] focus:bg-[#ececec]"
     >
       {children}
@@ -122,14 +130,14 @@ function PanelFooter({ children }: { children: React.ReactNode }) {
   )
 }
 
-/* Optional artwork layer for the Start here! card — drop a webp in
+/* Optional artwork layer for the Start here! card - drop a webp in
    public/brand and point this at it. It sits between the checkerboard and
    the text, and scales up while the card is hovered. */
 const CARD_FG_SRC: string | null = null
 
 function GuidesPanel() {
   const [cardHover, setCardHover] = useState(false)
-  /* Raw motion values, no spring — the pill tracks the cursor 1:1. Only the
+  /* Raw motion values, no spring - the pill tracks the cursor 1:1. Only the
      enter/exit fade+scale is sprung. */
   const cursorX = useMotionValue(0)
   const cursorY = useMotionValue(0)
@@ -146,11 +154,11 @@ function GuidesPanel() {
 
   return (
     <div className="relative flex h-full w-full pt-[13px] pr-[12px] pb-[12px] pl-[14px] [perspective:900px]">
-        {/* Start here! card — layers: checker bg, artwork, text, corner tab.
+        {/* Start here! card - layers: checker bg, artwork, text, corner tab.
             Pointer-tracking tilt: mousemove writes the rotation directly so
             there is no re-render; the transform transition smooths it out. */}
         <NavigationMenuLink
-          href="#"
+          href="/start"
           className="group/card relative block h-[302px] w-[244px] shrink-0 overflow-hidden rounded-[7px] border-[3px] border-solid border-[#ff902f] p-0 transition-[transform,box-shadow] duration-200 ease-out will-change-transform hover:bg-transparent hover:shadow-[0px_14px_28px_rgba(0,0,0,0.28)] focus:bg-transparent"
           onMouseEnter={(e) => {
             placePill(e)
@@ -194,7 +202,7 @@ function GuidesPanel() {
             }}
           />
 
-          {/* foreground artwork — scales up on hover */}
+          {/* foreground artwork - scales up on hover */}
           {CARD_FG_SRC && (
             <img
               src={CARD_FG_SRC}
@@ -203,7 +211,7 @@ function GuidesPanel() {
             />
           )}
 
-          {/* text layer — the Figma-exported vector overlay (305x377, scales
+          {/* text layer - the Figma-exported vector overlay (305x377, scales
               to the card), outlines and shadows baked in */}
           <img
             src="/brand/cardtext.svg"
@@ -211,7 +219,7 @@ function GuidesPanel() {
             className="pointer-events-none absolute inset-0 h-full w-full"
           />
 
-          {/* soft light sweep — its position is driven by the same pointer
+          {/* soft light sweep - its position is driven by the same pointer
               value as the tilt (--sweep, 0..1), so the sheen glides across
               the card as it tilts */}
           <div
@@ -221,7 +229,7 @@ function GuidesPanel() {
             <div className="absolute -top-[30%] -bottom-[30%] -left-[55%] w-[55%] bg-[linear-gradient(90deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.32)_50%,rgba(255,255,255,0)_100%)] transition-transform duration-200 ease-out [transform:translateX(calc(var(--sweep,0.5)*300%))_rotate(20deg)]" />
           </div>
 
-          {/* Zero To One corner tab — the Figma flag vector as a clip-path,
+          {/* Zero To One corner tab - the Figma flag vector as a clip-path,
               built at design scale (173x34) and scaled 0.8 from the top-right
               so it sits flush with the card's corner radius. */}
           <span
@@ -236,7 +244,7 @@ function GuidesPanel() {
           </span>
         </NavigationMenuLink>
 
-        {/* cursor pill — springs in at the top-right of the pointer */}
+        {/* cursor pill - springs in at the top-right of the pointer */}
         <AnimatePresence>
           {cardHover && (
             <motion.span
@@ -253,19 +261,21 @@ function GuidesPanel() {
           )}
         </AnimatePresence>
 
-        {/* guide links — same rows as the items-only panels */}
+        {/* guide links - same rows as the items-only panels */}
         <div className="flex min-w-0 flex-1 flex-col gap-[4px] pt-[6px] pl-[9px]">
           <PanelItem
             title="Macropad"
             description="Build a tiny keyboard. Design, solder, and use it everyday."
             descriptionClass="w-[160px]"
+            href="/guides/macropad"
           />
           <PanelItem
             title="Tamagotchi"
             description="Build a pocket pet from scratch!"
             descriptionClass="w-[160px]"
+            href="/guides/tamagotchi"
           />
-          <PanelFooter>Check out all guides</PanelFooter>
+          <PanelFooter href="/guides">Check out all guides</PanelFooter>
         </div>
     </div>
   )
@@ -275,9 +285,11 @@ function GuidesPanel() {
 function ItemsPanel({
   items,
   footer,
+  footerHref,
 }: {
-  items: { title: string; description: string }[]
+  items: { title: string; description: string; href?: string }[]
   footer: string
+  footerHref?: string
 }) {
   return (
     <div className="flex w-full flex-col gap-[4px] p-[8px]">
@@ -286,9 +298,10 @@ function ItemsPanel({
           key={item.title}
           title={item.title}
           description={item.description}
+          href={item.href}
         />
       ))}
-      <PanelFooter>{footer}</PanelFooter>
+      <PanelFooter href={footerHref}>{footer}</PanelFooter>
     </div>
   )
 }
@@ -298,18 +311,31 @@ const sections: {
   icon: Icon
   iconSize: number
   footer: string
-  items: { title: string; description: string }[]
+  footerHref?: string
+  items: { title: string; description: string; href?: string }[]
 }[] = [
   {
     label: "Concepts",
     icon: Lightbulb,
     iconSize: 26,
     footer: "Check out all concepts",
+    footerHref: "/concepts",
     items: [
-      { title: "Electricity Basics", description: "Voltage, current, resistance" },
-      { title: "Components", description: "Resistors, LEDs, capacitors, switches" },
-      { title: "Microcontrollers", description: "What they are, how they think" },
-      { title: "PCBs", description: "From breadboard to printed board" },
+      {
+        title: "Electricity Basics",
+        description: "Voltage, current, resistance",
+        href: "/concepts/voltage",
+      },
+      {
+        title: "I2C",
+        description: "Two wires, dozens of devices",
+        href: "/concepts/i2c",
+      },
+      {
+        title: "Pull-up Resistors",
+        description: "Why input pins need a default",
+        href: "/concepts/pull-up-resistors",
+      },
     ],
   },
   {
@@ -317,10 +343,18 @@ const sections: {
     icon: Wrench,
     iconSize: 24,
     footer: "Check out all tools",
+    footerHref: "/tools",
     items: [
-      { title: "Soldering Iron", description: "First hour, technique, safety" },
-      { title: "Multimeter", description: "Measuring without guessing" },
-      { title: "Debugging Hardware", description: "When nothing works" },
+      {
+        title: "Soldering Iron",
+        description: "First hour, technique, safety",
+        href: "/tools/soldering-iron",
+      },
+      {
+        title: "Multimeter",
+        description: "Measuring without guessing",
+        href: "/tools/multimeter",
+      },
     ],
   },
   {
@@ -340,7 +374,7 @@ const sections: {
 export function SiteHeader() {
   return (
     <header className="relative z-40 h-[91px] w-full">
-      {/* checkerboard background — pure CSS, no SVG involved */}
+      {/* checkerboard background - pure CSS, no SVG involved */}
       <div className="absolute inset-0 overflow-hidden shadow-[0px_3px_19px_0px_rgba(1,187,255,0.25)]">
         <div
           aria-hidden
@@ -366,7 +400,7 @@ export function SiteHeader() {
         >
           <img
             src="/brand/jolts-logo.svg"
-            alt="Hack Club jolts — learn to build real things"
+            alt="Hack Club jolts - learn to build real things"
             className="h-auto w-[200px] max-w-none"
           />
         </Link>
@@ -409,7 +443,11 @@ export function SiteHeader() {
                   </span>
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="w-[292px] p-0">
-                  <ItemsPanel items={section.items} footer={section.footer} />
+                  <ItemsPanel
+                    items={section.items}
+                    footer={section.footer}
+                    footerHref={section.footerHref}
+                  />
                 </NavigationMenuContent>
               </NavigationMenuItem>
             ))}

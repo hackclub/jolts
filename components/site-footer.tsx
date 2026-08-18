@@ -1,0 +1,51 @@
+/* The footer is a giant, deliberate nothing. */
+export function SiteFooter() {
+  return (
+    <footer className="mt-[80px] pb-[56px]">
+      {/* the giant empty space */}
+      <div aria-hidden className="h-[340px]" />
+
+      <div className="mx-auto flex w-full max-w-[1100px] flex-col items-center gap-[8px] px-[28px] text-center opacity-60">
+        <p className="text-[13.5px] font-semibold tracking-[-0.01em] text-[#5c6470]">
+          [This Space Intentionally Left Blank]
+        </p>
+        <p className="text-[12.5px] tracking-[-0.01em] text-[#5c6470] italic">
+          The bottom of every page is padded so readers can maintain a
+          consistent eyeline.
+        </p>
+
+        <div className="mt-[18px] flex items-center gap-[20px]">
+          <a
+            href="https://creativecommons.org/licenses/by-sa/4.0/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Guide text and images are CC BY-SA 4.0"
+            className="flex items-center gap-[5px] transition-opacity duration-150 hover:opacity-70"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/cc.svg" alt="Creative Commons" className="h-[26px] w-auto" loading="lazy" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/by.svg" alt="Attribution" className="h-[26px] w-auto" loading="lazy" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/sa.svg" alt="ShareAlike" className="h-[26px] w-auto" loading="lazy" />
+          </a>
+          <a
+            href="https://hackclub.com"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="A Hack Club project"
+            className="transition-opacity duration-150 hover:opacity-70"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/hackclub-flag.svg"
+              alt="Hack Club"
+              className="h-[26px] w-auto"
+              loading="lazy"
+            />
+          </a>
+        </div>
+      </div>
+    </footer>
+  )
+}

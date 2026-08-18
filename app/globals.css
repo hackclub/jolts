@@ -129,3 +129,71 @@
     @apply font-sans;
   }
 }
+
+/* ---------- browser surfaces carry the design too ---------- */
+
+::selection {
+  background: rgba(1, 166, 255, 0.22);
+}
+:focus-visible {
+  outline: 2px solid #01a6ff;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* The hover-preview pane's corner cutout lives in components/preview-link.tsx - the notch SVG is generated per label width, so the mask is inline. */
+
+/* ---------- page-switch view transition ---------- */
+
+/* Switching pages: the old column fades out fully, THEN the new one
+   fades in (sequential, not a crossfade - the in animation is delayed by
+   the out duration and held hidden by `both`). The left panel persists
+   in the layout, so only content moves. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(*.jolts-content) {
+    animation: jolts-vt-out 0.1s cubic-bezier(0.4, 0, 1, 1) both;
+  }
+  ::view-transition-new(*.jolts-content) {
+    animation: jolts-vt-in 0.18s cubic-bezier(0.3, 0, 0, 1) 0.1s both;
+  }
+}
+@keyframes jolts-vt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@keyframes jolts-vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ---------- guide article plumbing ---------- */
+
+/* iFixit-style step numbering via CSS counters - Steps are server-rendered
+   MDX blocks with no shared state, so the article wrapper counts them. */
+.jolts-guide {
+  counter-reset: step;
+}
+.jolts-step {
+  counter-increment: step;
+}
+.jolts-step-num::before {
+  content: counter(step);
+}
+
+/* collapse outer margins of nested prose inside blocks */
+.jolts-tight p {
+  margin: 0;
+}
+.jolts-tight p + p {
+  margin-top: 8px;
+}
+.jolts-step-body > *:first-child {
+  margin-top: 0;
+}
+.jolts-step-body > *:last-child {
+  margin-bottom: 0;
+}

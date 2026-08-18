@@ -1,0 +1,67 @@
+---
+type: concept
+title: Voltage, Current & Resistance
+subtitle: The three numbers behind every circuit, and the one equation that ties them together.
+author: anson
+aliases: [electricity-basics]
+tags: [fundamentals]
+---
+
+Every circuit question you'll ever debug comes down to three quantities.
+The classic analogy is water in a pipe, and it's classic because it works.
+
+## The three numbers
+
+- **Voltage (V, volts)** is pressure - how hard electrons are being
+  pushed. A 9 V battery pushes harder than a 1.5 V AA. Voltage is always
+  measured *between two points*; "5 V" secretly means "5 V above ground."
+- **Current (I, amps)** is flow - how many electrons actually move per
+  second. Your circuits mostly live in milliamps (mA). An LED sips ~20 mA;
+  a phone fast-charger shoves 3 A.
+- **Resistance (R, ohms)** is the narrowness of the pipe - how much the
+  material fights the flow. Resistors exist purely to add a known amount
+  of fight.
+
+## Ohm's law
+
+One equation relates all three:
+
+```
+V = I × R
+```
+
+Rearrange for whatever you're missing: `I = V / R`, `R = V / I`. This is
+not one formula among many - for beginner electronics, it's essentially
+the *only* formula.
+
+Worked example: an LED drops about 2 V and wants 20 mA. On a 5 V supply,
+the resistor must eat the other 3 V: `R = 3 V / 0.02 A = 150 Ω`. That's
+the entire mystery of "why does my LED need a resistor" - without one,
+nothing limits the current, and the LED becomes very bright very briefly.
+
+## What kills components
+
+Two failure modes cover almost everything:
+
+- **Too much voltage** breaks things directly - a 3.3 V part fed 5 V can
+  die instantly and silently. Check the rating before wiring power.
+- **Too much current** cooks things - heat is `V × I`, and small parts
+  can't shed much of it.
+
+Measuring beats guessing on both - that's the first hour with a
+<Tool slug="multimeter" />.
+
+<Checkpoint title="You get it when…">
+You can explain why a 9 V battery can't shock you (your skin's resistance
+keeps the current tiny) but a car battery can weld metal (12 V, nearly
+zero internal resistance, hundreds of amps available).
+</Checkpoint>
+
+<ReadMore>
+  <ExternalGuide
+    href="https://learn.sparkfun.com/tutorials/voltage-current-resistance-and-ohms-law/all"
+    title="Voltage, Current, Resistance, and Ohm's Law"
+  >
+    A longer treatment with diagrams, if you want the full tour.
+  </ExternalGuide>
+</ReadMore>

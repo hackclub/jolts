@@ -1,0 +1,80 @@
+---
+title: Routing & DRC
+---
+
+A PCB is made of layers. Our boards are "two-layer" - two sheets of
+copper with the substrate between them:
+
+| Layer                       | Description                                                  |
+| --------------------------- | ------------------------------------------------------------ |
+| **Top & bottom silkscreen** | The white ink layer where you can add art                    |
+| **Top & bottom copper**     | The layers where you make your copper wires                  |
+| **Substrate**               | The actual plastic (usually green) which makes up your board |
+| **Via**                     | The tunnels which connect the top and bottom copper layers   |
+
+![PCB layers](https://cdn.hackclub.com/019c545f-32f8-71b8-9b46-079aee118944/c2ec73f247fdb1f466903fc86d345fe0f4b47b6f_image.webp)
+
+<Step title="Route the traces">
+- Hit **X** and click anything with a thin blue line poking out. The
+  screen dims, shows the direction to go, and highlights the destination:
+
+  ![Routing example](https://cdn.hackclub.com/019c5460-5bb4-737a-8875-2d15ef8f3715/image.png)
+
+- Join the highlighted points. If the front side is blocked, route on the
+  back by selecting **B.Cu** in the right toolbar - or press **V**
+  mid-route to drop a **via**, a tiny plated tunnel that carries the
+  trace to the other side.
+- The rest of the routing vocabulary: **Backspace** deletes the last
+  segment while routing, **Esc** cancels the route, **D** drags a trace
+  without breaking connections, **U** selects a whole trace.
+</Step>
+
+<Warning title="Different colors never touch">
+Wires and pads of different colors (except golden) can't connect
+directly - that's the two copper layers. Crossing sides always goes
+through a via.
+</Warning>
+
+Your routing is complete!
+
+![Ground plane](https://cdn.hackclub.com/019dafaa-d994-786e-ba6d-d783085a964c/screenshot_2026-04-21_061717.png)
+
+A few notes on that screenshot: the red and blue fills are a
+[ground plane](https://www.kicadtips.com/how-to/make-a-ground-plane) - not required, but it helps routing, reduces noise, and looks nice. The
+small holes scattered across it are
+[stitching vias](https://resources.altium.com/p/everything-you-need-know-about-stitching-vias) - **you do not need those**, they're completely optional for a board like
+this.
+
+<Step title="Customize the silkscreen">
+- Click **F.Silkscreen** and use the text tool to add labels or jokes:
+
+  ![Sample text](https://cdn.hackclub.com/019c546c-c7b1-7df9-b96b-68dae071b550/image.png)
+
+- For art, select the top or bottom silkscreen layer and run your image
+  through the KiCad image converter:
+
+  ![KiCad image converter](https://kicad-info.s3.dualstack.us-west-2.amazonaws.com/original/3X/a/3/a3b5fba9b9455697b0d861d48a028c571ec44403.png)
+
+- Your board is now beautiful.
+</Step>
+
+<Step title="Run the Design Rules Check">
+- **DRC** verifies the board has no interference errors, nothing off the
+  board edge, and no intersecting wires. (It does *not* confirm the
+  circuit works.)
+
+  ![DRC](https://cdn.hackclub.com/019c5876-0777-7c3f-9817-931007221588/27ae0765082623ea2988bbe01ce8cb8a4012b0b8_image.webp)
+
+- Work through any errors it reports. The common families: clearance and
+  track-width violations, via sizing, pad and hole clearances, board-edge
+  and silkscreen issues, zone slivers, missing connections, and courtyard
+  overlaps. Confusing ones? Ask for help - that's what the community is
+  for.
+</Step>
+
+<Checkpoint>
+The DRC passes clean. Open **View → 3D Viewer** and admire your finished
+board:
+
+![3D Viewer](https://cdn.hackclub.com/019db09a-41c2-7fad-9dfe-1083224eca73/image.png)
+</Checkpoint>

@@ -1,0 +1,64 @@
+---
+type: concept
+title: I2C
+subtitle: How two wires let your microcontroller talk to dozens of sensors and displays at once.
+author: anson
+tags: [protocols, communication]
+---
+
+I2C ("eye-squared-see") is the protocol behind most of the little boards
+you'll plug into a microcontroller - OLED displays, temperature sensors,
+accelerometers. Its trick: **two shared wires**, no matter how many
+devices join.
+
+## The two wires
+
+- **SDA** - data. Bits go both directions on this one wire.
+- **SCL** - clock. The controller ticks this line so everyone agrees when
+  each bit happens.
+
+Every device hangs off the same two lines, plus power and ground. Compare
+that to wiring a display with 8+ dedicated pins and you see why I2C won.
+
+## Addresses
+
+With everyone on one wire, messages need names. Each device has a 7-bit
+**address** - the SSD1306 OLED is usually `0x3C`, for instance. The
+controller starts every conversation by calling an address; only that
+device answers.
+
+This is also your first debugging tool. In CircuitPython:
+
+```python
+import board, busio
+i2c = busio.I2C(board.GP1, board.GP0)  # SCL, SDA
+while not i2c.try_lock():
+    pass
+print([hex(a) for a in i2c.scan()])
+```
+
+If your device's address prints, the wiring is right - full stop. If the
+list is empty, no amount of driver code will help: check SDA/SCL aren't
+swapped (the universal first mistake), then power and ground.
+
+## Why the lines idle high
+
+I2C devices never *drive* the lines high - they only pull them low or let
+go. Something has to pull the lines back up, which is exactly the job of
+<ConceptLink slug="pull-up-resistors" />. Most breakout boards include
+them, which is why your breadboard wiring usually just works.
+
+<Checkpoint title="You get it when…">
+A sensor "doesn't work," and your first move is an address scan instead
+of rewriting the code - because the scan tells you which half of the
+problem (wiring vs. software) you actually have.
+</Checkpoint>
+
+<ReadMore>
+  <ExternalGuide
+    href="https://learn.adafruit.com/circuitpython-basics-i2c-and-spi/i2c-devices"
+    title="CircuitPython I2C devices"
+  >
+    Wiring, scanning, and drivers for real parts.
+  </ExternalGuide>
+</ReadMore>

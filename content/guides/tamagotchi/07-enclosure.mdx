@@ -1,0 +1,91 @@
+---
+title: Enclosure
+---
+
+Time to give the board a body. Export the PCB from KiCad into your CAD
+platform - Onshape here, and this tutorial series is the fastest way in:
+
+<Video id="d4QzBdcQoe0" title="Onshape tutorial" />
+
+<Step title="Block out the case">
+- Bring the PCB export into Onshape, plus any models you need - the
+  battery headers came from
+  [3D ContentCentral](https://www.3dcontentcentral.com/download-model.aspx?catalogid=171&id=1025256).
+- Expect experimentation: revolve looked bad and was hard to use here,
+  and the battery went through several placements before vertical won.
+- Create a sketch (upper-left sketch button) and draw the shapes that
+  include your tolerances and shell size:
+
+  ![](https://cdn.hackclub.com/019c5c8f-7d48-7dc5-9f80-8dcef93f84e0/image.png)
+
+  ![](https://cdn.hackclub.com/019c5985-794b-78d8-bbec-b885edabe178/image.png)
+
+  ![](https://cdn.hackclub.com/019c5983-207f-747f-b33a-d92806aac17e/image.png)
+</Step>
+
+<Step title="Iterate the board and the case together">
+- The case revealed board problems: the vibration motor moved to the
+  back and the screen got raised - from
+
+  ![](https://cdn.hackclub.com/019c59d1-a434-7b99-a5bf-7d486ab388f6/image.png)
+
+  to
+
+  ![](https://cdn.hackclub.com/019c59cf-3ea1-7c97-8367-5ef8e0558b2a/image.png)
+
+- The headers overlapped the buzzer, so the buzzer moved to the middle of
+  the board - the gap between the LCD and the headers leaves just enough
+  space:
+
+  ![example](https://cdn.hackclub.com/019c5a0c-fc35-7127-b439-55fb132f13c3/image.png)
+</Step>
+
+<Step title="Finish the shell">
+- The back half gets 3D-printed standoffs and large fillets to round the
+  edges; the top half gets tolerance between the plate and the case:
+
+  ![](https://cdn.hackclub.com/019c5c85-9499-7b71-b5ed-3d3325909b62/image.png)
+
+- Cut holes for the battery and USB-C. The measured USB-C was about
+  7 × 13 mm; these cutouts are 12.5 × 7.5 mm and work but are *tight* - add ~1 mm of margin, or test values on your own printer. The small
+  bridging here prints fine:
+
+  ![](https://cdn.hackclub.com/019c5c85-ee74-7721-ab42-03937224ebe6/image.png)
+
+  ![](https://cdn.hackclub.com/019c5c87-d8d2-7de5-bc94-b7690c845c4c/image.png)
+
+- Confirm nothing overlaps with the section view tool:
+
+  ![](https://cdn.hackclub.com/019c5c89-1791-78d6-9b35-902744dcb72a/image.png)
+
+- Upload all the case files to your GitHub repo.
+</Step>
+
+<Warning title="It will fight you, and that's normal">
+This project took way longer than expected: a printer that wouldn't join
+the network, hours flashing the wrong COM port, a button that died after
+soldering, an accidental short while fixing it. None of that means you
+did something wrong. When something eats hours with no end in sight, a
+completely different approach is usually faster than pushing through - flashing broken? Try another method. Component won't desolder? Maybe it
+doesn't need to come off at all. And the whole community is there to ask.
+</Warning>
+
+Don't follow this page 1:1 - this was one person's process, and yours
+will differ greatly. For inspiration, poke through the
+[Onshape document](https://cad.onshape.com/documents/fa5791d8e7f345b436054923/w/ad8e09905eb572b0a8a40e9d/e/e81f06aa82a76dd04f8e6832?renderMode=0&uiState=6990af61d8ec4667253f72ea)
+and its feature tree to see every iteration. A firmware page (flashing
+the board with Arduino IDE) is coming next.
+
+<ReadMore>
+  <ExternalGuide
+    href="https://www.youtube.com/playlist?list=PLGqRUdq5ULsMDOxmu10AGPDIOkzNYu7D7"
+    title="Onshape for hobbyists"
+  >
+    The full tutorial playlist behind the CAD in this page.
+  </ExternalGuide>
+</ReadMore>
+
+<ShipIt>
+Enjoy making :D - post your board and case in #fallout on the Hack Club
+Slack, and PR your improvements (or your firmware page!) into this guide.
+</ShipIt>
