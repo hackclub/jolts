@@ -42,43 +42,6 @@ export function GuideNav({
     items.find((item) => item.href === normalized)?.slug ?? null
   const multi = items.length > 1
 
-  /* hybrid pinning: the panel starts in flow (below the header, scrolls
-     away with it), and the moment it reaches 28px from the viewport top
-     it goes fixed - and unlike position:sticky, it never detaches when
-     the content column ends. The holder keeps the grid column and marks
-     where "in flow" would be. */
-  const navRef = useRef<HTMLElement>(null)
-  const holderRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const nav = navRef.current
-    const holder = holderRef.current
-    if (!nav || !holder) return
-    const mq = window.matchMedia("(min-width: 1024px)")
-    const unpin = () => {
-      nav.style.position = ""
-      nav.style.top = ""
-      nav.style.width = ""
-    }
-    const onScroll = () => {
-      if (!mq.matches) return unpin()
-      if (holder.getBoundingClientRect().top <= 28) {
-        nav.style.position = "fixed"
-        nav.style.top = "28px"
-        nav.style.width = "190px"
-      } else {
-        unpin()
-      }
-    }
-    onScroll()
-    window.addEventListener("scroll", onScroll, { passive: true })
-    window.addEventListener("resize", onScroll)
-    return () => {
-      unpin()
-      window.removeEventListener("scroll", onScroll)
-      window.removeEventListener("resize", onScroll)
-    }
-  }, [])
-
   /* the persistent layout means Next only scrolls the changed segment
      into view - a page switch should land at the very top instead
      (unless we're deep-linking to a #section) */
@@ -91,36 +54,55 @@ export function GuideNav({
     }
   }, [pathname])
 
-  /* scrollspy: the last section whose anchor has passed the reading line */
+  /* scrollspy: the last section whose anchor has passed the reading line.
+     Section offsets are cached (re-measured on resize and again after
+     late image loads), so the scroll handler is pure arithmetic - no
+     forced layout per frame. */
   const [readingId, setReadingId] = useState<string | null>(null)
   useEffect(() => {
     const item = items.find((i) => i.slug === current)
-    const targets = (item?.toc ?? [])
-      .map((t) => document.getElementById(t.id))
-      .filter((el): el is HTMLElement => el !== null)
+    const ids = (item?.toc ?? []).map((t) => t.id)
+    let marks: { id: string; y: number }[] = []
+    const measure = () => {
+      marks = ids
+        .map((id) => {
+          const el = document.getElementById(id)
+          return el
+            ? { id, y: el.getBoundingClientRect().top + window.scrollY }
+            : null
+        })
+        .filter((m): m is { id: string; y: number } => m !== null)
+      onScroll()
+    }
     const onScroll = () => {
-      let id: string | null = targets[0]?.id ?? null
-      for (const el of targets) {
-        if (el.getBoundingClientRect().top <= 140) id = el.id
-      }
+      const line = window.scrollY + 140
+      let id: string | null = marks[0]?.id ?? null
+      for (const m of marks) if (m.y <= line) id = m.id
       setReadingId(id)
     }
-    // initial read deferred a frame: no sync setState inside the effect,
-    // and the new page's sections exist in the DOM by then
-    const raf = requestAnimationFrame(onScroll)
+    // measure after paint, and again once images have had a chance to load
+    const raf = requestAnimationFrame(measure)
+    const late = [setTimeout(measure, 600), setTimeout(measure, 2000)]
     window.addEventListener("scroll", onScroll, { passive: true })
+    window.addEventListener("resize", measure)
     return () => {
       cancelAnimationFrame(raf)
+      late.forEach(clearTimeout)
       window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("resize", measure)
     }
   }, [items, current])
 
   return (
-    <div ref={holderRef} className="min-w-0">
+    /* the rail: absolutely positioned to span the grid row PLUS ~600px
+       past its bottom (the footer's blank space), so the sticky panel
+       inside it never runs out of travel on real pages - pinning stays
+       pure CSS, compositor-smooth, zero scroll JS */
+    <div className="relative min-w-0">
+    <div className="lg:absolute lg:top-0 lg:-bottom-[600px] lg:w-[190px]">
     <nav
-      ref={navRef}
       aria-label="Guide pages"
-      className="relative overflow-hidden rounded-[12px] p-[5px] shadow-[0px_3px_13px_0px_rgba(0,0,0,0.14)] lg:flex lg:max-h-[calc(100vh-56px)] lg:flex-col"
+      className="relative overflow-hidden rounded-[12px] p-[5px] shadow-[0px_3px_13px_0px_rgba(0,0,0,0.14)] lg:sticky lg:top-[28px] lg:flex lg:max-h-[calc(100vh-56px)] lg:flex-col"
     >
       <CheckerFrame
         theme={theme}
@@ -218,6 +200,7 @@ export function GuideNav({
         </ol>
       </div>
     </nav>
+    </div>
     </div>
   )
 }
