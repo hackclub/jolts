@@ -16,9 +16,10 @@ import { useRouter } from "next/navigation"
 
 import {
   ArrowLeft,
+  ArrowSquareOut,
   CloudCheck,
   Code,
-  DownloadSimple,
+  GitPullRequest,
 } from "@phosphor-icons/react"
 import { Editor, EditorContent } from "@tiptap/react"
 
@@ -31,9 +32,9 @@ import {
   type UploadedImage,
 } from "@/components/editor/context"
 import { buildExtensions } from "@/components/editor/extensions"
-import { ExportDialog } from "@/components/editor/export-dialog"
 import { MetaHeader } from "@/components/editor/meta-header"
 import { PageRail, type RailPage } from "@/components/editor/page-rail"
+import { SaveDialog } from "@/components/editor/save-dialog"
 import { SourceEditor } from "@/components/editor/source-editor"
 import { EditorToolbar } from "@/components/editor/toolbar"
 import { GhostInput } from "@/components/editor/views/bits"
@@ -43,7 +44,12 @@ import {
   type ContentType,
   type EntryMeta,
 } from "@/lib/content-schema"
-import { computeChanges, splitRaw, type PageDraftOut } from "@/lib/editor/changes"
+import {
+  computeChanges,
+  splitRaw,
+  type FileChange,
+  type PageDraftOut,
+} from "@/lib/editor/changes"
 import { splitFrontmatter } from "@/lib/editor/frontmatter"
 import {
   deleteDraft,
@@ -52,17 +58,18 @@ import {
   type Draft,
   type DraftPage,
 } from "@/lib/editor/draft-db"
+import { prepareImage } from "@/lib/editor/image-prep"
 import { parseMdxDoc, type ParsedDoc } from "@/lib/editor/mdx-parse"
 import { serializeMdxDoc } from "@/lib/editor/mdx-serialize"
-import type { FileChange } from "@/lib/editor/patch"
 import { remapSliceKeys, type BlockSlice, type PMNode } from "@/lib/editor/pm-doc"
+import type { PullRequestResult } from "@/lib/github/types"
 import { typeTheme } from "@/lib/theme"
 import { cn } from "@/lib/utils"
 
 /* The editor. One EditorShell per entry: the left rail switches pages
    (each page is its own Tiptap instance, so undo histories stay per
    page), the frontmatter renders as the editable header card, and the
-   only way out is a git patch. Everything autosaves to IndexedDB. */
+   only way out is a pull request. Everything autosaves to IndexedDB. */
 
 export type EditorFileIn = { name: string; raw: string }
 
@@ -171,8 +178,9 @@ export function EditorShell(props: EditorSource) {
   const [uploads, setUploads] = useState<Map<string, UploadedImage>>(new Map())
   const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set())
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle")
-  const [exportOpen, setExportOpen] = useState(false)
-  const [exportChanges, setExportChanges] = useState<FileChange[]>([])
+  const [saveOpen, setSaveOpen] = useState(false)
+  const [saveChanges, setSaveChanges] = useState<FileChange[]>([])
+  const [pullRequest, setPullRequest] = useState<PullRequestResult | null>(null)
   const [leaveTo, setLeaveTo] = useState<string | null>(null)
   const [, forceRender] = useState(0)
   const rerender = () => forceRender((n) => n + 1)
@@ -182,16 +190,18 @@ export function EditorShell(props: EditorSource) {
     dirtyIdsRef.current = dirtyIds
   }, [dirtyIds])
 
-  /* latest-value refs for the debounced autosave and export paths, which
+  /* latest-value refs for the debounced autosave and save paths, which
      run from timers/handlers and must never see stale closures */
   const metaRef = useRef(meta)
   const uploadsRef = useRef(uploads)
   const pagesRef = useRef(pages)
+  const pullRequestRef = useRef(pullRequest)
   useEffect(() => {
     metaRef.current = meta
     uploadsRef.current = uploads
     pagesRef.current = pages
-  }, [meta, uploads, pages])
+    pullRequestRef.current = pullRequest
+  }, [meta, uploads, pages, pullRequest])
 
   const editorsRef = useRef(new Map<string, EditorEntry>())
 
@@ -236,6 +246,7 @@ export function EditorShell(props: EditorSource) {
         mime: u.mime,
         data: u.data.buffer.slice(0) as ArrayBuffer,
       })),
+      ...(pullRequestRef.current ? { pullRequest: pullRequestRef.current } : {}),
     }
     await saveDraft(draft)
     return true
@@ -265,8 +276,11 @@ export function EditorShell(props: EditorSource) {
 
   const addUpload = useCallback(
     async (file: File): Promise<string> => {
-      const data = new Uint8Array(await file.arrayBuffer())
-      const base = file.name
+      // photos get downscaled and re-encoded here, once, so the repo, the
+      // upload and every reader's clone all stay small
+      const prepared = await prepareImage(file)
+      const data = prepared.data
+      const base = prepared.fileName
         .toLowerCase()
         .replace(/[^a-z0-9.-]+/g, "-")
         .replace(/^-+|-+$/g, "")
@@ -281,10 +295,10 @@ export function EditorShell(props: EditorSource) {
         while (taken(`${stem}-${i}${ext}`)) i++
         name = `${stem}-${i}${ext}`
       }
-      const url = URL.createObjectURL(new Blob([data], { type: file.type }))
+      const url = URL.createObjectURL(new Blob([data], { type: prepared.mime }))
       setUploads((m) => {
         const next = new Map(m)
-        next.set(name, { url, data, mime: file.type })
+        next.set(name, { url, data, mime: prepared.mime })
         return next
       })
       scheduleAutosave()
@@ -510,6 +524,7 @@ export function EditorShell(props: EditorSource) {
       })
       setPages(nextPages)
       setMetaState(draft.meta)
+      setPullRequest(draft.pullRequest ?? null)
       // keep whatever page is open (?page= deep links land before the
       // async restore resolves) - match it into the restored list
       setActiveId((cur) => {
@@ -698,10 +713,18 @@ export function EditorShell(props: EditorSource) {
     buildChangesRef.current = buildFileChanges
   }, [buildFileChanges])
 
-  const openExport = useCallback(() => {
-    setExportChanges(buildFileChanges())
-    setExportOpen(true)
+  const openSave = useCallback(() => {
+    setSaveChanges(buildFileChanges())
+    setSaveOpen(true)
   }, [buildFileChanges])
+
+  /* The draft deliberately survives a save: until the pull request merges,
+     the published page still shows the old version, so this browser holds
+     the only copy of the new one. We just remember where it went. */
+  const onSaved = useCallback((result: PullRequestResult) => {
+    setPullRequest(result)
+    scheduleAutosave()
+  }, [scheduleAutosave])
 
   /* ---------- render ---------- */
 
@@ -848,9 +871,24 @@ export function EditorShell(props: EditorSource) {
               <Code size={15} weight="bold" />
             </button>
           )}
+          {/* already saved once? keep a way back to that pull request -
+              editing on and saving again simply opens the next one */}
+          {pullRequest && (
+            <a
+              href={pullRequest.url}
+              target="_blank"
+              rel="noreferrer"
+              title={`Pull request #${pullRequest.number} on ${pullRequest.fork}`}
+              className="hidden items-center gap-[5px] rounded-[8px] border border-[#14B87A]/35 bg-[#E9FAF3] px-[9px] py-[4px] text-[12.5px] font-semibold tracking-[-0.01em] text-[#067A54] transition-colors hover:bg-[#d8f5ea] sm:flex"
+            >
+              <GitPullRequest size={13} weight="bold" aria-hidden />
+              #{pullRequest.number}
+              <ArrowSquareOut size={11} weight="bold" aria-hidden />
+            </a>
+          )}
           <button
             type="button"
-            onClick={openExport}
+            onClick={openSave}
             disabled={!anythingDirty}
             className={cn(
               "flex items-center gap-[7px] rounded-[9px] px-[13px] py-[6px] text-[13.5px] font-semibold tracking-[-0.01em] text-white transition-all",
@@ -858,8 +896,8 @@ export function EditorShell(props: EditorSource) {
             )}
             style={{ background: theme.accent }}
           >
-            <DownloadSimple size={15} weight="bold" aria-hidden />
-            Export patch
+            <GitPullRequest size={15} weight="bold" aria-hidden />
+            {pullRequest ? "Save again" : "Save changes"}
           </button>
         </div>
       </div>
@@ -1004,15 +1042,17 @@ export function EditorShell(props: EditorSource) {
         </div>
       </div>
 
-      {exportOpen && (
-        <ExportDialog
-          onClose={() => setExportOpen(false)}
-          changes={exportChanges}
-          defaultSubject={
+      {saveOpen && (
+        <SaveDialog
+          onClose={() => setSaveOpen(false)}
+          onSaved={onSaved}
+          changes={saveChanges}
+          defaultTitle={
             props.mode === "create"
               ? `Add ${meta.title || props.slug} ${theme.label.toLowerCase()}`
               : `Update ${meta.title || props.slug}`
           }
+          contentType={props.contentType}
           slug={props.slug}
         />
       )}

@@ -101,7 +101,9 @@ export function NewEntryFlow({
     if (wanted) setTitle(wanted)
   }, [])
 
-  const slug = slugEdited ?? slugifyHeading(title)
+  // same shape the slug input enforces, so a typed title and a hand-edited
+  // slug can never disagree about what is a legal folder name
+  const slug = slugEdited ?? slugifyHeading(title).replace(/^-+/, "")
   const taken = slug !== "" && existingSlugs[type].includes(slug)
   const ready = title.trim().length > 0 && slug.length > 0 && !taken
   const theme = typeTheme[type]

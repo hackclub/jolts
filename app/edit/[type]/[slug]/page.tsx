@@ -15,10 +15,11 @@ import {
   type ContentType,
 } from "@/lib/content"
 
-/* The visual editor for an existing entry. Fully static like the rest of
-   the site: the entry's raw files, the cross-link index, and the folder's
-   image list are all baked in at build time - editing is entirely
-   client-side, and the exit is a downloaded git patch. */
+/* The visual editor for an existing entry. The page itself is static like
+   the rest of the site - the entry's raw files, the cross-link index, and
+   the folder's image list are all baked in at build time, and editing
+   happens entirely in the browser. Saving is the one server round-trip:
+   /api/github/* turns the change set into a pull request. */
 
 export const dynamicParams = false
 

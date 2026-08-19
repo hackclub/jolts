@@ -49,6 +49,17 @@ export const typeTheme: Record<ContentType, TypeTheme> = {
   },
 }
 
+/* Site chrome - the header's nav dropdown, search, and the editor's save
+   dialog - keeps the blue family. It's the one palette not tied to a content
+   type, which is what makes those surfaces read as "the site talking" rather
+   than "this guide". Shaped to drop straight into CheckerFrame. */
+export const chromeTheme = {
+  accent: "#01A6FF",
+  checkerA: "#01BBFF",
+  checkerB: "#01A6FF",
+  wash: "1,206,242",
+}
+
 export const difficultyLabel = {
   beginner: "Beginner",
   intermediate: "Intermediate",

@@ -72,8 +72,9 @@ export default function ContributePage() {
       </div>
       <p className="mt-[10px] text-[13px] tracking-[-0.01em] text-black/45">
         The visual editor is WYSIWYG - what you type is exactly what ships.
-        No account needed: your work downloads as a git patch, ready to
-        become a pull request. Prefer raw MDX? Copy{" "}
+        Connect GitHub once and Save changes does the rest: it forks the
+        repo, branches off current main and opens the pull request under
+        your name. Prefer raw MDX? Copy{" "}
         <a
           href={`${REPO}/blob/main/content/TEMPLATE.mdx`}
           className="font-semibold text-black/70 underline decoration-black/25 underline-offset-2 hover:decoration-black"
@@ -98,10 +99,10 @@ export default function ContributePage() {
           blocks for structure - no arbitrary JSX.
         </li>
         <li>
-          Open a pull request - or, from the browser editor, download your
-          work as a .patch and post it in #jolts. CI validates your
-          frontmatter, a preview deploy renders your guide, and a reviewer
-          helps you polish it.
+          Hit <strong className="font-semibold text-black/85">Save changes</strong>{" "}
+          and the editor opens the pull request for you - fork, branch and
+          commit included. CI validates your frontmatter, a preview deploy
+          renders your guide, and a reviewer helps you polish it.
         </li>
         <li>
           Merged: your guide is live with your name and GitHub avatar on it.

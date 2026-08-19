@@ -1,11 +1,26 @@
 import type { ContentType, EntryMeta } from "@/lib/content-schema"
 import { emitFrontmatter } from "@/lib/editor/frontmatter"
-import type { FileChange } from "@/lib/editor/patch"
 
-/* Turns the editor's state into the minimal set of file changes. The
-   guiding rule: a byte the author didn't touch is a byte the patch
-   doesn't touch - unchanged frontmatter and unchanged bodies are reused
-   verbatim, files without changes don't appear at all. */
+/* Turns the editor's state into the minimal set of file changes - the
+   commit a contributor's pull request will carry. The guiding rule: a byte
+   the author didn't touch is a byte the commit doesn't touch - unchanged
+   frontmatter and unchanged bodies are reused verbatim, files without
+   changes don't appear at all. */
+
+/** One file's worth of change, repo-relative. `add-binary` carries the
+    bytes themselves (a dropped photo); everything else is text. */
+export type FileChange =
+  | { kind: "modify"; path: string; before: string; after: string }
+  | { kind: "add"; path: string; after: string }
+  | { kind: "delete"; path: string; before: string }
+  | {
+      kind: "rename"
+      fromPath: string
+      path: string
+      before: string
+      after: string
+    }
+  | { kind: "add-binary"; path: string; data: Uint8Array }
 
 export type PageDraftOut = {
   /** target filename, e.g. "index.mdx" or "03-usb-c.mdx" */

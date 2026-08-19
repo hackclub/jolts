@@ -1,5 +1,6 @@
 import type { EntryMeta } from "@/lib/content-schema"
 import type { PMNode } from "@/lib/editor/pm-doc"
+import type { PullRequestResult } from "@/lib/github/types"
 
 /* Crash-proof drafts: everything the editor holds (including uploaded
    photo bytes) autosaves into IndexedDB, keyed by entry. Close the tab
@@ -21,6 +22,9 @@ export type Draft = {
   meta: EntryMeta
   pages: DraftPage[]
   uploads: { name: string; mime: string; data: ArrayBuffer }[]
+  /** the pull request this draft has already been saved into, if any -
+      so "PR #123" survives a reload while the branch waits for review */
+  pullRequest?: PullRequestResult
 }
 
 const DB_NAME = "jolts-editor"
