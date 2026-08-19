@@ -22,7 +22,7 @@ export function GuideBreadcrumb({
   base: string
   pages: { slug: string; title: string; file: string }[]
   accent: string
-  /** GitHub editor URL for the guide folder, without the filename */
+  /** visual-editor URL for this guide, without the ?page= */
   editBase?: string
 }) {
   const pathname = usePathname().replace(/\/$/, "")
@@ -83,15 +83,13 @@ export function GuideBreadcrumb({
         </>
       )}
       {editBase && (
-        <a
-          href={`${editBase}/${page?.file ?? "index.mdx"}`}
-          target="_blank"
-          rel="noreferrer"
+        <Link
+          href={`${editBase}?page=${page?.file ?? "index.mdx"}`}
           className="ml-auto inline-flex items-center gap-[5px] text-[#9aa1ab] transition-colors duration-150 hover:text-[#16181d]"
         >
           <PencilSimple size={13} weight="fill" aria-hidden />
           Edit
-        </a>
+        </Link>
       )}
     </nav>
   )

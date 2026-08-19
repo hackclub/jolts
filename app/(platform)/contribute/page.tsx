@@ -1,7 +1,11 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
-import { ArrowUpRight, GitPullRequest } from "@phosphor-icons/react/dist/ssr"
+import {
+  ArrowUpRight,
+  GitPullRequest,
+  PencilSimple,
+} from "@phosphor-icons/react/dist/ssr"
 
 import { Breadcrumb } from "@/components/breadcrumb"
 
@@ -42,23 +46,34 @@ export default function ContributePage() {
         built something worth teaching, teach it.
       </p>
 
-      <a
-        href={`${REPO}/new/main/content`}
-        target="_blank"
-        rel="noreferrer"
-        className="group mt-[22px] inline-flex items-center gap-[9px] rounded-[9px] bg-[#16181d] px-[18px] py-[11px] text-[15px] font-semibold tracking-[-0.02em] text-white transition-colors duration-150 hover:bg-black"
-      >
-        <GitPullRequest size={18} weight="bold" aria-hidden />
-        Start a guide on GitHub
-        <ArrowUpRight
-          size={14}
-          weight="bold"
-          className="transition-transform duration-150 group-hover:translate-x-[1px] group-hover:-translate-y-[1px]"
-          aria-hidden
-        />
-      </a>
+      <div className="mt-[22px] flex flex-wrap items-center gap-[10px]">
+        <Link
+          href="/edit/new"
+          className="group inline-flex items-center gap-[9px] rounded-[9px] bg-[#FF902F] px-[18px] py-[11px] text-[15px] font-semibold tracking-[-0.02em] text-white transition-all duration-150 hover:brightness-105"
+        >
+          <PencilSimple size={18} weight="fill" aria-hidden />
+          Write in the browser
+        </Link>
+        <a
+          href={`${REPO}/new/main/content`}
+          target="_blank"
+          rel="noreferrer"
+          className="group inline-flex items-center gap-[9px] rounded-[9px] bg-[#16181d] px-[18px] py-[11px] text-[15px] font-semibold tracking-[-0.02em] text-white transition-colors duration-150 hover:bg-black"
+        >
+          <GitPullRequest size={18} weight="bold" aria-hidden />
+          Start on GitHub
+          <ArrowUpRight
+            size={14}
+            weight="bold"
+            className="transition-transform duration-150 group-hover:translate-x-[1px] group-hover:-translate-y-[1px]"
+            aria-hidden
+          />
+        </a>
+      </div>
       <p className="mt-[10px] text-[13px] tracking-[-0.01em] text-black/45">
-        A visual editor (write in the browser, PR opened for you) is coming - until then, copy{" "}
+        The visual editor is WYSIWYG - what you type is exactly what ships.
+        No account needed: your work downloads as a git patch, ready to
+        become a pull request. Prefer raw MDX? Copy{" "}
         <a
           href={`${REPO}/blob/main/content/TEMPLATE.mdx`}
           className="font-semibold text-black/70 underline decoration-black/25 underline-offset-2 hover:decoration-black"
@@ -73,18 +88,20 @@ export default function ContributePage() {
       </h2>
       <ol className="mt-[12px] list-decimal space-y-[10px] pl-[22px] text-[15.5px] leading-[1.65] tracking-[-0.01em] text-black/75 marker:font-semibold marker:text-black/40">
         <li>
-          Fork the repo and copy <code className="rounded-[5px] bg-[#f3f3f3] px-[5px] py-[1.5px] font-mono text-[0.88em]">content/TEMPLATE.mdx</code>{" "}
+          Write in the browser (photos drop right in), or fork the repo and
+          copy <code className="rounded-[5px] bg-[#f3f3f3] px-[5px] py-[1.5px] font-mono text-[0.88em]">content/TEMPLATE.mdx</code>{" "}
           into <code className="rounded-[5px] bg-[#f3f3f3] px-[5px] py-[1.5px] font-mono text-[0.88em]">content/guides/your-slug/index.mdx</code>{" "}
-          (or concepts/tools). Photos live in the same folder - hardware
-          guides are 80% photos, take lots.
+          (or concepts/tools). Hardware guides are 80% photos - take lots.
         </li>
         <li>
           Write with the block registry below. Plain markdown for prose,
           blocks for structure - no arbitrary JSX.
         </li>
         <li>
-          Open a pull request. CI validates your frontmatter, a preview
-          deploy renders your guide, and a reviewer helps you polish it.
+          Open a pull request - or, from the browser editor, download your
+          work as a .patch and post it in #jolts. CI validates your
+          frontmatter, a preview deploy renders your guide, and a reviewer
+          helps you polish it.
         </li>
         <li>
           Merged: your guide is live with your name and GitHub avatar on it.

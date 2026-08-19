@@ -52,15 +52,13 @@ export function Breadcrumb({
         )
       })}
       {editUrl && (
-        <a
+        <Link
           href={editUrl}
-          target="_blank"
-          rel="noreferrer"
           className="ml-auto inline-flex items-center gap-[5px] text-[#9aa1ab] transition-colors duration-150 hover:text-[#16181d]"
         >
           <PencilSimple size={13} weight="fill" aria-hidden />
           Edit
-        </a>
+        </Link>
       )}
     </nav>
   )

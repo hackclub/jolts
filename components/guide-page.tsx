@@ -411,7 +411,7 @@ export async function GuidePage({
         <Breadcrumb
           trail={trail}
           accent={theme.accent}
-          editUrl={`${REPO}/edit/main/content/${entry.contentType}/${entry.slug}/index.mdx`}
+          editUrl={`/edit/${entry.contentType}/${entry.slug}`}
         />
         <OverviewHeader entry={entry} />
         <article className="jolts-guide pt-[8px] pb-[30px]" style={accentStyle}>
@@ -432,7 +432,7 @@ export async function GuidePage({
         <Breadcrumb
           trail={trail}
           accent={theme.accent}
-          editUrl={`${REPO}/edit/main/content/${entry.contentType}/${entry.slug}/index.mdx`}
+          editUrl={`/edit/${entry.contentType}/${entry.slug}`}
         />
         <ViewTransition default="jolts-content">
           <div className="min-w-0">

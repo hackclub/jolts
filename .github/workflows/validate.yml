@@ -17,6 +17,9 @@ jobs:
       - run: npm ci
       # fast, friendly frontmatter errors for contributors
       - run: npm run validate
+      # every guide must survive the visual editor's MDX round-trip
+      # byte-for-byte, so /edit/* can never corrupt or reject content
+      - run: npm run test:editor
       # the authoritative gate - compiles every guide's MDX and prerenders
       # every page, so a broken guide can't merge
       - run: npm run build

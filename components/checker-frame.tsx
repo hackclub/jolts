@@ -34,8 +34,10 @@ export function CheckerFrame({
   children: React.ReactNode
 }) {
   return (
+    // isolate: inner z-indexed layers (flag labels etc.) must never
+    // escape and paint over floating UI like the editor's menus
     <div
-      className={cn("relative overflow-hidden rounded-[12px] p-[5px]", className)}
+      className={cn("relative isolate overflow-hidden rounded-[12px] p-[5px]", className)}
       style={{ background: theme.accent }}
     >
       <div
@@ -87,8 +89,8 @@ function leftFlagCornerSvg(notchW: number): string {
 /* Three mask layers that overlap only on fully-opaque rows/columns, so no
    hairline gaps at fractional zooms and no XOR seams: the fixed-size
    corner piece with the flag hole, the rest of the top strip, and
-   everything below. */
-function leftFlagMaskStyle(notchW: number): React.CSSProperties {
+   everything below. (Exported for the visual editor's editable flag.) */
+export function leftFlagMaskStyle(notchW: number): React.CSSProperties {
   const cw = notchW + 30
   const maskImage = `${leftFlagCornerSvg(notchW)}, linear-gradient(#000, #000), linear-gradient(#000, #000)`
   const maskPosition = `top left, ${cw - 1}px 0, 0 ${NOTCH_H}px`

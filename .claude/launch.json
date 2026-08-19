@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "jolts-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "npm run dev"],
       "port": 3000
     }
   ]

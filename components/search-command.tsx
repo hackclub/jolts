@@ -308,6 +308,14 @@ export function SearchButton({ className }: { className?: string }) {
                           <span className="font-medium text-[#16181d]">
                             {query.trim()}
                           </span>
+                          {/* Wikipedia's move: the page you searched for
+                              and didn't find is one click from existing */}
+                          <a
+                            href={`/edit/new?title=${encodeURIComponent(query.trim())}`}
+                            className="mt-[10px] block text-[13px] font-semibold text-[#FF902F] hover:underline [text-underline-offset:3px]"
+                          >
+                            Write &ldquo;{query.trim()}&rdquo; yourself →
+                          </a>
                         </>
                       ) : (
                         // blank query and still nothing: the index failed to load

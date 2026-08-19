@@ -1,0 +1,263 @@
+/* The visual editor's WYSIWYG ground truth: these rules mirror the prose
+   styles the reader gets from components/mdx/registry.tsx
+   (proseComponents), applied to the bare elements ProseMirror renders.
+   If registry.tsx typography changes, change this file with it. */
+
+.jolts-editor-prose {
+  outline: none;
+  caret-color: var(--guide-accent, #ff902f);
+}
+
+/* The site-wide :focus-visible ring (globals.css) draws a blue box around
+   every seamless text field in the editor - it reads as an error state.
+   Text fields' focus is the caret itself; buttons and links keep the
+   ring for keyboard users. */
+.jolts-editor-page :is(input, textarea):focus-visible,
+.jolts-editor-page [contenteditable]:focus-visible {
+  outline: none;
+}
+
+.jolts-editor-prose p {
+  margin: 14px 0;
+  font-size: 15.5px;
+  line-height: 1.7;
+  letter-spacing: -0.01em;
+  color: #33383f;
+}
+
+.jolts-editor-prose h1 {
+  margin: 48px 0 12px;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: #16181d;
+  line-height: 1.15;
+}
+
+.jolts-editor-prose h2 {
+  margin: 48px 0 12px;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: #16181d;
+}
+
+.jolts-editor-prose h3 {
+  margin: 34px 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: #16181d;
+}
+
+.jolts-editor-prose h4,
+.jolts-editor-prose h5,
+.jolts-editor-prose h6 {
+  margin: 28px 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #16181d;
+}
+
+.jolts-editor-prose a {
+  font-weight: 500;
+  color: #16181d;
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 0, 0, 0.25);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.jolts-editor-prose ul {
+  margin: 14px 0;
+  padding-left: 20px;
+  list-style: disc;
+  font-size: 15.5px;
+  line-height: 1.65;
+  letter-spacing: -0.01em;
+  color: #33383f;
+}
+.jolts-editor-prose ul > li::marker {
+  color: var(--guide-accent, #ff902f);
+}
+
+.jolts-editor-prose ol {
+  margin: 14px 0;
+  padding-left: 20px;
+  list-style: decimal;
+  font-size: 15.5px;
+  line-height: 1.65;
+  letter-spacing: -0.01em;
+  color: #33383f;
+}
+.jolts-editor-prose ol > li::marker {
+  font-weight: 600;
+  color: #9aa1ab;
+}
+
+.jolts-editor-prose li + li {
+  margin-top: 6px;
+}
+.jolts-editor-prose li > p {
+  margin: 0;
+}
+.jolts-editor-prose li > p + p {
+  margin-top: 8px;
+}
+
+.jolts-editor-prose code {
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.055);
+  padding: 1.5px 5px;
+  font-family: var(--font-geist-mono, ui-monospace, monospace);
+  font-size: 0.88em;
+  color: #16181d;
+}
+
+.jolts-editor-prose pre {
+  margin: 20px 0;
+  overflow-x: auto;
+  border-radius: 10px;
+  background: #15181d;
+  padding: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #e8eaed;
+  white-space: pre-wrap;
+}
+.jolts-editor-prose pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+.jolts-editor-prose blockquote {
+  margin: 20px 0;
+  border-left: 2px solid var(--guide-accent, #ff902f);
+  padding-left: 16px;
+  color: #5c6470;
+  font-style: italic;
+}
+
+.jolts-editor-prose hr {
+  margin: 36px 0;
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+.jolts-editor-prose hr.ProseMirror-selectednode {
+  border-top-color: var(--guide-accent, #ff902f);
+}
+
+.jolts-editor-prose kbd {
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-bottom-width: 2px;
+  background: #fafafa;
+  padding: 0.5px 5px;
+  font-family: var(--font-geist-mono, ui-monospace, monospace);
+  font-size: 0.82em;
+  color: #16181d;
+}
+
+/* tables: same skeleton as the reader's table styles */
+.jolts-editor-prose table {
+  margin: 20px 0;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  table-layout: fixed;
+}
+.jolts-editor-prose th {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 7px 16px 7px 0;
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #9aa1ab;
+  text-transform: uppercase;
+}
+.jolts-editor-prose td {
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  padding: 8px 16px 8px 0;
+  color: #33383f;
+  vertical-align: top;
+}
+.jolts-editor-prose th p,
+.jolts-editor-prose td p {
+  margin: 0;
+  font-size: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  font-weight: inherit;
+  line-height: 1.5;
+}
+.jolts-editor-prose .selectedCell {
+  position: relative;
+}
+.jolts-editor-prose .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 144, 47, 0.12);
+  pointer-events: none;
+}
+
+/* ---------- editor furniture ---------- */
+
+/* placeholder */
+.jolts-editor-prose .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+}
+
+/* node selections get the accent ring */
+.jolts-editor-prose .ProseMirror-selectednode > * {
+  border-radius: 4px;
+}
+.jolts-editor-prose
+  :is(section, aside, div, figure).ProseMirror-selectednode::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 12px;
+  border: 2px solid var(--guide-accent, #ff902f);
+  pointer-events: none;
+}
+.jolts-editor-prose .ProseMirror-selectednode {
+  position: relative;
+}
+
+/* drop cursor bar */
+.prosemirror-dropcursor-block,
+.prosemirror-dropcursor-inline {
+  background: var(--guide-accent, #ff902f) !important;
+  border-radius: 2px;
+}
+
+/* gap cursor */
+.jolts-editor-prose .ProseMirror-gapcursor::after {
+  border-top: 1.5px solid var(--guide-accent, #ff902f);
+  width: 24px;
+}
+
+/* keep the reader's "first/last child" margin trims inside step bodies */
+.jolts-editor-prose .jolts-step-body > div > *:first-child {
+  margin-top: 0;
+}
+.jolts-editor-prose .jolts-step-body > div > *:last-child {
+  margin-bottom: 0;
+}
+.jolts-editor-prose .jolts-tight > div > p {
+  margin: 0;
+}
+.jolts-editor-prose .jolts-tight > div > p + p {
+  margin-top: 8px;
+}

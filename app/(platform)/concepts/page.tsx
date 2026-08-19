@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 
 import { Breadcrumb } from "@/components/breadcrumb"
 import { EntryList } from "@/components/entry-card"
+import { NewEntryRow } from "@/components/new-entry-link"
 import { HubHero } from "@/components/hub-hero"
 import { listConcepts } from "@/lib/content"
 
@@ -26,6 +27,9 @@ export default function ConceptsPage() {
       />
       <div className="mt-[26px] border-t border-black/10">
         <EntryList entries={concepts} />
+      </div>
+      <div className="mt-[20px]">
+        <NewEntryRow type="concepts" />
       </div>
     </div>
   )

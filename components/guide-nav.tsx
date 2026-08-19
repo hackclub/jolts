@@ -130,7 +130,9 @@ export function GuideNav({
                       className="w-[13px] shrink-0 text-right text-[11.5px] tabular-nums transition-colors duration-200"
                       style={{ color: active ? theme.accent : "#c2c7ce" }}
                     >
-                      {i + 1}
+                      {/* the overview is home, not step one - pages carry
+                          the numbers (mirrors the editor's rail) */}
+                      {item.slug === null ? "•" : i}
                     </span>
                   )}
                   {active ? (

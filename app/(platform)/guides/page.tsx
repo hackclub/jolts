@@ -3,6 +3,7 @@ import Link from "next/link"
 
 import { Breadcrumb } from "@/components/breadcrumb"
 import { GuideCard } from "@/components/entry-card"
+import { NewEntryCard } from "@/components/new-entry-link"
 import { HubHero } from "@/components/hub-hero"
 import { listGuides } from "@/lib/content"
 
@@ -41,6 +42,7 @@ export default function GuidesPage() {
         {guides.map((entry) => (
           <GuideCard key={entry.slug} entry={entry} />
         ))}
+        <NewEntryCard type="guides" />
       </div>
 
       <p className="mt-[36px] text-[13.5px] tracking-[-0.01em] text-[#9aa1ab]">

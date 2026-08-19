@@ -42,7 +42,7 @@ export default async function GuideLayout({
             file: p.file,
           }))}
           accent={typeTheme.guides.accent}
-          editBase={`https://github.com/hackclub/jolts/edit/main/content/guides/${entry.slug}`}
+          editBase={`/edit/guides/${entry.slug}`}
         />
         <ViewTransition default="jolts-content">
           <div className="min-w-0">{children}</div>

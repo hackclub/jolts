@@ -44,15 +44,13 @@ import { cn } from "@/lib/utils"
 
 /* ---------- Step - the iFixit-style unit of instruction ---------- */
 
-/* pen-on-hover for section headings - links to the source file on GitHub */
+/* pen-on-hover for section headings - opens the page in the visual editor */
 function EditPen({ editUrl, className }: { editUrl?: string; className?: string }) {
   if (!editUrl) return null
   return (
     <a
       href={editUrl}
-      target="_blank"
-      rel="noreferrer"
-      aria-label="Edit this section on GitHub"
+      aria-label="Edit this page in the visual editor"
       className={cn(
         "text-[#c2c7ce] opacity-0 transition-opacity duration-150 group-hover/heading:opacity-100 hover:!text-[#16181d]",
         className
@@ -84,7 +82,8 @@ export function Step({
       {/* the step heading is one two-segment tab: "Step N" in the guide
           accent with the tilted flag edge, continuing into a grey segment
           that carries the title */}
-      <h3 className="group/heading flex items-stretch text-[17px] font-semibold tracking-[-0.03em]">
+      {/* isolate: keeps the flag's z-10 from painting over floating UI */}
+      <h3 className="group/heading isolate flex items-stretch text-[17px] font-semibold tracking-[-0.03em]">
         {/* accent segment: the body's right edge is clipped diagonally so
             nothing can leak past the seam, and a skewed rounded cap rides
             the same diagonal (outside the clipped span - clip-path clips
@@ -684,7 +683,7 @@ export function getMDXComponents(
   entry: Entry,
   sourceFile = "index.mdx"
 ): MDXComponents {
-  const editUrl = `https://github.com/hackclub/jolts/edit/main/content/${entry.contentType}/${entry.slug}/${sourceFile}`
+  const editUrl = `/edit/${entry.contentType}/${entry.slug}?page=${sourceFile}`
   return {
     ...proseComponents(entry, editUrl),
     Step: ({ image, ...props }: React.ComponentProps<typeof Step>) => (

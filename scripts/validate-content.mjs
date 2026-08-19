@@ -1,7 +1,8 @@
 // Frontmatter validation for content/**/index.mdx - the CI gate that fails
 // malformed PRs with a friendly message before anything ships.
-// Keep the rules in sync with lib/content.ts (the authoritative schemas,
-// which also run during `next build`). This script exists to give
+// Keep the rules in sync with lib/content-schema.ts (the authoritative
+// schemas, which also run during `next build` AND inside the visual
+// editor in the browser). This script exists to give
 // contributors fast, readable errors instead of a build stack trace.
 import fs from "node:fs"
 import path from "node:path"
