@@ -4,6 +4,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* `nav:` - the width where the header's navigation pill still fits its
+   labels. Below it the segments go icon-only; below `md` they collapse
+   into the hamburger panel. In rem, like the built-in breakpoints: a px
+   value sorts ahead of all of them and would lose to `md:` on any element
+   that sets both. */
+@theme {
+  --breakpoint-nav: 70rem;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

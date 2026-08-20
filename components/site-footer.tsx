@@ -1,20 +1,42 @@
-/* The footer is a giant, deliberate nothing. */
+import Link from "next/link"
+
+const links = [
+  { label: "About Jolts", href: "/start" },
+  { label: "Style Guide", href: "/style-guide" },
+  { label: "Slack", href: "https://hackclub.enterprise.slack.com/archives/C0BQ57WQ0K1" },
+  { label: "GitHub", href: "https://github.com/hackclub/jolts" },
+]
+
 export function SiteFooter() {
   return (
     <footer className="mt-[80px] pb-[56px]">
-      {/* the giant empty space */}
-      <div aria-hidden className="h-[340px]" />
-
       <div className="mx-auto flex w-full max-w-[1100px] flex-col items-center gap-[8px] px-[28px] text-center opacity-60">
-        <p className="text-[13.5px] font-semibold tracking-[-0.01em] text-[#5c6470]">
-          [This Space Intentionally Left Blank]
-        </p>
-        <p className="text-[12.5px] tracking-[-0.01em] text-[#5c6470] italic">
-          The bottom of every page is padded so readers can maintain a
-          consistent eyeline.
-        </p>
+        <nav className="flex flex-wrap items-center justify-center gap-x-[10px] gap-y-[4px] text-[13px] font-medium tracking-[-0.01em] text-[#5c6470]">
+          {links.map(({ label, href }, i) => (
+            <span key={label} className="flex items-center gap-[10px]">
+              {i > 0 && <span aria-hidden>·</span>}
+              {href.startsWith("/") ? (
+                <Link
+                  href={href}
+                  className="transition-opacity duration-150 hover:opacity-70"
+                >
+                  {label}
+                </Link>
+              ) : (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="transition-opacity duration-150 hover:opacity-70"
+                >
+                  {label}
+                </a>
+              )}
+            </span>
+          ))}
+        </nav>
 
-        <div className="mt-[18px] flex items-center gap-[20px]">
+        <div className="mt-[10px] flex items-center gap-[20px]">
           <a
             href="https://creativecommons.org/licenses/by-sa/4.0/"
             target="_blank"

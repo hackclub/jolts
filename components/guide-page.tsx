@@ -7,6 +7,7 @@ import { notFound, permanentRedirect } from "next/navigation"
 import { Clock, Coins, Wrench } from "@phosphor-icons/react/dist/ssr"
 
 import { Breadcrumb } from "@/components/breadcrumb"
+import { CheckerFrame } from "@/components/checker-frame"
 import { AuthorLine, ContributorsLine } from "@/components/entry-card"
 import { GuideNav, type NavItem } from "@/components/guide-nav"
 import { getMDXComponents } from "@/components/mdx/registry"
@@ -238,73 +239,67 @@ async function OverviewHeader({ entry }: { entry: Entry }) {
 
   return (
     <>
-    <header className="relative overflow-hidden rounded-[12px] border border-black/10 bg-[#FCFCFA]">
-      {/* graph-paper grid, fading out toward the bottom so the meta rows
-          sit on quieter ground */}
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, rgba(22,24,29,0.055) 1px, transparent 1px), linear-gradient(to bottom, rgba(22,24,29,0.055) 1px, transparent 1px)",
-          backgroundSize: "21px 21px",
-          maskImage:
-            "linear-gradient(180deg, black 0%, rgba(0,0,0,0.3) 100%)",
-          WebkitMaskImage:
-            "linear-gradient(180deg, black 0%, rgba(0,0,0,0.3) 100%)",
-        }}
-      />
-      {/* soft accent glow behind the photo corner */}
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{
-          background: `radial-gradient(880px 560px at 90% -10%, ${theme.tint}, transparent 72%)`,
-        }}
-      />
+    <header>
+      <CheckerFrame
+        theme={theme}
+        checkerSize={150}
+        className="shadow-[0px_4px_14px_-2px_rgba(0,0,0,0.18)]"
+      >
+        {/* the surface: full-bleed rows, so the meta strip's divider
+            reaches both edges */}
+        <div className="relative overflow-hidden rounded-[7px] bg-white">
+          {/* soft accent glow behind the photo corner */}
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={{
+              background: `radial-gradient(880px 560px at 90% -10%, ${theme.tint}, transparent 72%)`,
+            }}
+          />
 
-      <div className="relative flex items-center gap-[26px] px-[24px] pt-[22px] pb-[16px]">
-        <div className="min-w-0 flex-1">
-          <h1 className="font-augie text-[40px] leading-[1.02] text-[#16181d] text-balance">
-            {meta.title}
-          </h1>
-          <p className="mt-[10px] text-[16px] leading-[1.55] tracking-[-0.01em] text-[#5c6470]">
-            {meta.subtitle}
-          </p>
+          <div className="relative flex items-center gap-[26px] px-[22px] pt-[20px] pb-[16px]">
+            <div className="min-w-0 flex-1">
+              <h1 className="font-augie text-[40px] leading-[1.02] text-[#16181d] text-balance">
+                {meta.title}
+              </h1>
+              <p className="mt-[10px] text-[16px] leading-[1.55] tracking-[-0.01em] text-[#5c6470]">
+                {meta.subtitle}
+              </p>
 
-          {meta.type === "guide" && (
-            <p className="mt-[10px] text-[14px] tracking-[-0.01em] text-[#9aa1ab]">
-              You&rsquo;ll learn {meta.learns.join(", ")}
-            </p>
-          )}
+              {meta.type === "guide" && (
+                <p className="mt-[10px] text-[14px] tracking-[-0.01em] text-[#9aa1ab]">
+                  You&rsquo;ll learn {meta.learns.join(", ")}
+                </p>
+              )}
+            </div>
+
+            {meta.hero &&
+              (heroTransparent ? (
+                /* transparent render: no frame - larger, floating with its
+                   own drop shadow */
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={contentImageUrl(entry.contentType, entry.slug, meta.hero)}
+                  alt=""
+                  className="hidden aspect-[4/3] w-[240px] shrink-0 rotate-[2.5deg] object-contain [filter:drop-shadow(0px_12px_16px_rgba(0,0,0,0.28))] md:block"
+                />
+              ) : (
+                /* opaque photo: polaroid frame */
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={contentImageUrl(entry.contentType, entry.slug, meta.hero)}
+                  alt=""
+                  className="hidden aspect-[4/3] w-[196px] shrink-0 rotate-[2.5deg] rounded-[9px] border-[5px] border-white object-cover shadow-[0px_6px_18px_-4px_rgba(0,0,0,0.28)] md:block"
+                />
+              ))}
+          </div>
+
+          <div className="relative flex flex-wrap items-center gap-x-[18px] gap-y-[8px] border-t border-black/[0.07] px-[22px] py-[11px]">
+            <AuthorLine meta={meta} />
+            <ContributorsLine names={meta.contributors} />
+          </div>
         </div>
-
-        {meta.hero &&
-          (heroTransparent ? (
-            /* transparent render: no frame - larger, floating on the grid
-               with its own drop shadow. Negative margin lets it use the
-               card's padding without growing the card. */
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={contentImageUrl(entry.contentType, entry.slug, meta.hero)}
-              alt=""
-              className="hidden aspect-[4/3] w-[252px] shrink-0 -my-[10px] -mr-[4px] rotate-[2.5deg] object-contain [filter:drop-shadow(0px_12px_16px_rgba(0,0,0,0.28))] md:block"
-            />
-          ) : (
-            /* opaque photo: polaroid frame */
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={contentImageUrl(entry.contentType, entry.slug, meta.hero)}
-              alt=""
-              className="hidden aspect-[4/3] w-[196px] shrink-0 rotate-[2.5deg] rounded-[9px] border-[5px] border-white object-cover shadow-[0px_6px_18px_-4px_rgba(0,0,0,0.28)] md:block"
-            />
-          ))}
-      </div>
-
-      <div className="relative flex flex-wrap items-center gap-x-[18px] gap-y-[8px] border-t border-black/[0.07] px-[24px] py-[11px]">
-        <AuthorLine meta={meta} />
-        <ContributorsLine names={meta.contributors} />
-      </div>
+      </CheckerFrame>
     </header>
 
     <div className="mb-[14px]">

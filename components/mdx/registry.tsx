@@ -525,7 +525,7 @@ export function ExternalGuide({
         />
       </span>
       <span className="jolts-tight mt-[2px] block text-[13.5px] leading-[1.55] tracking-[-0.01em] text-[#5c6470] [&_p]:!text-[13.5px] [&_p]:!leading-[1.55]">
-        {children ?? `Deep dive on ${domain}.`}
+        {children ?? `More on ${domain}.`}
       </span>
     </a>
   )

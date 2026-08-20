@@ -70,7 +70,9 @@ export function PageRail({
 
   return (
     <div className="relative min-w-0">
-      <div className="lg:absolute lg:top-0 lg:-bottom-[600px] lg:w-[190px]">
+      {/* span the row only - overshooting extends the document's scroll
+          height, which reads as dead space under the footer */}
+      <div className="lg:absolute lg:top-0 lg:bottom-0 lg:w-[190px]">
         <nav
           aria-label="Guide pages"
           className="relative overflow-hidden rounded-[12px] p-[5px] shadow-[0px_3px_13px_0px_rgba(0,0,0,0.14)] lg:sticky lg:top-[74px] lg:flex lg:max-h-[calc(100vh-102px)] lg:flex-col"

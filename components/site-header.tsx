@@ -1,13 +1,16 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import {
   ArrowUpRight,
   BookOpenText,
+  CaretDown,
   Lightbulb,
+  List,
   Package,
   Wrench,
+  X,
   type Icon,
 } from "@phosphor-icons/react"
 
@@ -27,7 +30,12 @@ import {
 import { cn } from "@/lib/utils"
 
 /* Scale notes: header chrome is Figma (1920 frame) × 0.73, the navigation
-   pill and its dropdown panels are Figma × 0.8. */
+   pill and its dropdown panels are Figma × 0.8.
+
+   Three widths: at `nav` (1120px) and up everything is at full scale;
+   between `md` and `nav` the chrome steps down and the pill segments drop
+   their labels, keeping only icons; below `md` the pill is replaced by the
+   hamburger panel (MobileNav). */
 
 /* Pill segment. Hover previews the same white gradient + underline the open
    state uses - no separate hover tint - so the trigger reads as one motion
@@ -36,8 +44,8 @@ import { cn } from "@/lib/utils"
    the ::after underline fades on the same clock. Class names are written out
    in full because Tailwind's scanner only sees complete literals. */
 const segmentClass = cn(
-  "jolts-glow relative flex h-full w-max cursor-pointer items-center rounded-none px-[17px]",
-  "text-[22.4px] font-semibold tracking-[-0.03em] text-white",
+  "jolts-glow relative flex h-full w-max cursor-pointer items-center rounded-none px-[14px] nav:px-[17px]",
+  "text-[19px] font-semibold tracking-[-0.03em] text-white nav:text-[22.4px]",
   "bg-transparent hover:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:outline-none",
   "data-popup-open:bg-transparent data-popup-open:hover:bg-transparent data-popup-open:focus:bg-transparent",
   "data-open:bg-transparent data-open:hover:bg-transparent data-open:focus:bg-transparent",
@@ -60,7 +68,7 @@ const bleedRightClass = "before:-right-[7px] after:-right-[7px]"
    segment it would also shadow the white gradient rectangle and smear a dark
    rim around the text. z-10 keeps the row above the gradient overlay. */
 const segmentContentClass =
-  "relative z-10 flex items-center gap-[10px] [filter:drop-shadow(0px_1.5px_4px_rgba(0,0,0,0.35))]"
+  "relative z-10 flex items-center gap-[8px] nav:gap-[10px] [filter:drop-shadow(0px_1.5px_4px_rgba(0,0,0,0.35))]"
 
 /* The blue checker border chrome and the white surface live on the POPUP and
    VIEWPORT (see popupClassName / viewportClassName on <NavigationMenu>), not
@@ -133,6 +141,45 @@ function PanelFooter({
       <ArrowUpRight size={12} weight="bold" aria-hidden />
     </NavigationMenuLink>
   )
+}
+
+type NavSection = {
+  label: string
+  icon: Icon
+  iconSize: number
+  footer: string
+  footerHref?: string
+  items: { title: string; description: string; href?: string }[]
+}
+
+/* Guides are their own thing on desktop - the section gets an illustrated
+   panel instead of a plain item list - but the rows are the same rows, so
+   they live here and GuidesPanel and MobileNav both read them. */
+const guideItems = [
+  {
+    title: "Macropad",
+    description: "Build a tiny keyboard. Design, solder, and use it everyday.",
+    href: "/guides/macropad",
+  },
+  {
+    title: "Tamagotchi",
+    description: "Build a pocket pet from scratch!",
+    href: "/guides/tamagotchi",
+  },
+  {
+    title: "RP2040 Devboard",
+    description: "Design your own dev board - schematic to fab.",
+    href: "/guides/devboard",
+  },
+]
+
+const guidesSection: NavSection = {
+  label: "Guides",
+  icon: BookOpenText,
+  iconSize: 26,
+  footer: "Check out all guides",
+  footerHref: "/guides",
+  items: guideItems,
 }
 
 /* Optional artwork layer for the Start here! card - drop a webp in
@@ -268,25 +315,18 @@ function GuidesPanel() {
 
         {/* guide links - same rows as the items-only panels */}
         <div className="flex min-w-0 flex-1 flex-col gap-[4px] pt-[6px] pl-[9px]">
-          <PanelItem
-            title="Macropad"
-            description="Build a tiny keyboard. Design, solder, and use it everyday."
-            descriptionClass="w-[160px]"
-            href="/guides/macropad"
-          />
-          <PanelItem
-            title="Tamagotchi"
-            description="Build a pocket pet from scratch!"
-            descriptionClass="w-[160px]"
-            href="/guides/tamagotchi"
-          />
-          <PanelItem
-            title="RP2040 Devboard"
-            description="Design your own dev board - schematic to fab."
-            descriptionClass="w-[160px]"
-            href="/guides/devboard"
-          />
-          <PanelFooter href="/guides">Check out all guides</PanelFooter>
+          {guideItems.map((item) => (
+            <PanelItem
+              key={item.title}
+              title={item.title}
+              description={item.description}
+              descriptionClass="w-[160px]"
+              href={item.href}
+            />
+          ))}
+          <PanelFooter href={guidesSection.footerHref}>
+            {guidesSection.footer}
+          </PanelFooter>
         </div>
     </div>
   )
@@ -317,14 +357,7 @@ function ItemsPanel({
   )
 }
 
-const sections: {
-  label: string
-  icon: Icon
-  iconSize: number
-  footer: string
-  footerHref?: string
-  items: { title: string; description: string; href?: string }[]
-}[] = [
+const sections: NavSection[] = [
   {
     label: "Concepts",
     icon: Lightbulb,
@@ -385,6 +418,281 @@ const sections: {
   },
 ]
 
+/* ---------- below md: the pill becomes a panel ---------- */
+
+/* Same chrome as everything else in the header - the buttons that flank the
+   nav (search, hamburger) share this square. */
+const chromeButtonClass = cn(
+  "jolts-glow relative flex cursor-pointer items-center justify-center overflow-hidden rounded-[4px] bg-white/20",
+  "before:pointer-events-none before:absolute before:inset-0",
+  "before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.55)_92%,rgba(255,255,255,0.85)_100%)]",
+  "active:before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.75)_92%,rgba(255,255,255,1)_100%)]",
+  "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white after:opacity-0 after:transition-opacity after:duration-150 after:ease-out",
+  "hover:after:opacity-100 active:after:opacity-100"
+)
+
+/* Vertically centred in each header height (68/80/91), except at `nav`,
+   where the button sits where Figma put it. */
+const chromeButtonSize =
+  "mt-[12px] size-[44px] md:mt-[17px] md:size-[46px] nav:mt-[25px] nav:size-[49px]"
+
+/* A panel row. Not PanelItem: that one is a NavigationMenuLink, which only
+   works inside the navigation menu's context. */
+function MobileRow({
+  title,
+  description,
+  href = "#",
+  onNavigate,
+}: {
+  title: string
+  description?: string
+  href?: string
+  onNavigate: () => void
+}) {
+  const external = href.startsWith("http")
+  const className =
+    "flex flex-col items-start gap-[2px] rounded-[8px] px-[12px] py-[9px] active:bg-[#f3f3f3]"
+  const inner = (
+    <>
+      <span className="text-[15.5px] font-semibold tracking-[-0.03em] text-black">
+        {title}
+      </span>
+      {description && (
+        <span className="text-[12px] leading-[normal] tracking-[-0.03em] text-black/50">
+          {description}
+        </span>
+      )}
+    </>
+  )
+  return external ? (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className={className}
+      onClick={onNavigate}
+    >
+      {inner}
+    </a>
+  ) : (
+    <Link href={href} className={className} onClick={onNavigate}>
+      {inner}
+    </Link>
+  )
+}
+
+/* One collapsible section. Tapping the header toggles it; the section's hub
+   is the "Check out all …" row, same as the desktop panels. */
+function MobileSection({
+  section,
+  expanded,
+  onToggle,
+  onNavigate,
+}: {
+  section: NavSection
+  expanded: boolean
+  onToggle: () => void
+  onNavigate: () => void
+}) {
+  return (
+    <div className="border-t border-black/[0.07] first:border-t-0">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="flex w-full cursor-pointer items-center gap-[10px] rounded-[8px] px-[12px] py-[12px] text-left active:bg-[#f3f3f3]"
+      >
+        <section.icon
+          size={21}
+          weight="fill"
+          aria-hidden
+          className="shrink-0 text-[#01A6FF]"
+        />
+        <span className="flex-1 text-[17px] font-semibold tracking-[-0.03em] text-black">
+          {section.label}
+        </span>
+        <CaretDown
+          size={14}
+          weight="bold"
+          aria-hidden
+          className={cn(
+            "shrink-0 text-black/35 transition-transform duration-200 ease-out",
+            expanded && "rotate-180"
+          )}
+        />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            className="overflow-hidden"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="flex flex-col gap-[2px] pb-[8px] pl-[19px]">
+              {section.items.map((item) => (
+                <MobileRow
+                  key={item.title}
+                  title={item.title}
+                  description={item.description}
+                  href={item.href}
+                  onNavigate={onNavigate}
+                />
+              ))}
+              {section.footerHref && (
+                <Link
+                  href={section.footerHref}
+                  onClick={onNavigate}
+                  className="mt-[4px] mr-[12px] flex h-[36px] items-center justify-center gap-[6px] rounded-[7px] bg-[#f3f3f3] text-[13px] font-medium tracking-[-0.03em] text-[#5b5b5b] active:bg-[#ececec]"
+                >
+                  {section.footer}
+                  <ArrowUpRight size={12} weight="bold" aria-hidden />
+                </Link>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+/* Hamburger + drop-down panel, below md only. The panel is absolutely
+   positioned inside the header so it hangs off the bar's bottom edge; the
+   scrim below it catches taps outside. */
+function MobileNav({ sections }: { sections: NavSection[] }) {
+  const [open, setOpen] = useState(false)
+  const [expanded, setExpanded] = useState<string | null>(sections[0]?.label ?? null)
+
+  /* while the panel is up: Escape closes it, the page behind it holds still
+     so the scrim stays over the same content, and widening past `md` closes
+     it - the pill is back, and the scroll lock would otherwise outlive a
+     panel that md:hidden has already taken off screen. */
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false)
+    }
+    const wide = window.matchMedia("(min-width: 48rem)")
+    const onWide = () => {
+      if (wide.matches) setOpen(false)
+    }
+    window.addEventListener("keydown", onKey)
+    wide.addEventListener("change", onWide)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      window.removeEventListener("keydown", onKey)
+      wide.removeEventListener("change", onWide)
+      document.body.style.overflow = prev
+    }
+  }, [open])
+
+  const close = () => setOpen(false)
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-label={open ? "Close menu" : "Menu"}
+        aria-expanded={open}
+        aria-controls="site-mobile-nav"
+        onClick={() => setOpen((o) => !o)}
+        className={cn(chromeButtonClass, chromeButtonSize, "ml-[8px] md:hidden")}
+      >
+        {open ? (
+          <X
+            size={22}
+            weight="bold"
+            aria-hidden
+            className="relative z-10 text-white [filter:drop-shadow(0px_1.5px_4px_rgba(0,0,0,0.35))]"
+          />
+        ) : (
+          <List
+            size={24}
+            weight="bold"
+            aria-hidden
+            className="relative z-10 text-white [filter:drop-shadow(0px_1.5px_4px_rgba(0,0,0,0.35))]"
+          />
+        )}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              aria-hidden
+              onClick={close}
+              className="absolute top-full left-0 h-screen w-full bg-black/25 md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            />
+            <motion.div
+              id="site-mobile-nav"
+              className="absolute top-full right-[12px] left-[12px] z-10 mt-[6px] origin-top md:hidden"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ type: "spring", stiffness: 520, damping: 38 }}
+            >
+              <div className={cn("relative", popupChromeClass)}>
+                <div className="relative z-10 max-h-[calc(100dvh-110px)] overflow-y-auto overscroll-contain rounded-[8px] bg-white p-[6px] shadow-[0px_3px_5px_0px_rgba(0,0,0,0.25)]">
+                  {/* the Start here! card, flattened into a banner */}
+                  <Link
+                    href="/start"
+                    onClick={close}
+                    className="relative mb-[6px] flex h-[54px] items-center gap-[8px] overflow-hidden rounded-[7px] border-[3px] border-solid border-[#ff902f] px-[14px]"
+                  >
+                    <span
+                      aria-hidden
+                      className="absolute -inset-[120%] rotate-[-8.66deg]"
+                      style={{
+                        backgroundImage:
+                          "conic-gradient(#FFBA01 0 25%, #FF9D00 0 50%, #FFBA01 0 75%, #FF9D00 0)",
+                        backgroundSize: "64px 64px",
+                      }}
+                    />
+                    <span
+                      aria-hidden
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(67.21deg, rgba(255,211,1,0) 0%, rgba(255,211,1,0.75) 100%)",
+                      }}
+                    />
+                    <span className="relative z-10 flex flex-1 items-center gap-[7px] text-[17px] font-semibold tracking-[-0.03em] text-white [filter:drop-shadow(0px_1.5px_3px_rgba(0,0,0,0.3))]">
+                      Beginner? Start here!
+                      <ArrowUpRight size={16} weight="bold" aria-hidden />
+                    </span>
+                  </Link>
+
+                  {sections.map((section) => (
+                    <MobileSection
+                      key={section.label}
+                      section={section}
+                      expanded={expanded === section.label}
+                      onToggle={() =>
+                        setExpanded((e) =>
+                          e === section.label ? null : section.label
+                        )
+                      }
+                      onNavigate={close}
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
+
 export function SiteHeader() {
   const router = useRouter()
 
@@ -426,7 +734,7 @@ export function SiteHeader() {
     }
 
   return (
-    <header className="relative z-40 h-[91px] w-full">
+    <header className="relative z-40 h-[68px] w-full md:h-[80px] nav:h-[91px]">
       {/* checkerboard background - pure CSS, no SVG involved */}
       <div className="absolute inset-0 overflow-hidden shadow-[0px_3px_19px_0px_rgba(1,187,255,0.25)]">
         <div
@@ -445,22 +753,22 @@ export function SiteHeader() {
         <div aria-hidden className="absolute inset-0 bg-black/5" />
       </div>
 
-      <div className="relative flex h-full items-start pr-[35px] pl-[54px]">
+      <div className="relative flex h-full items-start pr-[14px] pl-[18px] md:pr-[22px] md:pl-[26px] nav:pr-[35px] nav:pl-[54px]">
         {/* logo hangs below the header bar */}
         <Link
           href="/"
-          className="relative z-10 mt-[12px] w-[200px] shrink-0 self-start"
+          className="relative z-10 mt-[10px] shrink-0 self-start md:mt-[12px]"
         >
           <img
             src="/brand/jolts-logo.svg"
             alt="Hack Club jolts - learn to build real things"
-            className="h-auto w-[200px] max-w-none"
+            className="h-auto w-[132px] max-w-none md:w-[164px] nav:w-[200px]"
           />
         </Link>
 
         <NavigationMenu
           delay={0}
-          className="mt-[24px] ml-[32px] max-w-none flex-none justify-start"
+          className="mt-[17px] ml-[18px] hidden max-w-none flex-none justify-start md:flex nav:mt-[24px] nav:ml-[32px]"
           sideOffset={26}
           popupClassName={popupChromeClass}
           viewportClassName={viewportChromeClass}
@@ -471,15 +779,22 @@ export function SiteHeader() {
             setMenuValue(v)
           }}
         >
-          <NavigationMenuList className="h-[54px] w-max flex-none justify-start gap-0 overflow-hidden rounded-[4px] bg-white/20 px-[7px]">
+          <NavigationMenuList className="h-[46px] w-max flex-none justify-start gap-0 overflow-hidden rounded-[4px] bg-white/20 px-[7px] nav:h-[54px]">
             <NavigationMenuItem className="h-full">
               <NavigationMenuTrigger
                 className={cn(segmentClass, bleedLeftClass)}
-                onClick={segmentClick("/guides")}
+                onClick={segmentClick(guidesSection.footerHref)}
               >
                 <span className={segmentContentClass}>
-                  <BookOpenText size={26} weight="fill" aria-hidden />
-                  Guides
+                  <guidesSection.icon
+                    size={guidesSection.iconSize}
+                    weight="fill"
+                    aria-hidden
+                  />
+                  {/* labels are the first thing to go when the bar tightens */}
+                  <span className="hidden nav:inline">
+                    {guidesSection.label}
+                  </span>
                 </span>
               </NavigationMenuTrigger>
               <NavigationMenuContent className="h-[329px] w-[476px] p-0">
@@ -502,7 +817,7 @@ export function SiteHeader() {
                       weight="fill"
                       aria-hidden
                     />
-                    {section.label}
+                    <span className="hidden nav:inline">{section.label}</span>
                   </span>
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="w-[292px] p-0">
@@ -517,20 +832,11 @@ export function SiteHeader() {
           </NavigationMenuList>
         </NavigationMenu>
 
-        {/* search */}
+        {/* search, then the hamburger that replaces the pill below md */}
         <SearchButton
-          className={cn(
-            "jolts-glow relative mt-[25px] ml-auto flex size-[49px] cursor-pointer items-center justify-center overflow-hidden rounded-[4px] bg-white/20",
-            // same brightness-overshoot gradient as the pill segments
-            "before:pointer-events-none before:absolute before:inset-0",
-            "before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.55)_92%,rgba(255,255,255,0.85)_100%)]",
-            // pressed: swap the overlay for a stronger gradient
-            "active:before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.75)_92%,rgba(255,255,255,1)_100%)]",
-            // and the line thing
-            "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white after:opacity-0 after:transition-opacity after:duration-150 after:ease-out",
-            "hover:after:opacity-100 active:after:opacity-100"
-          )}
+          className={cn(chromeButtonClass, chromeButtonSize, "ml-auto")}
         />
+        <MobileNav sections={[guidesSection, ...sections]} />
       </div>
     </header>
   )

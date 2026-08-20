@@ -12,13 +12,13 @@ import { Breadcrumb } from "@/components/breadcrumb"
 export const metadata: Metadata = {
   title: "Contribute - jolts",
   description:
-    "Jolts is community-written. Guides land by pull request - reviewed, curated, and credited.",
+    "Jolts is community-written. How to write a guide, the block registry, and how pull requests get reviewed.",
 }
 
 const REPO = "https://github.com/hackclub/jolts"
 
 const registry = [
-  ["<Step>", "one photo, one action - the iFixit unit of instruction"],
+  ["<Step>", "one photo, one action"],
   ["<PartsList>", "renders the frontmatter parts table"],
   ["<Tool>", "chip linking to a tool page - never teach a tool inline"],
   ["<ConceptLink>", "inline link to a concept - never explain one inline"],
@@ -41,9 +41,7 @@ export default function ContributePage() {
         Write a guide
       </h1>
       <p className="mt-[10px] max-w-[640px] text-[17px] leading-[1.55] tracking-[-0.01em] text-black/55">
-        Every page on Jolts is a plain MDX file in a public repo, and every
-        page ships by pull request - reviewed, curated, and credited. If you
-        built something worth teaching, teach it.
+        Every guide on Jolts was written by someone who built the thing.
       </p>
 
       <div className="mt-[22px] flex flex-wrap items-center gap-[10px]">
@@ -71,7 +69,7 @@ export default function ContributePage() {
         </a>
       </div>
       <p className="mt-[10px] text-[13px] tracking-[-0.01em] text-black/45">
-        The visual editor is WYSIWYG - what you type is exactly what ships.
+        The visual editor shows the page as it will ship.
       </p>
 
       <h2 className="mt-[44px] text-[26px] font-semibold tracking-[-0.03em] text-black">
@@ -82,7 +80,7 @@ export default function ContributePage() {
           Write in the browser (photos drop right in), or fork the repo and
           copy <code className="rounded-[5px] bg-[#f3f3f3] px-[5px] py-[1.5px] font-mono text-[0.88em]">content/TEMPLATE.mdx</code>{" "}
           into <code className="rounded-[5px] bg-[#f3f3f3] px-[5px] py-[1.5px] font-mono text-[0.88em]">content/guides/your-slug/index.mdx</code>{" "}
-          (or concepts/tools). Hardware guides are 80% photos - take lots.
+          (or concepts/tools). Take plenty of photos while you build.
         </li>
         <li>
           Write with the block registry below. Plain markdown for prose,
@@ -90,12 +88,12 @@ export default function ContributePage() {
         </li>
         <li>
           Hit <strong className="font-semibold text-black/85">Save changes</strong>{" "}
-          and the editor opens the pull request for you - fork, branch and
-          commit included. CI validates your frontmatter, a preview deploy
-          renders your guide, and a reviewer helps you polish it.
+          and the editor opens a pull request for you. A reviewer goes
+          through it with you before it ships.
         </li>
         <li>
-          Merged: your guide is live with your name and GitHub avatar on it.
+          Once it merges, your guide is live with your name and GitHub avatar
+          on it.
         </li>
       </ol>
 
@@ -103,20 +101,16 @@ export default function ContributePage() {
         The bar for guides
       </h2>
       <p className="mt-[10px] text-[15.5px] leading-[1.7] tracking-[-0.01em] text-black/75">
-        Would a teen show it off, use it daily, or keep it alive a week
-        later? If not, it&rsquo;s a checkpoint, not a project - and it
-        doesn&rsquo;t get a guide. (This is why there&rsquo;s no
-        blink-an-LED guide.) Concepts and tools have no gate beyond being
-        true, clear, and linked from somewhere.
+        A guide has to be clear, easy to follow, and structured well enough
+        that someone can build the thing from it without getting lost.
+        Concepts and tools are held to the same bar.
       </p>
 
       <h2 className="mt-[44px] text-[26px] font-semibold tracking-[-0.03em] text-black">
         The block registry
       </h2>
       <p className="mt-[10px] text-[15.5px] leading-[1.7] tracking-[-0.01em] text-black/75">
-        Guides are consistent because the vocabulary is closed - these blocks
-        are the whole set. They&rsquo;re also what makes a visual editor
-        possible later: each block round-trips as a form.
+        These blocks are the whole vocabulary. Anything else fails CI.
       </p>
       <table className="mt-[14px] w-full border-collapse border-t border-black/10 text-[14px] tracking-[-0.01em]">
         <tbody className="divide-y divide-black/[0.07]">
@@ -135,11 +129,10 @@ export default function ContributePage() {
         Linking discipline
       </h2>
       <p className="mt-[10px] text-[15.5px] leading-[1.7] tracking-[-0.01em] text-black/75">
-        A build never explains I2C inline - it links the concept. A concept
-        never teaches KiCad - it links the tool. Guides stay short, each idea
-        gets written well once, and every reference page is reachable from a
-        moment of need instead of a cold sidebar. Deep reference material
-        links out via <code className="rounded-[5px] bg-[#f3f3f3] px-[5px] py-[1.5px] font-mono text-[0.88em]">&lt;ExternalGuide&gt;</code> - Jolts is the front door, not the whole library.
+        Link to a concept page instead of explaining the concept inline, and
+        to a tool page instead of teaching the tool. Guides stay short that
+        way, and each idea is written once, where people go looking for it.
+        For anything outside what Jolts covers, link out with <code className="rounded-[5px] bg-[#f3f3f3] px-[5px] py-[1.5px] font-mono text-[0.88em]">&lt;ExternalGuide&gt;</code>.
       </p>
 
       <h2 className="mt-[44px] text-[26px] font-semibold tracking-[-0.03em] text-black">
@@ -161,18 +154,17 @@ export default function ContributePage() {
         >
           MIT
         </a>
-        . Same split Adafruit uses: writing stays open and remixable, code
-        never infects anyone&rsquo;s project. You keep credit - permanently.
+        . Your name stays on the guide.
       </p>
 
       <p className="mt-[34px] text-[13.5px] tracking-[-0.01em] text-black/45">
-        Not sure what to write?{" "}
+        If you&rsquo;ve built something that isn&rsquo;t in{" "}
         <Link
-          href="/builds"
+          href="/guides"
           className="font-semibold text-black/70 underline decoration-black/25 underline-offset-2 hover:decoration-black"
         >
-          Build something first
-        </Link>{" "} - the best guides come from fresh scars.
+          the guides
+        </Link>{" "} yet, write it up.
       </p>
     </div>
   )

@@ -8,7 +8,7 @@ import { listGuides } from "@/lib/content"
 export const metadata: Metadata = {
   title: "Start here - jolts",
   description:
-    "Never touched hardware? Here's how Jolts works and how to pick a first build you'll actually use.",
+    "How Jolts works and how to pick a first build you'll actually use, even if you've never touched hardware.",
 }
 
 const contentTypes = [
@@ -16,19 +16,19 @@ const contentTypes = [
     href: "/guides",
     accent: "#FF902F",
     title: "Guides",
-    text: "make this specific thing, start to finish. This is where you spend most of your time.",
+    text: "make this specific thing, start to finish.",
   },
   {
     href: "/concepts",
     accent: "#8A21B8",
     title: "Concepts",
-    text: "understand this idea. Builds link here the moment you need one - you rarely browse these cold.",
+    text: "understand this idea - I2C, voltage, pull-up resistors.",
   },
   {
     href: "/tools",
     accent: "#067A54",
     title: "Tools",
-    text: "how to use this specific thing - an iron, a multimeter, KiCad. Each starts with a first-hour page.",
+    text: "how to use this specific thing - an iron, a multimeter, KiCad.",
   },
 ]
 
@@ -84,9 +84,7 @@ export default function StartPage() {
           How Jolts works
         </h2>
         <p className="mt-[10px] text-[15.5px] leading-[1.7] tracking-[-0.01em] text-[#33383f]">
-          Everything on this site is one of three things, and they link to
-          each other at the moment of need - a build never stops to lecture
-          you.
+          Everything here is one of three things.
         </p>
         <ul className="mt-[14px] space-y-[10px] text-[15.5px] leading-[1.65] tracking-[-0.01em] text-[#33383f]">
           {contentTypes.map((ct) => (
@@ -114,9 +112,7 @@ export default function StartPage() {
           Pick your first build
         </h2>
         <p className="mt-[10px] text-[15.5px] leading-[1.7] tracking-[-0.01em] text-[#33383f]">
-          Jolts doesn&rsquo;t prescribe a first project - pick the thing you
-          want to own. Every card declares what it assumes, so &ldquo;no
-          soldering&rdquo; means exactly that. Builds that skip the iron are
+          Pick the thing you want to own. Builds that need no soldering are
           listed first.
         </p>
       </div>
@@ -143,13 +139,13 @@ export default function StartPage() {
           >
             soldering iron guide
           </Link>{" "}
-          first. Stuck at any point? Ask in{" "}
+          first. If you get stuck, ask in{" "}
           <a
             href="https://hackclub.slack.com"
             className="font-medium text-[#16181d] underline decoration-black/25 decoration-[1.5px] underline-offset-[3px] hover:decoration-black"
           >
             the Hack Club Slack
-          </a>{" "} - that&rsquo;s what it&rsquo;s for.
+          </a>.
         </p>
       </div>
     </div>
