@@ -40,9 +40,13 @@ export class GitHubError extends Error {
   }
 }
 
-type Init = Omit<RequestInit, "body"> & { body?: unknown }
+export type Init = Omit<RequestInit, "body"> & { body?: unknown }
 
-async function gh<T>(token: string, path: string, init: Init = {}): Promise<T> {
+export async function gh<T>(
+  token: string,
+  path: string,
+  init: Init = {}
+): Promise<T> {
   const { body, ...rest } = init
   const res = await fetch(`${API}${path}`, {
     ...rest,
@@ -82,6 +86,29 @@ function githubMessage(parsed: unknown, status: number): string {
   const obj = parsed as { message?: string; errors?: { message?: string }[] } | null
   const first = obj?.errors?.find((e) => e.message)?.message
   return obj?.message ? (first ? `${obj.message}: ${first}` : obj.message) : `GitHub returned ${status}`
+}
+
+/** Escape hatch for endpoints that answer with a file's bytes rather than
+    JSON. Returns null for 404 - "this path doesn't exist at that ref" is a
+    normal answer when a file was added or deleted. */
+export async function ghRaw(
+  token: string,
+  path: string
+): Promise<string | null> {
+  const res = await fetch(`${API}${path}`, {
+    headers: {
+      accept: "application/vnd.github.raw",
+      "x-github-api-version": "2022-11-28",
+      "user-agent": "jolts-editor",
+      authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  })
+  if (res.status === 404) return null
+  if (!res.ok) {
+    throw new GitHubError(`GitHub returned ${res.status}`, res.status, `GET ${path}`)
+  }
+  return res.text()
 }
 
 /* ---------- who ---------- */

@@ -28,25 +28,21 @@ const TYPE_CARDS: {
   type: ContentType
   icon: typeof RocketLaunch
   what: string
-  bar: string
 }[] = [
   {
     type: "guides",
     icon: RocketLaunch,
-    what: "“Make this specific thing” - steps, parts, photos.",
-    bar: "The bar: would a teen show it off, use it daily, or keep it alive a week later?",
+    what: "Something you build, with parts and photos.",
   },
   {
     type: "concepts",
     icon: Lightbulb,
-    what: "“Understand this idea” - voltage, I2C, pull-ups.",
-    bar: "The bar: true, clear, and linked from somewhere.",
+    what: "An idea guides can link to instead of explaining.",
   },
   {
     type: "tools",
     icon: Wrench,
-    what: "“How to use this thing” - irons, multimeters, KiCad.",
-    bar: "The bar: true, clear, and linked from somewhere.",
+    what: "How to use a specific tool, from multimeters to KiCad.",
   },
 ]
 
@@ -130,10 +126,6 @@ export function NewEntryFlow({
       <h1 className="font-augie text-[42px] leading-[1.05] text-[#16181d]">
         Write something new
       </h1>
-      <p className="mt-[10px] text-[16px] leading-[1.55] tracking-[-0.01em] text-[#5c6470]">
-        Everything on Jolts is written by people who built the thing. Your
-        name goes on the page.
-      </p>
 
       {drafts.length > 0 && (
         <div className="mt-[24px]">
@@ -245,10 +237,6 @@ export function NewEntryFlow({
           )
         })}
       </div>
-
-      <p className="mt-[10px] text-[12.5px] leading-[1.5] text-[#9aa1ab]">
-        {TYPE_CARDS.find((c) => c.type === type)?.bar}
-      </p>
 
       <label className="mt-[24px] block text-[13px] font-semibold tracking-[-0.01em] text-[#5c6470]">
         What&rsquo;s it called?

@@ -239,7 +239,7 @@ export function SaveDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-[20px] backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-[20px]"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && phase !== "working") onClose()
       }}
@@ -273,10 +273,10 @@ export function SaveDialog({
         <div className="relative rounded-[7px] bg-white px-[18px] py-[16px] shadow-[0px_2px_4px_0px_rgba(0,0,0,0.15)]">
           {changes.length === 0 ? (
             <p className="py-[16px] text-center text-[14px] text-[#9aa1ab]">
-              Nothing has changed yet - edit something first!
+              Nothing has changed yet.
             </p>
           ) : phase === "done" && result ? (
-            <Success result={result} slug={slug} />
+            <Success result={result} />
           ) : (
             <>
               {/* ---------- who ---------- */}
@@ -525,18 +525,13 @@ function ChangeList({
   )
 }
 
-function Success({ result, slug }: { result: PullRequestResult; slug: string }) {
+function Success({ result }: { result: PullRequestResult }) {
   return (
     <div>
       <div className="rounded-[11px] border border-[#14B87A]/30 bg-[#E9FAF3] px-[15px] py-[13px]">
         <p className="flex items-center gap-[7px] text-[14.5px] font-semibold text-[#067A54]">
           <CheckCircle size={17} weight="fill" aria-hidden />
           Pull request #{result.number} is open
-        </p>
-        <p className="mt-[5px] text-[13px] leading-[1.55] text-[#067A54]/85">
-          Your work is on GitHub under your own name. CI will validate the
-          frontmatter and a preview deploy will render your page - then a
-          reviewer helps you polish it.
         </p>
       </div>
 
@@ -561,20 +556,6 @@ function Success({ result, slug }: { result: PullRequestResult; slug: string }) 
           <dd className="min-w-0 truncate font-mono text-[#5c6470]">{result.fork}</dd>
         </div>
       </dl>
-
-      <p className="mt-[13px] text-[12.5px] leading-[1.55] text-[#9aa1ab]">
-        Want eyes on it faster? Drop the link in{" "}
-        <a
-          href="https://hackclub.slack.com/archives/jolts"
-          target="_blank"
-          rel="noreferrer"
-          className="font-semibold text-[#5c6470] underline underline-offset-2 hover:text-[#16181d]"
-        >
-          #jolts on the Hack Club Slack
-        </a>
-        . Keep editing <span className="font-mono">{slug}</span> and save again
-        to open another pull request.
-      </p>
     </div>
   )
 }

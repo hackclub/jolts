@@ -72,16 +72,6 @@ export default function ContributePage() {
       </div>
       <p className="mt-[10px] text-[13px] tracking-[-0.01em] text-black/45">
         The visual editor is WYSIWYG - what you type is exactly what ships.
-        Connect GitHub once and Save changes does the rest: it forks the
-        repo, branches off current main and opens the pull request under
-        your name. Prefer raw MDX? Copy{" "}
-        <a
-          href={`${REPO}/blob/main/content/TEMPLATE.mdx`}
-          className="font-semibold text-black/70 underline decoration-black/25 underline-offset-2 hover:decoration-black"
-        >
-          TEMPLATE.mdx
-        </a>{" "}
-        and go.
       </p>
 
       <h2 className="mt-[44px] text-[26px] font-semibold tracking-[-0.03em] text-black">

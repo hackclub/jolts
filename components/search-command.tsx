@@ -17,8 +17,10 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
+import { CheckerFrame } from "@/components/checker-frame"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Command as CommandPrimitive } from "cmdk"
+import { chromeTheme } from "@/lib/theme"
 import { cn } from "@/lib/utils"
 
 /* Site search: a command palette in the navigation dropdown's blue
@@ -245,22 +247,13 @@ export function SearchButton({ className }: { className?: string }) {
           showCloseButton={false}
           className="top-[14%] w-full max-w-[calc(100%-2rem)] translate-y-0 gap-0 bg-transparent p-0 ring-0 sm:max-w-[580px]"
         >
-          {/* the navigation dropdown's chrome: blue checker frame */}
-          <div className="relative overflow-hidden rounded-[14px] p-[6px] shadow-[0px_10px_40px_-6px_rgba(0,0,0,0.4)]">
-            <div
-              aria-hidden
-              className="absolute -inset-[60%] rotate-[-16.06deg] bg-[#01A6FF]"
-              style={{
-                backgroundImage:
-                  "conic-gradient(#01BBFF 0 25%, #01A6FF 0 50%, #01BBFF 0 75%, #01A6FF 0)",
-                backgroundSize: "150px 150px",
-              }}
-            />
-            <div
-              aria-hidden
-              className="absolute inset-0 bg-gradient-to-b from-[rgba(1,206,242,0)] to-[rgba(1,206,242,0.7)]"
-            />
-            <div className="relative overflow-hidden rounded-[9px] bg-white shadow-[0px_3px_5px_0px_rgba(0,0,0,0.2)]">
+          {/* same chrome as the nav dropdown and the save dialog */}
+          <CheckerFrame
+            theme={chromeTheme}
+            checkerSize={150}
+            className="shadow-[0px_10px_40px_-6px_rgba(0,0,0,0.4)]"
+          >
+            <div className="relative overflow-hidden rounded-[7px] bg-white shadow-[0px_3px_5px_0px_rgba(0,0,0,0.2)]">
               <Command
                 className="rounded-none! bg-white p-0"
                 loop
@@ -415,7 +408,7 @@ export function SearchButton({ className }: { className?: string }) {
                 </div>
               </Command>
             </div>
-          </div>
+          </CheckerFrame>
         </DialogContent>
       </Dialog>
     </>

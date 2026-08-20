@@ -23,6 +23,7 @@ import {
 } from "@phosphor-icons/react"
 import { Editor, EditorContent } from "@tiptap/react"
 
+import { CheckerFrame } from "@/components/checker-frame"
 import { BlockHandle } from "@/components/editor/block-handle"
 import { EditorBubbleMenu } from "@/components/editor/bubble"
 import {
@@ -63,7 +64,7 @@ import { parseMdxDoc, type ParsedDoc } from "@/lib/editor/mdx-parse"
 import { serializeMdxDoc } from "@/lib/editor/mdx-serialize"
 import { remapSliceKeys, type BlockSlice, type PMNode } from "@/lib/editor/pm-doc"
 import type { PullRequestResult } from "@/lib/github/types"
-import { typeTheme } from "@/lib/theme"
+import { chromeTheme, typeTheme } from "@/lib/theme"
 import { cn } from "@/lib/utils"
 
 /* The editor. One EditorShell per entry: the left rail switches pages
@@ -906,7 +907,7 @@ export function EditorShell(props: EditorSource) {
       {leaveTo && (
         <ChoiceDialog
           title="Keep working on this later?"
-          body="Your edits live as a draft in this browser - come back any time and they'll be right here."
+          body="Your edits are saved as a draft in this browser."
           confirmLabel="Keep my draft"
           confirmClass="bg-[#16181d] hover:bg-black"
           altLabel="Discard changes"
@@ -980,8 +981,7 @@ export function EditorShell(props: EditorSource) {
                 ) : activeEntry.autoFallback ? (
                   <p className="mb-[8px] rounded-[9px] border border-[#FF902F]/30 bg-[#FFF4E6] px-[12px] py-[8px] text-[13px] leading-[1.5] text-[#9a5a1d]">
                     This page uses MDX the visual editor doesn&rsquo;t
-                    understand yet, so you&rsquo;re editing the source
-                    directly - nothing will be lost.
+                    understand yet, so you&rsquo;re editing the source.
                   </p>
                 ) : null}
                 <SourceEditor
@@ -1088,46 +1088,55 @@ function ChoiceDialog({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-[20px] backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-[20px]"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onCancel()
       }}
     >
-      <div className="w-full max-w-[400px] rounded-[14px] bg-white p-[20px] shadow-[0px_24px_60px_-12px_rgba(0,0,0,0.4)]">
-        <h2 className="text-[16px] font-semibold tracking-[-0.02em] text-[#16181d]">
-          {title}
-        </h2>
-        <p className="mt-[6px] text-[13.5px] leading-[1.55] text-[#5c6470]">
-          {body}
-        </p>
-        <div className="mt-[16px] flex flex-col gap-[7px]">
-          <button
-            type="button"
-            onClick={onConfirm}
-            className={cn(
-              "rounded-[9px] py-[8px] text-[14px] font-semibold text-white transition-all",
-              confirmClass
-            )}
-          >
-            {confirmLabel}
-          </button>
-          {altLabel && onAlt && (
-            <button
-              type="button"
-              onClick={onAlt}
-              className="rounded-[9px] border border-black/10 py-[8px] text-[14px] font-semibold text-[#d43c3c] transition-colors hover:border-[#d43c3c]/40 hover:bg-[#fdecec]"
-            >
-              {altLabel}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-[9px] py-[7px] text-[13.5px] font-medium text-[#9aa1ab] transition-colors hover:bg-black/[0.04] hover:text-[#16181d]"
-          >
-            Stay here
-          </button>
-        </div>
+      <div className="w-full max-w-[400px]">
+        <CheckerFrame
+          theme={chromeTheme}
+          checkerSize={150}
+          className="shadow-[0px_24px_60px_-12px_rgba(0,0,0,0.45)]"
+        >
+          {/* title on the frame, like the save dialog */}
+          <h2 className="relative px-[10px] pt-[3px] pb-[9px] text-[14.5px] font-semibold tracking-[-0.02em] text-white [filter:drop-shadow(0px_1px_3px_rgba(0,0,0,0.28))]">
+            {title}
+          </h2>
+          <div className="relative rounded-[7px] bg-white px-[18px] py-[16px] shadow-[0px_2px_4px_0px_rgba(0,0,0,0.15)]">
+            <p className="text-[13.5px] leading-[1.55] text-[#5c6470]">
+              {body}
+            </p>
+            <div className="mt-[16px] flex flex-col gap-[7px]">
+              <button
+                type="button"
+                onClick={onConfirm}
+                className={cn(
+                  "rounded-[9px] py-[8px] text-[14px] font-semibold text-white transition-all",
+                  confirmClass
+                )}
+              >
+                {confirmLabel}
+              </button>
+              {altLabel && onAlt && (
+                <button
+                  type="button"
+                  onClick={onAlt}
+                  className="rounded-[9px] border border-black/10 py-[8px] text-[14px] font-semibold text-[#d43c3c] transition-colors hover:border-[#d43c3c]/40 hover:bg-[#fdecec]"
+                >
+                  {altLabel}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onCancel}
+                className="rounded-[9px] py-[7px] text-[13.5px] font-medium text-[#9aa1ab] transition-colors hover:bg-black/[0.04] hover:text-[#16181d]"
+              >
+                Stay here
+              </button>
+            </div>
+          </div>
+        </CheckerFrame>
       </div>
     </div>
   )

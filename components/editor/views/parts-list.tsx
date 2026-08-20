@@ -34,7 +34,7 @@ export function PartsListView(props: NodeViewProps) {
       <BlockShell props={props} label="parts list">
         <div className="my-[30px] rounded-[10px] border border-dashed border-black/15 px-[16px] py-[12px] text-[13.5px] text-[#9aa1ab]">
           &lt;PartsList /&gt; only renders on guides - this entry is a{" "}
-          {meta.type}. You probably want to delete this block.
+          {meta.type}.
         </div>
       </BlockShell>
     )
