@@ -25,6 +25,9 @@ export type Draft = {
   /** the pull request this draft has already been saved into, if any -
       so "PR #123" survives a reload while the branch waits for review */
   pullRequest?: PullRequestResult
+  /** signatureOf() the change set at the moment it was saved, so a restored
+      draft knows whether it still matches its pull request */
+  savedSignature?: string
 }
 
 const DB_NAME = "jolts-editor"

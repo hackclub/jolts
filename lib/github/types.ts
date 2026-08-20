@@ -39,3 +39,16 @@ export type PullRequestResult = {
   /** "owner/repo" of the fork the branch lives in */
   fork: string
 }
+
+/** A pull request this editor opened for one entry, in whatever state it is
+    now. `mine` is relative to whoever asked. */
+export type EntryPr = {
+  number: number
+  url: string
+  branch: string
+  author: string
+  mine: boolean
+  state: "open" | "merged" | "closed"
+  title: string
+  updatedAt: string
+}

@@ -1,6 +1,7 @@
 import type { FileChange } from "@/lib/editor/changes"
 import { HINT_COOKIE } from "@/lib/github/config"
 import type {
+  EntryPr,
   ForkInfo,
   GhUser,
   PullRequestResult,
@@ -128,6 +129,36 @@ export function connect(): Promise<void> {
   })
 }
 
+/* ---------- what already exists for this entry ---------- */
+
+/** Everything already open, merged or closed for one entry. Returns null when
+    nobody is signed in - the editor works fine without knowing, it just can't
+    label the state until the save dialog asks them to connect. */
+export async function fetchEntryPrs(
+  contentType: string,
+  slug: string
+): Promise<EntryPr[] | null> {
+  const res = await fetch(
+    `/api/github/entry-prs?type=${encodeURIComponent(contentType)}&slug=${encodeURIComponent(slug)}`,
+    { credentials: "same-origin" }
+  )
+  if (!res.ok) return null
+  const data = (await res.json().catch(() => null)) as { prs?: EntryPr[] } | null
+  return data?.prs ?? null
+}
+
+/** The one open pull request a further save should revise, if there is one. */
+export const myOpenPr = (prs: EntryPr[] | null) =>
+  prs?.find((pr) => pr.mine && pr.state === "open") ?? null
+
+/** The most recent merged one, for telling a stale draft what happened. */
+export const myMergedPr = (prs: EntryPr[] | null) =>
+  prs?.find((pr) => pr.mine && pr.state === "merged") ?? null
+
+/** Other people's open work on the same entry - worth a warning, never a block. */
+export const othersOpenPrs = (prs: EntryPr[] | null) =>
+  prs?.filter((pr) => !pr.mine && pr.state === "open") ?? []
+
 /* ---------- the save ---------- */
 
 export async function ensureFork(): Promise<{ fork: ForkInfo; user: GhUser }> {
@@ -157,6 +188,8 @@ export async function createPullRequest(input: {
   description: string
   fork: ForkInfo
   changes: WireChange[]
+  /** revise this pull request instead of opening a new one */
+  updates?: number
 }): Promise<PullRequestResult> {
   return api<PullRequestResult>("/api/github/pr", {
     method: "POST",

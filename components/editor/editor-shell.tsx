@@ -19,6 +19,7 @@ import {
   ArrowSquareOut,
   CloudCheck,
   Code,
+  GitMerge,
   GitPullRequest,
 } from "@phosphor-icons/react"
 import { Editor, EditorContent } from "@tiptap/react"
@@ -47,6 +48,7 @@ import {
 } from "@/lib/content-schema"
 import {
   computeChanges,
+  signatureOf,
   splitRaw,
   type FileChange,
   type PageDraftOut,
@@ -63,7 +65,12 @@ import { prepareImage } from "@/lib/editor/image-prep"
 import { parseMdxDoc, type ParsedDoc } from "@/lib/editor/mdx-parse"
 import { serializeMdxDoc } from "@/lib/editor/mdx-serialize"
 import { remapSliceKeys, type BlockSlice, type PMNode } from "@/lib/editor/pm-doc"
-import type { PullRequestResult } from "@/lib/github/types"
+import {
+  fetchEntryPrs,
+  myMergedPr,
+  myOpenPr,
+} from "@/lib/github/client"
+import type { EntryPr, PullRequestResult } from "@/lib/github/types"
 import { chromeTheme, typeTheme } from "@/lib/theme"
 import { cn } from "@/lib/utils"
 
@@ -182,6 +189,13 @@ export function EditorShell(props: EditorSource) {
   const [saveOpen, setSaveOpen] = useState(false)
   const [saveChanges, setSaveChanges] = useState<FileChange[]>([])
   const [pullRequest, setPullRequest] = useState<PullRequestResult | null>(null)
+  /* what the change set looked like when it was last saved, so "Saved" and
+     "Update #12" are distinguishable states rather than one hopeful guess */
+  const [savedSignature, setSavedSignature] = useState<string | null>(null)
+  const [editedSinceSave, setEditedSinceSave] = useState(false)
+  /* everything GitHub knows about this entry's pull requests - the draft only
+     ever holds a hint, this is the truth */
+  const [entryPrs, setEntryPrs] = useState<EntryPr[] | null>(null)
   const [leaveTo, setLeaveTo] = useState<string | null>(null)
   const [, forceRender] = useState(0)
   const rerender = () => forceRender((n) => n + 1)
@@ -197,12 +211,14 @@ export function EditorShell(props: EditorSource) {
   const uploadsRef = useRef(uploads)
   const pagesRef = useRef(pages)
   const pullRequestRef = useRef(pullRequest)
+  const savedSignatureRef = useRef(savedSignature)
   useEffect(() => {
     metaRef.current = meta
     uploadsRef.current = uploads
     pagesRef.current = pages
     pullRequestRef.current = pullRequest
-  }, [meta, uploads, pages, pullRequest])
+    savedSignatureRef.current = savedSignature
+  }, [meta, uploads, pages, pullRequest, savedSignature])
 
   const editorsRef = useRef(new Map<string, EditorEntry>())
 
@@ -248,12 +264,16 @@ export function EditorShell(props: EditorSource) {
         data: u.data.buffer.slice(0) as ArrayBuffer,
       })),
       ...(pullRequestRef.current ? { pullRequest: pullRequestRef.current } : {}),
+      ...(savedSignatureRef.current
+        ? { savedSignature: savedSignatureRef.current }
+        : {}),
     }
     await saveDraft(draft)
     return true
   }, [draftKey, props.mode])
 
-  const scheduleAutosave = useCallback(() => {
+  const scheduleAutosave = useCallback((opts?: { edited?: boolean }) => {
+    if (opts?.edited !== false) setEditedSinceSave(true)
     setSaveState("saving")
     if (autosaveTimer.current) clearTimeout(autosaveTimer.current)
     autosaveTimer.current = setTimeout(async () => {
@@ -526,6 +546,7 @@ export function EditorShell(props: EditorSource) {
       setPages(nextPages)
       setMetaState(draft.meta)
       setPullRequest(draft.pullRequest ?? null)
+      setSavedSignature(draft.savedSignature ?? null)
       // keep whatever page is open (?page= deep links land before the
       // async restore resolves) - match it into the restored list
       setActiveId((cur) => {
@@ -535,8 +556,16 @@ export function EditorShell(props: EditorSource) {
           : null
         return (match ?? nextPages[0]).id
       })
-      // recompute dirty dots
-      setTimeout(() => nextPages.forEach((p) => markDirtyCheck(p.id)), 0)
+      // recompute dirty dots, then work out - once - whether this draft still
+      // matches the pull request it was saved into
+      setTimeout(() => {
+        nextPages.forEach((p) => markDirtyCheck(p.id))
+        setEditedSinceSave(
+          draft.savedSignature
+            ? signatureOf(buildChangesRef.current()) !== draft.savedSignature
+            : true
+        )
+      }, 0)
     },
     [initial.pages, makeEditor, markDirtyCheck]
   )
@@ -562,6 +591,18 @@ export function EditorShell(props: EditorSource) {
       alive = false
     }
   }, [draftKey, restoreDraft])
+
+  /* ---------- what GitHub already has for this entry ----------
+     Only asked when the draft says a pull request exists: a first-time editor
+     shouldn't pay a round trip to be told "nothing yet". The save dialog asks
+     again when it opens, which is what covers the switched-browser case. */
+
+  const askedPrs = useRef(false)
+  useEffect(() => {
+    if (askedPrs.current || !pullRequest) return
+    askedPrs.current = true
+    void fetchEntryPrs(props.contentType, props.slug).then(setEntryPrs)
+  }, [pullRequest, props.contentType, props.slug])
 
   /* ---------- meta ---------- */
 
@@ -722,10 +763,19 @@ export function EditorShell(props: EditorSource) {
   /* The draft deliberately survives a save: until the pull request merges,
      the published page still shows the old version, so this browser holds
      the only copy of the new one. We just remember where it went. */
-  const onSaved = useCallback((result: PullRequestResult) => {
-    setPullRequest(result)
-    scheduleAutosave()
-  }, [scheduleAutosave])
+  const onSaved = useCallback(
+    (result: PullRequestResult, signature: string) => {
+      setPullRequest(result)
+      setSavedSignature(signature)
+      setEditedSinceSave(false)
+      // GitHub's view of this entry just changed; re-read it so the top bar
+      // switches to "Saved" and a later edit offers to revise this PR
+      void fetchEntryPrs(props.contentType, props.slug).then(setEntryPrs)
+      // persisting the pull request into the draft is not a user edit
+      scheduleAutosave({ edited: false })
+    },
+    [scheduleAutosave, props.contentType, props.slug]
+  )
 
   /* ---------- render ---------- */
 
@@ -800,11 +850,37 @@ export function EditorShell(props: EditorSource) {
     deleted: p.deleted,
   }))
 
+  /* ---------- where does this work stand? ----------
+     One derived answer for the top bar, because "you have edits" is not the
+     same question as "are those edits already in a pull request". */
+  const openPr = myOpenPr(entryPrs)
+  const mergedPr = myMergedPr(entryPrs)
+
+  /* Which pull request to point at, and what to call its state. An open one
+     wins: it is the thing a further save would revise. A merged one is worth
+     showing too - it explains why the editor's starting point just changed
+     under them. Before GitHub has answered, the draft's own hint stands in. */
+  const prChip: { number: number; url: string; tone: string; label: string } | null =
+    openPr
+      ? { number: openPr.number, url: openPr.url, tone: "open", label: "" }
+      : mergedPr
+        ? { number: mergedPr.number, url: mergedPr.url, tone: "merged", label: "merged" }
+        : pullRequest
+          ? { number: pullRequest.number, url: pullRequest.url, tone: "open", label: "" }
+          : null
+
   const anythingDirty =
     dirtyIds.size > 0 ||
     metaDirty ||
     uploads.size > 0 ||
     pages.some((p) => p.deleted || p.originalName !== p.fileName)
+
+  /* "Saved" rather than "Save again" needs to know whether anything moved
+     since the save. That is a boolean, tracked as edits happen - fingerprinting
+     the whole change set on every keystroke would serialize every file for an
+     answer we can just remember. The fingerprint is only needed once, when a
+     restored draft has to work out whether it still matches its pull request. */
+  const savedAndUnchanged = savedSignature !== null && !editedSinceSave
 
   const viewHref =
     props.mode === "edit"
@@ -872,33 +948,52 @@ export function EditorShell(props: EditorSource) {
               <Code size={15} weight="bold" />
             </button>
           )}
-          {/* already saved once? keep a way back to that pull request -
-              editing on and saving again simply opens the next one */}
-          {pullRequest && (
+          {/* where the work stands: a link to the pull request it lives in,
+              labelled with what that pull request has actually done */}
+          {(prChip ?? null) && (
             <a
-              href={pullRequest.url}
+              href={prChip!.url}
               target="_blank"
               rel="noreferrer"
-              title={`Pull request #${pullRequest.number} on ${pullRequest.fork}`}
-              className="hidden items-center gap-[5px] rounded-[8px] border border-[#14B87A]/35 bg-[#E9FAF3] px-[9px] py-[4px] text-[12.5px] font-semibold tracking-[-0.01em] text-[#067A54] transition-colors hover:bg-[#d8f5ea] sm:flex"
+              title={`Pull request #${prChip!.number}`}
+              className={cn(
+                "hidden items-center gap-[5px] rounded-[8px] border px-[9px] py-[4px] text-[12.5px] font-semibold tracking-[-0.01em] transition-colors sm:flex",
+                prChip!.tone === "merged"
+                  ? "border-[#6f42c1]/35 bg-[#f3eefc] text-[#5c37a1] hover:bg-[#eae1f8]"
+                  : prChip!.tone === "closed"
+                    ? "border-black/15 bg-[#f4f5f6] text-[#5c6470] hover:bg-[#eceef0]"
+                    : "border-[#14B87A]/35 bg-[#E9FAF3] text-[#067A54] hover:bg-[#d8f5ea]"
+              )}
             >
               <GitPullRequest size={13} weight="bold" aria-hidden />
-              #{pullRequest.number}
+              #{prChip!.number}
+              {prChip!.label && <span className="font-medium">{prChip!.label}</span>}
               <ArrowSquareOut size={11} weight="bold" aria-hidden />
             </a>
           )}
           <button
             type="button"
             onClick={openSave}
-            disabled={!anythingDirty}
+            disabled={!anythingDirty || savedAndUnchanged}
             className={cn(
               "flex items-center gap-[7px] rounded-[9px] px-[13px] py-[6px] text-[13.5px] font-semibold tracking-[-0.01em] text-white transition-all",
-              anythingDirty ? "hover:brightness-105" : "cursor-not-allowed opacity-40"
+              anythingDirty && !savedAndUnchanged
+                ? "hover:brightness-105"
+                : "cursor-not-allowed opacity-40"
             )}
             style={{ background: theme.accent }}
           >
-            <GitPullRequest size={15} weight="bold" aria-hidden />
-            {pullRequest ? "Save again" : "Save changes"}
+            {savedAndUnchanged ? (
+              <>
+                <CloudCheck size={15} weight="fill" aria-hidden />
+                Saved
+              </>
+            ) : (
+              <>
+                <GitPullRequest size={15} weight="bold" aria-hidden />
+                {openPr ? `Update #${openPr.number}` : "Save changes"}
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -921,6 +1016,31 @@ export function EditorShell(props: EditorSource) {
           }}
           onCancel={() => setLeaveTo(null)}
         />
+      )}
+
+      {/* ---------- your last save landed ----------
+          Only shown when there is something to resolve: the draft still holds
+          edits and the pull request they came from has already merged, so the
+          next save is a new one. When the draft matches what merged, the empty
+          change set deletes it on its own and nothing needs saying. */}
+      {mergedPr && !openPr && anythingDirty && !savedAndUnchanged && (
+        <div className="mx-auto w-full max-w-[1020px] px-[28px] pt-[18px]">
+          <p className="flex items-start gap-[8px] rounded-[10px] border border-[#6f42c1]/25 bg-[#f7f3fd] px-[13px] py-[10px] text-[13px] leading-[1.55] text-[#5c37a1]">
+            <GitMerge size={15} weight="bold" className="mt-[2px] shrink-0" aria-hidden />
+            <span>
+              Pull request{" "}
+              <a
+                href={mergedPr.url}
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold underline underline-offset-2"
+              >
+                #{mergedPr.number}
+              </a>{" "}
+              was merged. These edits came after it, so saving opens a new one.
+            </span>
+          </p>
+        </div>
       )}
 
       {/* ---------- the guide layout, editable ---------- */}

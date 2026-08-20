@@ -22,6 +22,37 @@ export type FileChange =
     }
   | { kind: "add-binary"; path: string; data: Uint8Array }
 
+/* A stable fingerprint of a change set. The editor needs to tell "nothing
+   has changed since I saved" from "I edited after saving" - the first means
+   the button should read Saved and do nothing, the second means the open pull
+   request wants updating. Comparing fingerprints avoids keeping a second copy
+   of every file just to answer that. */
+export function signatureOf(changes: FileChange[]): string {
+  const parts = changes
+    .map((c) => {
+      const body =
+        c.kind === "add-binary"
+          ? `bin:${c.data.length}`
+          : "after" in c
+            ? c.after
+            : ""
+      const from = c.kind === "rename" ? c.fromPath : ""
+      return `${c.kind}\u0000${from}\u0000${c.path}\u0000${body}`
+    })
+    .sort()
+  // two independent accumulators plus the count - collisions between two real
+  // edits of the same entry are not a risk worth a hashing dependency
+  let a = 0x811c9dc5
+  let b = 0x9e3779b9
+  const joined = parts.join("\u0001")
+  for (let i = 0; i < joined.length; i++) {
+    const ch = joined.charCodeAt(i)
+    a = Math.imul(a ^ ch, 16777619) >>> 0
+    b = (b + Math.imul(ch, 31) + (b << 5)) >>> 0
+  }
+  return `${a.toString(36)}.${b.toString(36)}.${changes.length}`
+}
+
 export type PageDraftOut = {
   /** target filename, e.g. "index.mdx" or "03-usb-c.mdx" */
   fileName: string

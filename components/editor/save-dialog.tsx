@@ -23,19 +23,22 @@ import { structuredPatch } from "diff"
 import { CheckerFrame } from "@/components/checker-frame"
 import { GithubMark } from "@/components/github-mark"
 import { celebrate } from "@/lib/confetti"
-import type { FileChange } from "@/lib/editor/changes"
+import { signatureOf, type FileChange } from "@/lib/editor/changes"
 import {
   SaveError,
   cachedUser,
   connect,
   createPullRequest,
   ensureFork,
+  fetchEntryPrs,
   fetchSession,
+  myOpenPr,
+  othersOpenPrs,
   signOut,
   splitChanges,
   uploadImage,
 } from "@/lib/github/client"
-import type { GhUser, PullRequestResult } from "@/lib/github/types"
+import type { EntryPr, GhUser, PullRequestResult } from "@/lib/github/types"
 import { chromeTheme } from "@/lib/theme"
 import { cn } from "@/lib/utils"
 
@@ -84,7 +87,7 @@ export function SaveDialog({
   slug,
 }: {
   onClose: () => void
-  onSaved: (result: PullRequestResult) => void
+  onSaved: (result: PullRequestResult, signature: string) => void
   changes: FileChange[]
   defaultTitle: string
   contentType: string
@@ -101,6 +104,9 @@ export function SaveDialog({
   const [error, setError] = useState<string | null>(null)
   const [needsReconnect, setNeedsReconnect] = useState(false)
   const [result, setResult] = useState<PullRequestResult | null>(null)
+  /* asked fresh on every open, because the answer can have changed on another
+     device since this browser last looked */
+  const [entryPrs, setEntryPrs] = useState<EntryPr[] | null>(null)
 
   const [stepStates, setStepStates] = useState<Record<StepId, "pending" | "active" | "done">>({
     fork: "pending",
@@ -108,6 +114,12 @@ export function SaveDialog({
     pr: "pending",
   })
   const [uploaded, setUploaded] = useState(0)
+
+  /* the contributor's own open pull request for this entry, if any: saving
+     revises that one instead of opening a rival to it */
+  const revising = useMemo(() => myOpenPr(entryPrs), [entryPrs])
+  /* other people mid-edit on the same page - worth saying once, never blocking */
+  const others = useMemo(() => othersOpenPrs(entryPrs), [entryPrs])
 
   const counts = useMemo(() => changes.map(diffCounts), [changes])
   const imageCount = useMemo(
@@ -125,10 +137,16 @@ export function SaveDialog({
             icon: ImageSquare,
           }
         : null,
-      { id: "pr", label: "Opening the pull request", icon: GitBranch },
+      {
+        id: "pr",
+        label: revising
+          ? `Updating pull request #${revising.number}`
+          : "Opening the pull request",
+        icon: GitBranch,
+      },
     ]
     return all.filter((step): step is Step => step !== null)
-  }, [imageCount])
+  }, [imageCount, revising])
 
   /* the hint cookie may be stale (token revoked on github.com) - confirm */
   useEffect(() => {
@@ -146,6 +164,20 @@ export function SaveDialog({
       alive = false
     }
   }, [])
+
+  /* what already exists for this entry - the answer decides whether this save
+     opens a pull request or revises one, so it is read here rather than
+     trusted from the draft */
+  useEffect(() => {
+    if (!user) return
+    let alive = true
+    fetchEntryPrs(contentType, slug).then((prs) => {
+      if (alive) setEntryPrs(prs)
+    })
+    return () => {
+      alive = false
+    }
+  }, [user, contentType, slug])
 
   /* the payoff. Runs once when the pull request lands; stopped if the dialog
      closes mid-flight (including before the dynamic import resolves). */
@@ -219,11 +251,12 @@ export function SaveDialog({
         description,
         fork,
         changes: wire,
+        ...(revising ? { updates: revising.number } : {}),
       })
       setStepStates((s) => ({ ...s, pr: "done" }))
       setResult(pr)
       setPhase("done")
-      onSaved(pr)
+      onSaved(pr, signatureOf(changes))
     } catch (err) {
       const reconnect = err instanceof SaveError && err.reconnect
       setError((err as Error).message)
@@ -257,7 +290,13 @@ export function SaveDialog({
         <div className="relative flex items-center gap-[8px] px-[10px] pt-[3px] pb-[9px] [filter:drop-shadow(0px_1px_3px_rgba(0,0,0,0.28))]">
           <GitPullRequest size={16} weight="bold" className="shrink-0 text-white" aria-hidden />
           <h2 className="min-w-0 flex-1 truncate text-[14.5px] font-semibold tracking-[-0.02em] text-white">
-            {phase === "done" ? "Your pull request is open" : "Save your changes"}
+            {phase === "done"
+              ? revising
+                ? `Pull request #${revising.number} updated`
+                : "Your pull request is open"
+              : revising
+                ? `Update pull request #${revising.number}`
+                : "Save your changes"}
           </h2>
           <button
             type="button"
@@ -276,7 +315,7 @@ export function SaveDialog({
               Nothing has changed yet.
             </p>
           ) : phase === "done" && result ? (
-            <Success result={result} />
+            <Success result={result} updated={Boolean(revising)} />
           ) : (
             <>
               {/* ---------- who ---------- */}
@@ -322,6 +361,42 @@ export function SaveDialog({
                   className="mt-[5px] w-full resize-y rounded-[9px] border border-black/12 px-[11px] py-[7px] text-[14px] leading-[1.5] outline-none placeholder:text-[#c3c8ce] focus:border-[var(--jolts-accent)]"
                 />
               </fieldset>
+
+              {revising && (
+                <p className="mt-[12px] flex items-start gap-[7px] rounded-[10px] border border-black/[0.09] bg-[#fafafa] px-[12px] py-[9px] text-[12.5px] leading-[1.5] text-[#5c6470]">
+                  <GitBranch size={14} weight="bold" className="mt-[2px] shrink-0" aria-hidden />
+                  <span>
+                    Adds a commit to your open pull request{" "}
+                    <a
+                      href={revising.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold underline underline-offset-2 hover:text-[#16181d]"
+                    >
+                      #{revising.number}
+                    </a>{" "}
+                    instead of opening a second one.
+                  </span>
+                </p>
+              )}
+
+              {others.length > 0 && (
+                <p className="mt-[10px] flex items-start gap-[7px] rounded-[10px] border border-[#FF902F]/30 bg-[#fff8f0] px-[12px] py-[9px] text-[12.5px] leading-[1.5] text-[#95591b]">
+                  <WarningCircle size={14} weight="fill" className="mt-[2px] shrink-0" aria-hidden />
+                  <span>
+                    @{others[0].author} has an open pull request on this page (
+                    <a
+                      href={others[0].url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold underline underline-offset-2 hover:text-[#16181d]"
+                    >
+                      #{others[0].number}
+                    </a>
+                    ). Yours may overlap.
+                  </span>
+                </p>
+              )}
 
               <ChangeList changes={changes} counts={counts} />
 
@@ -391,7 +466,7 @@ export function SaveDialog({
                 ) : (
                   <>
                     <GitPullRequest size={17} weight="bold" aria-hidden />
-                    Open pull request
+                    {revising ? `Update #${revising.number}` : "Open pull request"}
                   </>
                 )}
               </button>
@@ -525,13 +600,13 @@ function ChangeList({
   )
 }
 
-function Success({ result }: { result: PullRequestResult }) {
+function Success({ result, updated }: { result: PullRequestResult; updated: boolean }) {
   return (
     <div>
       <div className="rounded-[11px] border border-[#14B87A]/30 bg-[#E9FAF3] px-[15px] py-[13px]">
         <p className="flex items-center gap-[7px] text-[14.5px] font-semibold text-[#067A54]">
           <CheckCircle size={17} weight="fill" aria-hidden />
-          Pull request #{result.number} is open
+          Pull request #{result.number} {updated ? "updated" : "is open"}
         </p>
       </div>
 

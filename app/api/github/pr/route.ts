@@ -3,7 +3,13 @@ import crypto from "node:crypto"
 import { NextResponse } from "next/server"
 
 import { CONTENT_TYPES, type ContentType } from "@/lib/content-schema"
-import { getViewer, openPullRequest } from "@/lib/github/api"
+import {
+  NothingToCommitError,
+  branchPrefix,
+  getViewer,
+  openPullRequest,
+  updatePullRequest,
+} from "@/lib/github/api"
 import { failure, requireToken } from "@/lib/github/route-helpers"
 import { readToken } from "@/lib/github/session"
 import type { ForkInfo, WireChange } from "@/lib/github/types"
@@ -32,6 +38,8 @@ type Body = {
   description?: string
   fork?: Partial<ForkInfo>
   changes?: WireChange[]
+  /** revise this open pull request instead of opening another one */
+  updates?: number
 }
 
 export async function POST(req: Request) {
@@ -94,23 +102,44 @@ export async function POST(req: Request) {
       return bad("That fork isn't yours.")
     }
 
-    const branch = `jolts/${slug}-${crypto.randomBytes(3).toString("hex")}`
-    const result = await openPullRequest(token!, {
-      fork: {
-        owner: user.login,
-        repo: f.repo,
-        baseBranch: f.baseBranch,
-        baseSha: f.baseSha!,
-        baseTreeSha: f.baseTreeSha!,
-        created: false,
-      },
-      branch,
-      title,
-      body: prBody(input.description, contentType, slug),
-      changes,
-    })
+    const fork = {
+      owner: user.login,
+      repo: f.repo,
+      baseBranch: f.baseBranch,
+      baseSha: f.baseSha!,
+      baseTreeSha: f.baseTreeSha!,
+      created: false,
+    }
+    const body = prBody(input.description, contentType, slug)
+
+    const revising = Number(input.updates)
+    const result =
+      Number.isInteger(revising) && revising > 0
+        ? await updatePullRequest(token!, {
+            fork,
+            number: revising,
+            title,
+            body,
+            changes,
+          })
+        : await openPullRequest(token!, {
+            fork,
+            branch: `${branchPrefix(slug)}${crypto.randomBytes(3).toString("hex")}`,
+            title,
+            body,
+            changes,
+          })
     return NextResponse.json(result)
   } catch (err) {
+    if (err instanceof NothingToCommitError) {
+      return NextResponse.json(
+        {
+          error:
+            "This is already what's on main - your work must have been merged. Reload the editor to start from the published version.",
+        },
+        { status: 409 }
+      )
+    }
     return failure(err)
   }
 }

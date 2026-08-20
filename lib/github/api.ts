@@ -6,6 +6,7 @@ import {
   UPSTREAM_SLUG,
 } from "@/lib/github/config"
 import type {
+  EntryPr,
   ForkInfo,
   GhUser,
   PullRequestResult,
@@ -282,9 +283,105 @@ export async function createBlob(
   return blob.sha
 }
 
+/* ---------- finding an entry's pull requests ---------- */
+
+/* Every branch this editor creates is named jolts/<slug>-<hex>, which turns
+   "does a pull request already exist for this guide?" into one list call and a
+   regex - no per-PR file fetching. GitHub therefore stays the source of truth
+   about a contributor's open work, instead of a draft in one browser: switch
+   laptops and the editor still finds the pull request you opened at school. */
+
+export const branchPrefix = (slug: string) => `jolts/${slug}-`
+
+const branchPattern = (slug: string) =>
+  new RegExp(`^jolts/${slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-[0-9a-f]{6}(-\\d+)?$`)
+
+/** Every pull request this editor has opened for one entry, newest first,
+    including already-merged and closed ones - the caller needs all three
+    states to know what a draft is actually looking at. */
+export async function listEntryPrs(
+  token: string,
+  login: string,
+  slug: string
+): Promise<EntryPr[]> {
+  const pattern = branchPattern(slug)
+  const pulls = await gh<
+    (ApiPull & {
+      merged_at: string | null
+      state: string
+      head: ApiPull["head"] & { repo: { full_name: string; owner?: { login: string } } | null }
+    })[]
+  >(token, `${"/repos"}/${UPSTREAM_OWNER}/${UPSTREAM_REPO}/pulls?state=all&sort=updated&direction=desc&per_page=100`)
+
+  return pulls
+    .filter((pr) => pattern.test(pr.head.label.split(":").pop() ?? ""))
+    .map((pr) => ({
+      number: pr.number,
+      url: pr.html_url,
+      branch: pr.head.label.split(":").pop() ?? "",
+      author: pr.user?.login ?? "ghost",
+      mine: (pr.user?.login ?? "").toLowerCase() === login.toLowerCase(),
+      state: pr.merged_at ? "merged" : pr.state === "closed" ? "closed" : "open",
+      title: pr.title,
+      updatedAt: pr.updated_at,
+    }))
+}
+
+type ApiPull = {
+  number: number
+  title: string
+  html_url: string
+  updated_at: string
+  user: { login: string } | null
+  head: { label: string; sha: string; ref?: string }
+}
+
 /* ---------- commit + pull request ---------- */
 
 const FILE_MODE = "100644"
+
+/* The tree is always built on UPSTREAM's tree, never on the branch's own. Both
+   the first save and every later one therefore produce a branch whose diff
+   against main is exactly the contributor's current editor state - a page they
+   deleted after their first save really disappears, and unrelated work that
+   merged in the meantime is carried along rather than reverted.
+
+   Returns null when the result is identical to main, which happens when a
+   contributor's work has already been merged and their draft is just a copy of
+   what is now published. Committing that would open a pull request with an
+   empty diff. */
+async function commitChanges(
+  token: string,
+  fork: ForkInfo,
+  parents: string[],
+  message: string,
+  changes: WireChange[]
+): Promise<string | null> {
+  const forkPath = `/repos/${fork.owner}/${fork.repo}`
+
+  const tree = await gh<{ sha: string }>(token, `${forkPath}/git/trees`, {
+    method: "POST",
+    body: {
+      base_tree: fork.baseTreeSha,
+      tree: changes.map((c) =>
+        c.kind === "del"
+          ? { path: c.path, mode: FILE_MODE, type: "blob", sha: null }
+          : c.kind === "put-blob"
+            ? { path: c.path, mode: FILE_MODE, type: "blob", sha: c.sha }
+            : { path: c.path, mode: FILE_MODE, type: "blob", content: c.text }
+      ),
+    },
+  })
+  if (tree.sha === fork.baseTreeSha) return null
+
+  const commit = await gh<{ sha: string }>(token, `${forkPath}/git/commits`, {
+    method: "POST",
+    body: { message, tree: tree.sha, parents },
+  })
+  return commit.sha
+}
+
+export class NothingToCommitError extends Error {}
 
 export async function openPullRequest(
   token: string,
@@ -299,30 +396,16 @@ export async function openPullRequest(
   const { fork, branch } = opts
   const forkPath = `/repos/${fork.owner}/${fork.repo}`
 
-  const tree = await gh<{ sha: string }>(token, `${forkPath}/git/trees`, {
-    method: "POST",
-    body: {
-      base_tree: fork.baseTreeSha,
-      tree: opts.changes.map((c) =>
-        c.kind === "del"
-          ? { path: c.path, mode: FILE_MODE, type: "blob", sha: null }
-          : c.kind === "put-blob"
-            ? { path: c.path, mode: FILE_MODE, type: "blob", sha: c.sha }
-            : { path: c.path, mode: FILE_MODE, type: "blob", content: c.text }
-      ),
-    },
-  })
+  const commitSha = await commitChanges(
+    token,
+    fork,
+    [fork.baseSha],
+    opts.body ? `${opts.title}\n\n${opts.body}` : opts.title,
+    opts.changes
+  )
+  if (!commitSha) throw new NothingToCommitError()
 
-  const commit = await gh<{ sha: string }>(token, `${forkPath}/git/commits`, {
-    method: "POST",
-    body: {
-      message: opts.body ? `${opts.title}\n\n${opts.body}` : opts.title,
-      tree: tree.sha,
-      parents: [fork.baseSha],
-    },
-  })
-
-  const ref = await createBranch(token, forkPath, branch, commit.sha)
+  const ref = await createBranch(token, forkPath, branch, commitSha)
 
   const pr = await gh<{ html_url: string; number: number }>(
     token,
@@ -351,6 +434,82 @@ export async function openPullRequest(
     fork: `${fork.owner}/${fork.repo}`,
   }
 }
+
+/** Push another commit onto an existing pull request's branch, so a second save
+    revises the review in place instead of opening a rival to it. */
+export async function updatePullRequest(
+  token: string,
+  opts: {
+    fork: ForkInfo
+    number: number
+    title: string
+    body: string
+    changes: WireChange[]
+  }
+): Promise<PullRequestResult> {
+  const upstream = `/repos/${UPSTREAM_OWNER}/${UPSTREAM_REPO}`
+  const pr = await gh<{
+    number: number
+    html_url: string
+    state: string
+    merged_at: string | null
+    head: { ref: string; sha: string; repo: { full_name: string } | null }
+  }>(token, `${upstream}/pulls/${opts.number}`)
+
+  if (pr.merged_at) {
+    throw new GitHubError(
+      `Pull request #${pr.number} has already been merged, so it can't take more commits.`,
+      409
+    )
+  }
+  if (pr.state !== "open") {
+    throw new GitHubError(
+      `Pull request #${pr.number} is closed, so it can't take more commits.`,
+      409
+    )
+  }
+  // it has to be the caller's own branch in the caller's own fork
+  if (
+    pr.head.repo?.full_name.toLowerCase() !==
+    `${fork_full(opts.fork)}`.toLowerCase()
+  ) {
+    throw new GitHubError(
+      `Pull request #${pr.number} isn't on your fork, so you can't add to it.`,
+      403
+    )
+  }
+
+  const commitSha = await commitChanges(
+    token,
+    opts.fork,
+    [pr.head.sha],
+    opts.body ? `${opts.title}\n\n${opts.body}` : opts.title,
+    opts.changes
+  )
+  if (!commitSha) throw new NothingToCommitError()
+
+  await gh(token, `/repos/${opts.fork.owner}/${opts.fork.repo}/git/refs/heads/${pr.head.ref}`, {
+    method: "PATCH",
+    body: { sha: commitSha },
+  })
+
+  // keep the pull request's title in step with what they just typed
+  await gh(token, `${upstream}/pulls/${pr.number}`, {
+    method: "PATCH",
+    body: { title: opts.title },
+  }).catch(() => {
+    /* the commit is what matters; a stale title is not worth failing over */
+  })
+
+  return {
+    url: pr.html_url,
+    number: pr.number,
+    branch: pr.head.ref,
+    fork: fork_full(opts.fork),
+  }
+}
+
+const fork_full = (fork: ForkInfo) => `${fork.owner}/${fork.repo}`
 
 /** Create refs/heads/<name>, stepping the name aside if it already exists. */
 async function createBranch(
