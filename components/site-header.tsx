@@ -7,10 +7,8 @@ import {
   BookOpenText,
   CaretDown,
   Lightbulb,
-  List,
   Package,
   Wrench,
-  X,
   type Icon,
 } from "@phosphor-icons/react"
 
@@ -32,10 +30,10 @@ import { cn } from "@/lib/utils"
 /* Scale notes: header chrome is Figma (1920 frame) × 0.73, the navigation
    pill and its dropdown panels are Figma × 0.8.
 
-   Three widths: at `nav` (1120px) and up everything is at full scale;
-   between `md` and `nav` the chrome steps down and the pill segments drop
-   their labels, keeping only icons; below `md` the pill is replaced by the
-   hamburger panel (MobileNav). */
+   Three widths: at `lg` and up everything is at full scale; between `md`
+   and `lg` the chrome steps down and the pill segments drop their labels,
+   keeping only icons; below `md` the pill is replaced by the hamburger
+   panel (MobileNav). */
 
 /* Pill segment. Hover previews the same white gradient + underline the open
    state uses - no separate hover tint - so the trigger reads as one motion
@@ -44,8 +42,8 @@ import { cn } from "@/lib/utils"
    the ::after underline fades on the same clock. Class names are written out
    in full because Tailwind's scanner only sees complete literals. */
 const segmentClass = cn(
-  "jolts-glow relative flex h-full w-max cursor-pointer items-center rounded-none px-[14px] nav:px-[17px]",
-  "text-[19px] font-semibold tracking-[-0.03em] text-white nav:text-[22.4px]",
+  "jolts-glow relative flex h-full w-max cursor-pointer items-center rounded-none px-[14px] lg:px-[17px]",
+  "text-[19px] font-semibold tracking-[-0.03em] text-white lg:text-[22.4px]",
   "bg-transparent hover:bg-transparent focus:bg-transparent focus-visible:ring-0 focus-visible:outline-none",
   "data-popup-open:bg-transparent data-popup-open:hover:bg-transparent data-popup-open:focus:bg-transparent",
   "data-open:bg-transparent data-open:hover:bg-transparent data-open:focus:bg-transparent",
@@ -68,7 +66,7 @@ const bleedRightClass = "before:-right-[7px] after:-right-[7px]"
    segment it would also shadow the white gradient rectangle and smear a dark
    rim around the text. z-10 keeps the row above the gradient overlay. */
 const segmentContentClass =
-  "relative z-10 flex items-center gap-[8px] nav:gap-[10px] [filter:drop-shadow(0px_1.5px_4px_rgba(0,0,0,0.35))]"
+  "relative z-10 flex items-center gap-[8px] lg:gap-[10px] [filter:drop-shadow(0px_1.5px_4px_rgba(0,0,0,0.35))]"
 
 /* The blue checker border chrome and the white surface live on the POPUP and
    VIEWPORT (see popupClassName / viewportClassName on <NavigationMenu>), not
@@ -107,7 +105,7 @@ function PanelItem({
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noreferrer" : undefined}
-      className="flex-col items-start gap-[2px] rounded-[8px] px-[12px] py-[9px] hover:bg-[#f3f3f3] focus:bg-[#f3f3f3]"
+      className="flex-col items-start gap-[2px] rounded-[8px] px-[12px] py-[9px] hover:bg-[#f3f3f3] focus:bg-[#f3f3f3] active:bg-[#f3f3f3]"
     >
       <span className="text-[16px] font-semibold tracking-[-0.03em] text-black">
         {title}
@@ -135,7 +133,7 @@ function PanelFooter({
   return (
     <NavigationMenuLink
       href={href}
-      className="mt-auto flex h-[36px] w-full shrink-0 items-center justify-center gap-[6px] rounded-[7px] bg-[#f3f3f3] p-0 text-[13px] font-medium tracking-[-0.03em] text-[#5b5b5b] hover:bg-[#ececec] focus:bg-[#ececec]"
+      className="mt-auto flex h-[36px] w-full shrink-0 items-center justify-center gap-[6px] rounded-[7px] bg-[#f3f3f3] p-0 text-[13px] font-medium tracking-[-0.03em] text-[#5b5b5b] hover:bg-[#ececec] focus:bg-[#ececec] active:bg-[#ececec]"
     >
       {children}
       <ArrowUpRight size={12} weight="bold" aria-hidden />
@@ -211,12 +209,17 @@ function GuidesPanel() {
             there is no re-render; the transform transition smooths it out. */}
         <NavigationMenuLink
           href="/start"
-          className="group/card relative block h-[302px] w-[244px] shrink-0 overflow-hidden rounded-[7px] border-[3px] border-solid border-[#ff902f] p-0 transition-[transform,box-shadow] duration-200 ease-out will-change-transform hover:bg-transparent hover:shadow-[0px_14px_28px_rgba(0,0,0,0.28)] focus:bg-transparent"
-          onMouseEnter={(e) => {
+          className="group/card relative block h-[302px] w-[244px] shrink-0 overflow-hidden rounded-[7px] border-[3px] border-solid border-[#ff902f] p-0 transition-[transform,box-shadow] duration-200 ease-out will-change-transform hover:bg-transparent hover:shadow-[0px_14px_28px_rgba(0,0,0,0.28)] focus:bg-transparent active:shadow-[0px_8px_18px_rgba(0,0,0,0.24)]"
+          /* Pointer events, not mouse events, so a finger can be told apart:
+             a touch would otherwise leave the card tilted and the cursor pill
+             floating where it was tapped, with no unhover to clear either. */
+          onPointerEnter={(e) => {
+            if (e.pointerType !== "mouse") return
             placePill(e)
             setCardHover(true)
           }}
-          onMouseMove={(e) => {
+          onPointerMove={(e) => {
+            if (e.pointerType !== "mouse") return
             const el = e.currentTarget
             const r = el.getBoundingClientRect()
             const x = (e.clientX - r.left) / r.width - 0.5
@@ -226,7 +229,7 @@ function GuidesPanel() {
             el.style.setProperty("--sweep", (x + 0.5).toFixed(3))
             placePill(e)
           }}
-          onMouseLeave={(e) => {
+          onPointerLeave={(e) => {
             e.currentTarget.style.transform = ""
             e.currentTarget.style.removeProperty("--sweep")
             setCardHover(false)
@@ -428,13 +431,15 @@ const chromeButtonClass = cn(
   "before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.55)_92%,rgba(255,255,255,0.85)_100%)]",
   "active:before:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.75)_92%,rgba(255,255,255,1)_100%)]",
   "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white after:opacity-0 after:transition-opacity after:duration-150 after:ease-out",
-  "hover:after:opacity-100 active:after:opacity-100"
+  // press first; hover is the mouse-only extra, and below md there is no
+  // mouse worth designing for - same split as .jolts-glow in globals.css
+  "active:after:opacity-100 md:hover:after:opacity-100"
 )
 
-/* Vertically centred in each header height (68/80/91), except at `nav`,
+/* Vertically centred in each header height (68/80/91), except at `lg`,
    where the button sits where Figma put it. */
 const chromeButtonSize =
-  "mt-[12px] size-[44px] md:mt-[17px] md:size-[46px] nav:mt-[25px] nav:size-[49px]"
+  "mt-[12px] size-[44px] md:mt-[17px] md:size-[46px] lg:mt-[25px] lg:size-[49px]"
 
 /* A panel row. Not PanelItem: that one is a NavigationMenuLink, which only
    works inside the navigation menu's context. */
@@ -559,6 +564,32 @@ function MobileSection({
   )
 }
 
+/* Three bars that fold into an X: the outer two slide to the middle row and
+   cross, the middle one fades under them. Drawn here rather than swapping two
+   icons, which would have to cut from one shape to the other. */
+function MenuGlyph({ open }: { open: boolean }) {
+  const bar =
+    "absolute left-0 h-[2.5px] w-full rounded-full bg-white transition-[translate,rotate,opacity] duration-200 ease-out"
+  return (
+    <span
+      aria-hidden
+      className="relative z-10 h-[17px] w-[22px] [filter:drop-shadow(0px_1.5px_4px_rgba(0,0,0,0.35))]"
+    >
+      <span
+        className={cn(bar, "top-[1px]", open && "translate-y-[6px] rotate-45")}
+      />
+      <span className={cn(bar, "top-[7px]", open && "opacity-0")} />
+      <span
+        className={cn(
+          bar,
+          "top-[13px]",
+          open && "-translate-y-[6px] -rotate-45"
+        )}
+      />
+    </span>
+  )
+}
+
 /* Hamburger + drop-down panel, below md only. The panel is absolutely
    positioned inside the header so it hangs off the bar's bottom edge; the
    scrim below it catches taps outside. */
@@ -602,21 +633,7 @@ function MobileNav({ sections }: { sections: NavSection[] }) {
         onClick={() => setOpen((o) => !o)}
         className={cn(chromeButtonClass, chromeButtonSize, "ml-[8px] md:hidden")}
       >
-        {open ? (
-          <X
-            size={22}
-            weight="bold"
-            aria-hidden
-            className="relative z-10 text-white [filter:drop-shadow(0px_1.5px_4px_rgba(0,0,0,0.35))]"
-          />
-        ) : (
-          <List
-            size={24}
-            weight="bold"
-            aria-hidden
-            className="relative z-10 text-white [filter:drop-shadow(0px_1.5px_4px_rgba(0,0,0,0.35))]"
-          />
-        )}
+        <MenuGlyph open={open} />
       </button>
 
       <AnimatePresence>
@@ -734,7 +751,7 @@ export function SiteHeader() {
     }
 
   return (
-    <header className="relative z-40 h-[68px] w-full md:h-[80px] nav:h-[91px]">
+    <header className="relative z-40 h-[68px] w-full md:h-[80px] lg:h-[91px]">
       {/* checkerboard background - pure CSS, no SVG involved */}
       <div className="absolute inset-0 overflow-hidden shadow-[0px_3px_19px_0px_rgba(1,187,255,0.25)]">
         <div
@@ -753,7 +770,7 @@ export function SiteHeader() {
         <div aria-hidden className="absolute inset-0 bg-black/5" />
       </div>
 
-      <div className="relative flex h-full items-start pr-[14px] pl-[18px] md:pr-[22px] md:pl-[26px] nav:pr-[35px] nav:pl-[54px]">
+      <div className="relative flex h-full items-start pr-[14px] pl-[18px] md:pr-[22px] md:pl-[26px] lg:pr-[35px] lg:pl-[54px]">
         {/* logo hangs below the header bar */}
         <Link
           href="/"
@@ -762,13 +779,13 @@ export function SiteHeader() {
           <img
             src="/brand/jolts-logo.svg"
             alt="Hack Club jolts - learn to build real things"
-            className="h-auto w-[132px] max-w-none md:w-[164px] nav:w-[200px]"
+            className="h-auto w-[132px] max-w-none md:w-[164px] lg:w-[200px]"
           />
         </Link>
 
         <NavigationMenu
           delay={0}
-          className="mt-[17px] ml-[18px] hidden max-w-none flex-none justify-start md:flex nav:mt-[24px] nav:ml-[32px]"
+          className="mt-[17px] ml-[18px] hidden max-w-none flex-none justify-start md:flex lg:mt-[24px] lg:ml-[32px]"
           sideOffset={26}
           popupClassName={popupChromeClass}
           viewportClassName={viewportChromeClass}
@@ -779,7 +796,7 @@ export function SiteHeader() {
             setMenuValue(v)
           }}
         >
-          <NavigationMenuList className="h-[46px] w-max flex-none justify-start gap-0 overflow-hidden rounded-[4px] bg-white/20 px-[7px] nav:h-[54px]">
+          <NavigationMenuList className="h-[46px] w-max flex-none justify-start gap-0 overflow-hidden rounded-[4px] bg-white/20 px-[7px] lg:h-[54px]">
             <NavigationMenuItem className="h-full">
               <NavigationMenuTrigger
                 className={cn(segmentClass, bleedLeftClass)}
@@ -792,7 +809,7 @@ export function SiteHeader() {
                     aria-hidden
                   />
                   {/* labels are the first thing to go when the bar tightens */}
-                  <span className="hidden nav:inline">
+                  <span className="hidden lg:inline">
                     {guidesSection.label}
                   </span>
                 </span>
@@ -817,7 +834,7 @@ export function SiteHeader() {
                       weight="fill"
                       aria-hidden
                     />
-                    <span className="hidden nav:inline">{section.label}</span>
+                    <span className="hidden lg:inline">{section.label}</span>
                   </span>
                 </NavigationMenuTrigger>
                 <NavigationMenuContent className="w-[292px] p-0">
