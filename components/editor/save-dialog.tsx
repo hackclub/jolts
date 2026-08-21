@@ -85,6 +85,8 @@ export function SaveDialog({
   defaultTitle,
   contentType,
   slug,
+  knownPrNumber,
+  basedOn,
 }: {
   onClose: () => void
   onSaved: (result: PullRequestResult, signature: string) => void
@@ -92,6 +94,11 @@ export function SaveDialog({
   defaultTitle: string
   contentType: string
   slug: string
+  /** the pull request THIS browser opened, from its draft - only that one may
+      be revised from here (see `revising` below) */
+  knownPrNumber: number | null
+  /** which tree the change set was computed against */
+  basedOn: "main" | "branch"
 }) {
   // mounted fresh on every open (conditional render in the shell), so plain
   // initializers do the resetting
@@ -115,9 +122,13 @@ export function SaveDialog({
   })
   const [uploaded, setUploaded] = useState(0)
 
-  /* the contributor's own open pull request for this entry, if any: saving
-     revises that one instead of opening a rival to it */
-  const revising = useMemo(() => myOpenPr(entryPrs), [entryPrs])
+  const openPr = useMemo(() => myOpenPr(entryPrs), [entryPrs])
+  /* Revising rewrites the branch to match this editor, which is only safe when
+     this browser is the one that opened it. An open pull request from another
+     machine holds work this editor never loaded, so saving from here opens a
+     separate one rather than quietly deleting it. */
+  const revising = openPr && openPr.number === knownPrNumber ? openPr : null
+  const foreignPr = openPr && !revising ? openPr : null
   /* other people mid-edit on the same page - worth saying once, never blocking */
   const others = useMemo(() => othersOpenPrs(entryPrs), [entryPrs])
 
@@ -251,7 +262,7 @@ export function SaveDialog({
         description,
         fork,
         changes: wire,
-        ...(revising ? { updates: revising.number } : {}),
+        ...(revising ? { updates: revising.number, basedOn } : {}),
       })
       setStepStates((s) => ({ ...s, pr: "done" }))
       setResult(pr)
@@ -376,6 +387,26 @@ export function SaveDialog({
                       #{revising.number}
                     </a>{" "}
                     instead of opening a second one.
+                  </span>
+                </p>
+              )}
+
+              {foreignPr && (
+                <p className="mt-[12px] flex items-start gap-[7px] rounded-[10px] border border-[#FF902F]/30 bg-[#fff8f0] px-[12px] py-[9px] text-[12.5px] leading-[1.5] text-[#95591b]">
+                  <WarningCircle size={14} weight="fill" className="mt-[2px] shrink-0" aria-hidden />
+                  <span>
+                    You already have{" "}
+                    <a
+                      href={foreignPr.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold underline underline-offset-2 hover:text-[#16181d]"
+                    >
+                      #{foreignPr.number}
+                    </a>{" "}
+                    open on this page, saved from another browser. This one
+                    can&rsquo;t add to it without dropping what it contains, so
+                    saving here opens a separate pull request.
                   </span>
                 </p>
               )}

@@ -190,12 +190,29 @@ export async function createPullRequest(input: {
   changes: WireChange[]
   /** revise this pull request instead of opening a new one */
   updates?: number
+  /** which tree the change set was computed against */
+  basedOn?: "main" | "branch"
 }): Promise<PullRequestResult> {
   return api<PullRequestResult>("/api/github/pr", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(input),
   })
+}
+
+/** Read an entry as one of your own open pull requests leaves it, so this
+    machine can carry on from there. */
+export async function fetchPrEntry(number: number) {
+  return api<{
+    number: number
+    url: string
+    branch: string
+    headSha: string
+    contentType: string
+    slug: string
+    files: { name: string; raw: string }[]
+    images: string[]
+  }>(`/api/github/pr-entry?number=${number}`)
 }
 
 /* ---------- FileChange → wire ---------- */

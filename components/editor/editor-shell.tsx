@@ -17,8 +17,10 @@ import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
   ArrowSquareOut,
+  CircleNotch,
   CloudCheck,
   Code,
+  GitBranch,
   GitMerge,
   GitPullRequest,
 } from "@phosphor-icons/react"
@@ -67,6 +69,7 @@ import { serializeMdxDoc } from "@/lib/editor/mdx-serialize"
 import { remapSliceKeys, type BlockSlice, type PMNode } from "@/lib/editor/pm-doc"
 import {
   fetchEntryPrs,
+  fetchPrEntry,
   myMergedPr,
   myOpenPr,
 } from "@/lib/github/client"
@@ -193,6 +196,9 @@ export function EditorShell(props: EditorSource) {
      "Update #12" are distinguishable states rather than one hopeful guess */
   const [savedSignature, setSavedSignature] = useState<string | null>(null)
   const [editedSinceSave, setEditedSinceSave] = useState(false)
+  /* whether this editor's contents came from the published site or from a pull
+     request branch it adopted - decides which tree a save is applied to */
+  const [basedOn, setBasedOn] = useState<"main" | "branch">("main")
   /* everything GitHub knows about this entry's pull requests - the draft only
      ever holds a hint, this is the truth */
   const [entryPrs, setEntryPrs] = useState<EntryPr[] | null>(null)
@@ -212,13 +218,15 @@ export function EditorShell(props: EditorSource) {
   const pagesRef = useRef(pages)
   const pullRequestRef = useRef(pullRequest)
   const savedSignatureRef = useRef(savedSignature)
+  const basedOnRef = useRef(basedOn)
   useEffect(() => {
     metaRef.current = meta
     uploadsRef.current = uploads
     pagesRef.current = pages
     pullRequestRef.current = pullRequest
     savedSignatureRef.current = savedSignature
-  }, [meta, uploads, pages, pullRequest, savedSignature])
+    basedOnRef.current = basedOn
+  }, [meta, uploads, pages, pullRequest, savedSignature, basedOn])
 
   const editorsRef = useRef(new Map<string, EditorEntry>())
 
@@ -249,7 +257,8 @@ export function EditorShell(props: EditorSource) {
           fileName: p.fileName,
           originalName: p.originalName,
           title: p.title,
-          mode: entry?.mode ?? "visual",
+          baseRaw: p.originalRaw,
+        mode: entry?.mode ?? "visual",
           doc:
             entry?.mode === "visual" && entry.editor
               ? (entry.editor.getJSON() as PMNode)
@@ -267,6 +276,7 @@ export function EditorShell(props: EditorSource) {
       ...(savedSignatureRef.current
         ? { savedSignature: savedSignatureRef.current }
         : {}),
+      basedOn: basedOnRef.current,
     }
     await saveDraft(draft)
     return true
@@ -534,7 +544,10 @@ export function EditorShell(props: EditorSource) {
           title: dp.title,
           isOverview: dp.fileName === "index.mdx",
           deleted: dp.deleted,
-          originalRaw: orig?.originalRaw ?? null,
+          originalRaw:
+            draft.basedOn === "branch"
+              ? (dp.baseRaw ?? null)
+              : (orig?.originalRaw ?? null),
         }
         const entry = makeEditor(page, dp.mode === "visual" ? dp.doc : null)
         if (dp.mode === "source" && entry.mode === "source") {
@@ -547,6 +560,7 @@ export function EditorShell(props: EditorSource) {
       setMetaState(draft.meta)
       setPullRequest(draft.pullRequest ?? null)
       setSavedSignature(draft.savedSignature ?? null)
+      setBasedOn(draft.basedOn === "branch" ? "branch" : "main")
       // keep whatever page is open (?page= deep links land before the
       // async restore resolves) - match it into the restored list
       setActiveId((cur) => {
@@ -599,10 +613,83 @@ export function EditorShell(props: EditorSource) {
 
   const askedPrs = useRef(false)
   useEffect(() => {
-    if (askedPrs.current || !pullRequest) return
+    if (askedPrs.current) return
     askedPrs.current = true
+    // asked unconditionally: a contributor arriving on a second machine has no
+    // draft here, and the top bar must still know their pull request exists
     void fetchEntryPrs(props.contentType, props.slug).then(setEntryPrs)
-  }, [pullRequest, props.contentType, props.slug])
+  }, [props.contentType, props.slug])
+
+  /* ---------- continuing a pull request opened elsewhere ----------
+     Loads the entry as that branch leaves it and diffs against the branch from
+     then on, so a further save revises it faithfully - photos and pages this
+     machine never saw included. */
+
+  const [adopting, setAdopting] = useState(false)
+  const [adoptError, setAdoptError] = useState<string | null>(null)
+
+  const adoptPr = useCallback(
+    async (number: number) => {
+      setAdopting(true)
+      setAdoptError(null)
+      try {
+        const entry = await fetchPrEntry(number)
+
+        for (const e of editorsRef.current.values()) e.editor?.destroy()
+        editorsRef.current.clear()
+
+        const branchPages: PageState[] = entry.files.map((f) => ({
+          id: genId(),
+          fileName: f.name,
+          // present in the published entry too? then a save can still rename or
+          // delete the real file rather than adding a second one
+          originalName: initial.pages.some((p) => p.originalName === f.name)
+            ? f.name
+            : null,
+          title: f.name === "index.mdx" ? "Overview" : pageTitleOf(f.raw),
+          isOverview: f.name === "index.mdx",
+          deleted: false,
+          originalRaw: f.raw,
+        }))
+
+        /* No entry for pages the branch removed. From here the change set is
+           applied to the branch's own tree, where they are already gone - and
+           emitting a delete for a path that no longer exists is how you get a
+           422 rather than a tidy commit. */
+        const nextPages = branchPages
+        setPages(nextPages)
+        setActiveId(nextPages[0].id)
+        setUploads(new Map())
+
+        const index = entry.files.find((f) => f.name === "index.mdx")
+        if (index) {
+          setMetaState(
+            schemaByType[props.contentType].parse(
+              splitFrontmatterData(index.raw)
+            ) as EntryMeta
+          )
+        }
+
+        setBasedOn("branch")
+        setPullRequest({
+          number: entry.number,
+          url: entry.url,
+          branch: entry.branch,
+          fork: "",
+        })
+        // nothing differs from the branch yet, so this reads as saved
+        setSavedSignature(signatureOf([]))
+        setEditedSinceSave(false)
+        setDirtyIds(new Set())
+        void fetchEntryPrs(props.contentType, props.slug).then(setEntryPrs)
+      } catch (err) {
+        setAdoptError((err as Error).message)
+      } finally {
+        setAdopting(false)
+      }
+    },
+    [initial.pages, props.contentType, props.slug]
+  )
 
   /* ---------- meta ---------- */
 
@@ -856,13 +943,31 @@ export function EditorShell(props: EditorSource) {
   const openPr = myOpenPr(entryPrs)
   const mergedPr = myMergedPr(entryPrs)
 
+  /* Can this browser revise that pull request?
+
+     Only if this browser is where it came from. A save rewrites the branch to
+     "main plus everything in this editor", which is right when the draft holds
+     the whole entry - and destructive when it doesn't. On a second machine the
+     editor starts from published main, so it has no idea about the pages the
+     pull request added, and rewriting from here would delete them. */
+  const ownedHere =
+    openPr !== null && pullRequest !== null && pullRequest.number === openPr.number
+  /** an open pull request of theirs that did not come from this browser */
+  const foreignPr = openPr !== null && !ownedHere ? openPr : null
+
   /* Which pull request to point at, and what to call its state. An open one
      wins: it is the thing a further save would revise. A merged one is worth
      showing too - it explains why the editor's starting point just changed
      under them. Before GitHub has answered, the draft's own hint stands in. */
   const prChip: { number: number; url: string; tone: string; label: string } | null =
     openPr
-      ? { number: openPr.number, url: openPr.url, tone: "open", label: "" }
+      ? {
+          number: openPr.number,
+          url: openPr.url,
+          tone: "open",
+          // say so, rather than implying this browser can add to it
+          label: foreignPr ? "elsewhere" : "",
+        }
       : mergedPr
         ? { number: mergedPr.number, url: mergedPr.url, tone: "merged", label: "merged" }
         : pullRequest
@@ -991,7 +1096,7 @@ export function EditorShell(props: EditorSource) {
             ) : (
               <>
                 <GitPullRequest size={15} weight="bold" aria-hidden />
-                {openPr ? `Update #${openPr.number}` : "Save changes"}
+                {ownedHere ? `Update #${openPr!.number}` : "Save changes"}
               </>
             )}
           </button>
@@ -1016,6 +1121,56 @@ export function EditorShell(props: EditorSource) {
           }}
           onCancel={() => setLeaveTo(null)}
         />
+      )}
+
+      {/* ---------- the same account, a different machine ----------
+          GitHub has an open pull request for this entry that this browser knows
+          nothing about. Rather than quietly opening a rival to it, offer to
+          carry on with it here. */}
+      {foreignPr && (
+        <div className="mx-auto w-full max-w-[1020px] px-[28px] pt-[18px]">
+          <div className="rounded-[10px] border border-[#01A6FF]/30 bg-[#eff9ff] px-[13px] py-[11px]">
+            <p className="flex items-start gap-[8px] text-[13px] leading-[1.55] text-[#0b5f88]">
+              <GitBranch size={15} weight="bold" className="mt-[2px] shrink-0" aria-hidden />
+              <span>
+                You have{" "}
+                <a
+                  href={foreignPr.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold underline underline-offset-2"
+                >
+                  #{foreignPr.number}
+                </a>{" "}
+                open on this page from another browser.{" "}
+                {anythingDirty
+                  ? "Continuing it replaces what you have typed here."
+                  : "Continue it here and your next save updates it."}
+              </span>
+            </p>
+            <div className="mt-[9px] flex items-center gap-[8px]">
+              <button
+                type="button"
+                onClick={() => void adoptPr(foreignPr.number)}
+                disabled={adopting}
+                className="flex items-center gap-[6px] rounded-[8px] bg-[#0b5f88] px-[11px] py-[5px] text-[12.5px] font-semibold tracking-[-0.01em] text-white transition-colors hover:bg-[#094c6d] disabled:opacity-60"
+              >
+                {adopting && (
+                  <CircleNotch size={13} weight="bold" className="animate-spin" aria-hidden />
+                )}
+                Continue #{foreignPr.number} here
+              </button>
+              <span className="text-[12px] text-[#0b5f88]/70">
+                or keep editing to open a separate one
+              </span>
+            </div>
+            {adoptError && (
+              <p className="mt-[8px] text-[12.5px] leading-[1.5] text-[#a12222]">
+                {adoptError}
+              </p>
+            )}
+          </div>
+        </div>
       )}
 
       {/* ---------- your last save landed ----------
@@ -1174,6 +1329,8 @@ export function EditorShell(props: EditorSource) {
           }
           contentType={props.contentType}
           slug={props.slug}
+          knownPrNumber={pullRequest?.number ?? null}
+          basedOn={basedOn}
         />
       )}
     </EditorCtxProvider>

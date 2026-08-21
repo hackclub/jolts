@@ -336,6 +336,104 @@ type ApiPull = {
   head: { label: string; sha: string; ref?: string }
 }
 
+/* ---------- adopting an existing pull request on another machine ---------- */
+
+export type PrEntryFiles = {
+  number: number
+  url: string
+  branch: string
+  headSha: string
+  contentType: string
+  slug: string
+  /** the entry's .mdx files as this pull request leaves them */
+  files: { name: string; raw: string }[]
+  /** image filenames already on the branch - the editor lists them as
+      existing, so they are never re-uploaded and never dropped */
+  images: string[]
+}
+
+/** Read an entry exactly as one of the contributor's open pull requests leaves
+    it, so a second machine can carry on from there instead of from what is
+    published. A fork's head commit is reachable from the base repo, so this
+    needs no access to the fork itself. */
+export async function readPrEntry(
+  token: string,
+  login: string,
+  number: number
+): Promise<PrEntryFiles> {
+  const upstream = `/repos/${UPSTREAM_OWNER}/${UPSTREAM_REPO}`
+  const pr = await gh<{
+    number: number
+    html_url: string
+    state: string
+    merged_at: string | null
+    user: { login: string } | null
+    head: { label: string; sha: string }
+  }>(token, `${upstream}/pulls/${number}`)
+
+  if ((pr.user?.login ?? "").toLowerCase() !== login.toLowerCase()) {
+    throw new GitHubError("That pull request isn't yours to continue.", 403)
+  }
+  if (pr.merged_at || pr.state !== "open") {
+    throw new GitHubError(`Pull request #${number} is no longer open.`, 409)
+  }
+
+  const branch = pr.head.label.split(":").pop() ?? ""
+  const m = branch.match(/^jolts\/(.+)-[0-9a-f]{6}(?:-\d+)?$/)
+  if (!m) {
+    throw new GitHubError("That pull request wasn't opened by the editor.", 422)
+  }
+  const slug = m[1]
+
+  /* which content type owns that slug - the branch name doesn't say, so ask
+     the tree which folder the entry actually lives in */
+  let contentType: string | null = null
+  let listing: { name: string; type: string }[] = []
+  for (const candidate of ["guides", "concepts", "tools"]) {
+    const dir = await gh<{ name: string; type: string }[]>(
+      token,
+      `${upstream}/contents/content/${candidate}/${slug}?ref=${pr.head.sha}`
+    ).catch(() => null)
+    if (dir && Array.isArray(dir)) {
+      contentType = candidate
+      listing = dir
+      break
+    }
+  }
+  if (!contentType) {
+    throw new GitHubError("That pull request's entry folder is missing.", 404)
+  }
+
+  const mdx = listing
+    .filter((f) => f.type === "file" && /^(index|\d+-.+)\.mdx$/.test(f.name))
+    .map((f) => f.name)
+    .sort((a, b) => (a === "index.mdx" ? -1 : b === "index.mdx" ? 1 : a.localeCompare(b)))
+
+  const files = await Promise.all(
+    mdx.map(async (name) => ({
+      name,
+      raw:
+        (await ghRaw(
+          token,
+          `${upstream}/contents/content/${contentType}/${slug}/${encodeURIComponent(name)}?ref=${pr.head.sha}`
+        )) ?? "",
+    }))
+  )
+
+  return {
+    number: pr.number,
+    url: pr.html_url,
+    branch,
+    headSha: pr.head.sha,
+    contentType,
+    slug,
+    files: files.filter((f) => f.raw !== ""),
+    images: listing
+      .filter((f) => f.type === "file" && /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(f.name))
+      .map((f) => f.name),
+  }
+}
+
 /* ---------- commit + pull request ---------- */
 
 const FILE_MODE = "100644"
@@ -445,6 +543,14 @@ export async function updatePullRequest(
     title: string
     body: string
     changes: WireChange[]
+    /* Which tree the change set was computed against, and therefore which one
+       it must be applied to. An editor that loaded from published main means
+       "unchanged" = "same as main", so omitted files have to come from main.
+       An editor that adopted this branch means "unchanged" = "same as the
+       branch", so they have to come from the branch's own tip - otherwise the
+       branch's photos and pages, which this editor never had to load, would be
+       dropped for being unmentioned. */
+    basedOn: "main" | "branch"
   }
 ): Promise<PullRequestResult> {
   const upstream = `/repos/${UPSTREAM_OWNER}/${UPSTREAM_REPO}`
@@ -479,9 +585,18 @@ export async function updatePullRequest(
     )
   }
 
+  const headCommit = await gh<{ tree: { sha: string } }>(
+    token,
+    `/repos/${opts.fork.owner}/${opts.fork.repo}/git/commits/${pr.head.sha}`
+  )
+  const base: ForkInfo =
+    opts.basedOn === "branch"
+      ? { ...opts.fork, baseTreeSha: headCommit.tree.sha }
+      : opts.fork
+
   const commitSha = await commitChanges(
     token,
-    opts.fork,
+    base,
     [pr.head.sha],
     opts.body ? `${opts.title}\n\n${opts.body}` : opts.title,
     opts.changes

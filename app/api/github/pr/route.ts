@@ -40,6 +40,8 @@ type Body = {
   changes?: WireChange[]
   /** revise this open pull request instead of opening another one */
   updates?: number
+  /** which tree the change set was computed against - see updatePullRequest */
+  basedOn?: "main" | "branch"
 }
 
 export async function POST(req: Request) {
@@ -121,6 +123,7 @@ export async function POST(req: Request) {
             title,
             body,
             changes,
+            basedOn: input.basedOn === "branch" ? "branch" : "main",
           })
         : await openPullRequest(token!, {
             fork,

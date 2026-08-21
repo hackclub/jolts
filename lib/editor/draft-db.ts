@@ -9,6 +9,11 @@ import type { PullRequestResult } from "@/lib/github/types"
 export type DraftPage = {
   fileName: string
   originalName: string | null
+  /** The text this page is diffed against. Normally re-derived from what the
+      site published, but a draft adopted from a pull request is diffed against
+      that branch instead, and the branch isn't in the page's props - so it is
+      kept here. */
+  baseRaw?: string | null
   title: string
   mode: "visual" | "source"
   doc: PMNode | null
@@ -28,6 +33,8 @@ export type Draft = {
   /** signatureOf() the change set at the moment it was saved, so a restored
       draft knows whether it still matches its pull request */
   savedSignature?: string
+  /** what this draft's change set is computed against - see DraftPage.baseRaw */
+  basedOn?: "main" | "branch"
 }
 
 const DB_NAME = "jolts-editor"
