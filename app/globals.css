@@ -309,15 +309,29 @@ html[data-entry-skip] .entry-reveal {
   translate: -50% -50%;
   width: min(320px, 64vw);
   aspect-ratio: 283 / 148;
-  /* on the container, not the imgs: the filter outlines the composited
-     union of all characters, so it reads as one group outline. Chained
-     shadows compound, so four orthogonals also cover the diagonals. */
+}
+
+.entry-logo-halo,
+.entry-logo-face {
+  position: absolute;
+  inset: 0;
+}
+
+/* The outline can't live on .entry-logo: WebKit drops an ancestor's filter
+   once a descendant's transform animation gets composited, so the group
+   outline vanished the moment the pop started on iOS Safari. Instead each
+   character in the halo layer carries its own outline and the face layer
+   covers every halo that lands inside the group's silhouette, which leaves
+   the same union outline. Chained shadows compound, so four orthogonals also
+   cover the diagonals. */
+.entry-logo-halo svg {
   filter: drop-shadow(2px 0 0 white) drop-shadow(-2px 0 0 white)
     drop-shadow(0 2px 0 white) drop-shadow(0 -2px 0 white);
 }
 
 /* paused until EntryReveal's effect adds .entry-play — the pulse must share
-   its t=0 with the canvas iris clock, which can't start until hydration */
+   its t=0 with the canvas iris clock, which can't start until hydration. Both
+   layers run the same animation, so a character and its halo stay locked. */
 .entry-logo svg {
   position: absolute;
   inset: 0;
@@ -348,8 +362,7 @@ html[data-entry-skip] .entry-reveal {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .entry-logo,
-  .entry-logo img {
+  .entry-logo svg {
     animation: none;
   }
 }

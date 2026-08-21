@@ -119,22 +119,41 @@ export function EntryReveal() {
 
   return (
     <div ref={wrapperRef} aria-hidden className="entry-reveal">
+      {/* without hydration nothing ever starts the reveal, so the overlay
+          would sit there black over the page forever */}
+      <noscript>
+        <style>{`.entry-reveal{display:none}`}</style>
+      </noscript>
       <canvas ref={canvasRef} className="entry-reveal-canvas" />
-      {/* every character shares the full 283x148 logo canvas, so stacking
-          them reconstructs the logo; inlined so no image fetches happen */}
+      {/* the halo layer paints every character's white outline first, then the
+          face layer paints the artwork over it, so the halos that fall inside
+          the group's silhouette are covered and only the union outline is
+          left — see entry-logo-halo in globals.css for why the outline can't
+          just live on the container */}
       <div className="entry-logo">
-        {LOGO_CHAR_PATHS.map((Char, i) => (
-          <svg
-            key={i}
-            viewBox="0 0 283 148"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            style={{ "--char-i": i } as React.CSSProperties}
-          >
-            <Char />
-          </svg>
-        ))}
+        <LogoChars className="entry-logo-halo" />
+        <LogoChars className="entry-logo-face" />
       </div>
+    </div>
+  );
+}
+
+// every character shares the full 283x148 logo canvas, so stacking them
+// reconstructs the logo; inlined so no image fetches happen
+function LogoChars({ className }: { className: string }) {
+  return (
+    <div className={className}>
+      {LOGO_CHAR_PATHS.map((Char, i) => (
+        <svg
+          key={i}
+          viewBox="0 0 283 148"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ "--char-i": i } as React.CSSProperties}
+        >
+          <Char />
+        </svg>
+      ))}
     </div>
   );
 }
