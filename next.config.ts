@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         source: "/:type(guides|concepts|tools)/:slug.md",
         destination: "/md/:type/:slug",
       },
+      // page entries are top-level, so /start.md has no type segment
+      {
+        source: "/:slug(start).md",
+        destination: "/md/pages/:slug",
+      },
     ];
   },
   // the section used to be called "builds" — old links keep working

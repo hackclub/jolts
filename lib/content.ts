@@ -5,7 +5,7 @@ import matter from "gray-matter"
 import { cache } from "react"
 import { z } from "zod"
 
-import { schemaByType, slugifyHeading, type ContentType, type ConceptMeta, type EntryMeta, type GuideMeta, type ToolMeta } from "@/lib/content-schema"
+import { isBookType, schemaByType, slugifyHeading, type ContentType, type ConceptMeta, type EntryMeta, type GuideMeta, type PageMeta, type ToolMeta } from "@/lib/content-schema"
 
 /* The content layer. Plain MDX files on disk - no database, no CMS.
    content/{builds,concepts,tools}/<slug>/index.mdx, images colocated.
@@ -17,9 +17,12 @@ import { schemaByType, slugifyHeading, type ContentType, type ConceptMeta, type 
    existing imports keep working. */
 
 export {
+  BOOK_TYPES,
   CONTENT_TYPES,
   conceptSchema,
   guideSchema,
+  isBookType,
+  pageSchema,
   partSchema,
   schemaByType,
   slugifyHeading,
@@ -28,6 +31,7 @@ export {
   type ContentType,
   type EntryMeta,
   type GuideMeta,
+  type PageMeta,
   type ToolMeta,
 } from "@/lib/content-schema"
 
@@ -73,60 +77,77 @@ export const listEntries = cache((contentType: ContentType): Entry[] => {
 })
 
 export const listGuides = () => listEntries("guides") as Entry<GuideMeta>[]
+export const listPages = () => listEntries("pages") as Entry<PageMeta>[]
 export const listConcepts = () => listEntries("concepts") as Entry<ConceptMeta>[]
 export const listTools = () => listEntries("tools") as Entry<ToolMeta>[]
+
+/* Where an entry lives. Every type is namespaced under its own hub
+   (/guides/macropad) except pages, which are the site's own top-level
+   URLs - content/pages/start is /start, not /pages/start. Anything that
+   builds a link to an entry goes through here. */
+export function entryPath(contentType: ContentType, slug: string): string {
+  return contentType === "pages" ? `/${slug}` : `/${contentType}/${slug}`
+}
 
 export function authors(meta: EntryMeta): string[] {
   if (!meta.author) return []
   return Array.isArray(meta.author) ? meta.author : [meta.author]
 }
 
-/* ---------- guide pages ----------
+/* ---------- book chapters ----------
    A guide is a small book: index.mdx is the overview (frontmatter + intro
    + parts list) and numbered siblings are its pages, one per stage - content/guides/macropad/01-soldering.mdx → /guides/macropad/soldering.
-   The number gives the order; the rest of the filename is the URL slug. */
+   The number gives the order; the rest of the filename is the URL slug.
+   Site pages are built the same way (content/pages/start/01-*.mdx →
+   /start/...), which is what isBookType distinguishes. */
 
-const guidePageSchema = z.object({
+const bookPageSchema = z.object({
   title: z.string().min(1),
 })
 
-export type GuidePageEntry = {
+export type BookPage = {
   slug: string
   order: number
   title: string
   body: string
-  /** filename within the guide folder, e.g. "02-soldering.mdx" */
+  /** filename within the entry folder, e.g. "02-soldering.mdx" */
   file: string
 }
 
-export const listGuidePages = cache((guideSlug: string): GuidePageEntry[] => {
-  const dir = path.join(CONTENT_DIR, "guides", guideSlug)
-  if (!fs.existsSync(dir)) return []
-  return fs
-    .readdirSync(dir)
-    .map((f) => f.match(/^(\d+)-(.+)\.mdx$/))
-    .filter((m): m is RegExpMatchArray => m !== null)
-    .map((m) => {
-      const { data, content } = matter(
-        fs.readFileSync(path.join(dir, m[0]), "utf8")
-      )
-      const meta = guidePageSchema.parse(data)
-      return {
-        slug: m[2],
-        order: Number(m[1]),
-        title: meta.title,
-        body: content,
-        file: m[0],
-      }
-    })
-    .sort((a, b) => a.order - b.order)
-})
+export const listBookPages = cache(
+  (contentType: ContentType, slug: string): BookPage[] => {
+    if (!isBookType(contentType)) return []
+    const dir = path.join(CONTENT_DIR, contentType, slug)
+    if (!fs.existsSync(dir)) return []
+    return fs
+      .readdirSync(dir)
+      .map((f) => f.match(/^(\d+)-(.+)\.mdx$/))
+      .filter((m): m is RegExpMatchArray => m !== null)
+      .map((m) => {
+        const { data, content } = matter(
+          fs.readFileSync(path.join(dir, m[0]), "utf8")
+        )
+        const meta = bookPageSchema.parse(data)
+        return {
+          slug: m[2],
+          order: Number(m[1]),
+          title: meta.title,
+          body: content,
+          file: m[0],
+        }
+      })
+      .sort((a, b) => a.order - b.order)
+  }
+)
 
-export function getGuidePage(
-  guideSlug: string,
+export function getBookPage(
+  contentType: ContentType,
+  slug: string,
   pageSlug: string
-): GuidePageEntry | null {
-  return listGuidePages(guideSlug).find((p) => p.slug === pageSlug) ?? null
+): BookPage | null {
+  return (
+    listBookPages(contentType, slug).find((p) => p.slug === pageSlug) ?? null
+  )
 }
 
 /* ---------- in-page table of contents ---------- */

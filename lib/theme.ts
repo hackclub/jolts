@@ -47,6 +47,18 @@ export const typeTheme: Record<ContentType, TypeTheme> = {
     wash: "141,255,216",
     tint: "#E9FAF3",
   },
+  /* Site pages borrow the guides family on purpose: "Start here" is the
+     door into the builds, and the header's Start here card is already
+     bordered in the same orange. */
+  pages: {
+    label: "Page",
+    labelPlural: "Pages",
+    accent: "#FF902F",
+    checkerA: "#FFBA01",
+    checkerB: "#FF9D00",
+    wash: "255,211,1",
+    tint: "#FFF4E6",
+  },
 }
 
 /* Site chrome - the header's nav dropdown, search, and the editor's save

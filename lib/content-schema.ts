@@ -5,7 +5,7 @@ import { z } from "zod"
    server loaders (lib/content.ts) AND the browser-side visual editor,
    which validates drafts against the same schemas CI enforces. */
 
-export const CONTENT_TYPES = ["guides", "concepts", "tools"] as const
+export const CONTENT_TYPES = ["guides", "concepts", "tools", "pages"] as const
 export type ContentType = (typeof CONTENT_TYPES)[number]
 
 /* ---------- frontmatter schemas (validated in CI by scripts/validate-content.mjs) ---------- */
@@ -42,6 +42,11 @@ export const partSchema = z.object({
 
 export const guideSchema = baseSchema.extend({
   type: z.literal("guide"),
+  /** A project guide - you finish holding a thing you made (a tamagotchi,
+      a dev board). False for the general kind that teaches a practice
+      rather than a build, e.g. how to write a good journal. Defaults to
+      true: every guide written before this field existed is a project. */
+  build: z.boolean().default(true),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]),
   /** Human estimate, e.g. "1 weekend" or "3–4 hours". */
   time: z.string().min(1),
@@ -56,6 +61,15 @@ export const guideSchema = baseSchema.extend({
   /** Slugs of tool pages this build uses. */
   tools: z.array(z.string()).default([]),
   /** Hero image, relative to the guide folder. */
+  hero: z.string().optional(),
+})
+
+/* Site pages - "Start here", and anything else that is the site talking
+   rather than a catalog entry. Structured like a guide (an overview plus
+   numbered chapters) but mounted at the site root, so /start stays /start.
+   Not creatable from the hubs: these are chrome, not contributions. */
+export const pageSchema = baseSchema.extend({
+  type: z.literal("page"),
   hero: z.string().optional(),
 })
 
@@ -75,13 +89,22 @@ export const schemaByType = {
   guides: guideSchema,
   concepts: conceptSchema,
   tools: toolSchema,
+  pages: pageSchema,
 } as const
 
 export type Part = z.infer<typeof partSchema>
 export type GuideMeta = z.infer<typeof guideSchema>
 export type ConceptMeta = z.infer<typeof conceptSchema>
 export type ToolMeta = z.infer<typeof toolSchema>
-export type EntryMeta = GuideMeta | ConceptMeta | ToolMeta
+export type PageMeta = z.infer<typeof pageSchema>
+export type EntryMeta = GuideMeta | ConceptMeta | ToolMeta | PageMeta
+
+/* Types whose entries are books: an index.mdx overview plus numbered
+   sibling chapters. The rest are single pages. */
+export const BOOK_TYPES = ["guides", "pages"] as const
+export function isBookType(type: ContentType): boolean {
+  return (BOOK_TYPES as readonly string[]).includes(type)
+}
 
 /* ---------- heading anchors ---------- */
 

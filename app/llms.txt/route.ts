@@ -1,4 +1,4 @@
-import { CONTENT_TYPES, listEntries } from "@/lib/content"
+import { CONTENT_TYPES, entryPath, listEntries } from "@/lib/content"
 
 /* Open-access citizenship from day one: a machine-readable index of every
    guide, each available as raw markdown at <url>.md. Statically generated. */
@@ -23,7 +23,9 @@ export function GET() {
     if (entries.length === 0) continue
     lines.push(`## ${type[0].toUpperCase()}${type.slice(1)}`, "")
     for (const e of entries) {
-      lines.push(`- [${e.meta.title}](${SITE}/${type}/${e.slug}.md): ${e.meta.subtitle}`)
+      lines.push(
+        `- [${e.meta.title}](${SITE}${entryPath(type, e.slug)}.md): ${e.meta.subtitle}`
+      )
     }
     lines.push("")
   }

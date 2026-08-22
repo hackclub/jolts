@@ -13,15 +13,17 @@ import { GuideNav, type NavItem } from "@/components/guide-nav"
 import { getMDXComponents } from "@/components/mdx/registry"
 import { contentImageHasAlpha } from "@/lib/content-image"
 import {
+  authors,
   contentImageUrl,
+  entryPath,
   extractToc,
   getEntry,
-  getGuidePage,
+  getBookPage,
   listEntries,
-  listGuidePages,
+  listBookPages,
+  type BookPage,
   type ContentType,
   type Entry,
-  type GuidePageEntry,
 } from "@/lib/content"
 import { renderMDX } from "@/lib/mdx"
 import { typeTheme } from "@/lib/theme"
@@ -43,9 +45,12 @@ export function guideStaticParams(contentType: ContentType) {
   )
 }
 
-export function guidePageStaticParams() {
-  return listEntries("guides").flatMap((e) =>
-    listGuidePages(e.slug).map((p) => ({ slug: e.slug, page: p.slug }))
+export function guidePageStaticParams(contentType: ContentType) {
+  return listEntries(contentType).flatMap((e) =>
+    listBookPages(contentType, e.slug).map((p) => ({
+      slug: e.slug,
+      page: p.slug,
+    }))
   )
 }
 
@@ -57,7 +62,7 @@ export function guideMetadata(
   const entry = getEntry(contentType, slug)
   if (!entry) return {}
   if (pageSlug) {
-    const page = getGuidePage(entry.slug, pageSlug)
+    const page = getBookPage(contentType, entry.slug, pageSlug)
     if (!page) return {}
     return {
       title: `${page.title} - ${entry.meta.title} - jolts`,
@@ -72,11 +77,8 @@ export function guideMetadata(
 
 /* ---------- left panel items (serializable for the client nav) ---------- */
 
-export function buildNavItems(
-  entry: Entry,
-  pages: GuidePageEntry[]
-): NavItem[] {
-  const base = `/${entry.contentType}/${entry.slug}`
+export function buildNavItems(entry: Entry, pages: BookPage[]): NavItem[] {
+  const base = entryPath(entry.contentType, entry.slug)
   return [
     {
       slug: null,
@@ -101,15 +103,16 @@ function PageFooterNav({
   current,
 }: {
   entry: Entry
-  pages: GuidePageEntry[]
+  pages: BookPage[]
   current: string | null
 }) {
+  const base = entryPath(entry.contentType, entry.slug)
   const seq = [
-    { slug: null as string | null, title: "Overview", href: `/guides/${entry.slug}` },
+    { slug: null as string | null, title: "Overview", href: base },
     ...pages.map((p) => ({
       slug: p.slug as string | null,
       title: p.title,
-      href: `/guides/${entry.slug}/${p.slug}`,
+      href: `${base}/${p.slug}`,
     })),
   ]
   const i = seq.findIndex((s) => s.slug === current)
@@ -236,6 +239,8 @@ async function OverviewHeader({ entry }: { entry: Entry }) {
   const heroTransparent = meta.hero
     ? await contentImageHasAlpha(entry.contentType, entry.slug, meta.hero)
     : false
+  const credited = authors(meta).length > 0 || meta.contributors.length > 0
+  const facts = FactTags({ meta })
 
   return (
     <>
@@ -294,17 +299,19 @@ async function OverviewHeader({ entry }: { entry: Entry }) {
               ))}
           </div>
 
-          <div className="relative flex flex-wrap items-center gap-x-[18px] gap-y-[8px] border-t border-black/[0.07] px-[22px] py-[11px]">
-            <AuthorLine meta={meta} />
-            <ContributorsLine names={meta.contributors} />
-          </div>
+          {/* credits strip - omitted entirely when there is nobody to
+              credit, so site pages don't render an empty rule */}
+          {credited && (
+            <div className="relative flex flex-wrap items-center gap-x-[18px] gap-y-[8px] border-t border-black/[0.07] px-[22px] py-[11px]">
+              <AuthorLine meta={meta} />
+              <ContributorsLine names={meta.contributors} />
+            </div>
+          )}
         </div>
       </CheckerFrame>
     </header>
 
-    <div className="mb-[14px]">
-      <FactTags meta={meta} />
-    </div>
+    {facts && <div className="mb-[14px]">{facts}</div>}
     </>
   )
 }
@@ -312,24 +319,26 @@ async function OverviewHeader({ entry }: { entry: Entry }) {
 /* ---------- guide right column (panel lives in the layout) ---------- */
 
 export async function GuideContent({
+  contentType = "guides",
   slug,
   pageSlug,
 }: {
+  contentType?: ContentType
   slug: string
   pageSlug?: string
 }) {
-  const entry = getEntry("guides", slug)
+  const entry = getEntry(contentType, slug)
   if (!entry) notFound()
   // old slugs (aliases) 301 to the canonical URL
   if (entry.slug !== slug) {
     permanentRedirect(
-      `/guides/${entry.slug}${pageSlug ? `/${pageSlug}` : ""}`
+      `${entryPath(contentType, entry.slug)}${pageSlug ? `/${pageSlug}` : ""}`
     )
   }
 
-  const theme = typeTheme.guides
-  const pages = listGuidePages(entry.slug)
-  const page = pageSlug ? getGuidePage(entry.slug, pageSlug) : null
+  const theme = typeTheme[contentType]
+  const pages = listBookPages(contentType, entry.slug)
+  const page = pageSlug ? getBookPage(contentType, entry.slug, pageSlug) : null
   if (pageSlug && !page) notFound()
 
   const body = await renderMDX(

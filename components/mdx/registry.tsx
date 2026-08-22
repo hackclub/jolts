@@ -15,10 +15,12 @@ import {
   FlagFrame,
   type FrameTheme,
 } from "@/components/checker-frame"
+import { GuideCard } from "@/components/entry-card"
 import { PreviewLink, type PreviewTheme } from "@/components/preview-link"
 import {
   contentImageUrl,
   getEntry,
+  listGuides,
   plainExcerpt,
   slugifyHeading,
   type Entry,
@@ -246,6 +248,36 @@ const toolPreviewTheme: PreviewTheme = {
   chipBg: "#E9FAF3",
   chipText: "#067A54",
   chipHoverBg: "#DCF5EA",
+}
+
+/* The guide catalog, inline. Site pages ("Start here") need to hand the
+   reader the actual builds, not a link to them; sort="easiest" leads with
+   the ones that need no soldering, and only="builds" drops the general
+   guides that don't end in a finished object. */
+async function GuideGrid({
+  sort,
+  only,
+}: {
+  sort?: "easiest"
+  only?: "builds"
+}) {
+  const all =
+    only === "builds" ? listGuides().filter((g) => g.meta.build) : listGuides()
+  const guides =
+    sort === "easiest"
+      ? [...all].sort(
+          (a, b) =>
+            Number(a.meta.soldering) - Number(b.meta.soldering) ||
+            a.meta.title.localeCompare(b.meta.title)
+        )
+      : all
+  return (
+    <div className="my-[28px] grid grid-cols-1 gap-[18px] sm:grid-cols-2">
+      {guides.map((entry) => (
+        <GuideCard key={entry.slug} entry={entry} />
+      ))}
+    </div>
+  )
 }
 
 function ConceptLinkInline({
@@ -696,6 +728,7 @@ export function getMDXComponents(
       />
     ),
     PartsList: () => <PartsListFor entry={entry} />,
+    GuideGrid,
     Tool: ToolLinkInline,
     Warning,
     Checkpoint,
