@@ -7,6 +7,7 @@ import "./globals.css";
 import { EntryReveal } from "@/components/entry-reveal";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const openRunde = localFont({
   src: [
@@ -25,8 +26,25 @@ const augiePixel = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "jolts",
-  description: "Learn to build real things",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Jolts - Learn to Build Real Hardware - Hack Club",
+    // every child page sets a bare title and gets the brand suffix
+    template: "%s - Hack Club",
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  openGraph: {
+    siteName: SITE_NAME,
+    type: "website",
+    locale: "en_US",
+    images: [
+      { url: "/joltsbanner.png", width: 3100, height: 904, alt: SITE_NAME },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

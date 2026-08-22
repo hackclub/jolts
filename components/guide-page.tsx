@@ -10,6 +10,12 @@ import { Breadcrumb } from "@/components/breadcrumb"
 import { CheckerFrame } from "@/components/checker-frame"
 import { AuthorLine, ContributorsLine } from "@/components/entry-card"
 import { GuideNav, type NavItem } from "@/components/guide-nav"
+import {
+  JsonLd,
+  LICENSE_URL,
+  PUBLISHER_ID,
+  WEBSITE_ID,
+} from "@/components/json-ld"
 import { getMDXComponents } from "@/components/mdx/registry"
 import { contentImageHasAlpha } from "@/lib/content-image"
 import {
@@ -21,11 +27,13 @@ import {
   getBookPage,
   listEntries,
   listBookPages,
+  plainExcerpt,
   type BookPage,
   type ContentType,
   type Entry,
 } from "@/lib/content"
 import { renderMDX } from "@/lib/mdx"
+import { SITE_NAME, SITE_URL } from "@/lib/site"
 import { typeTheme } from "@/lib/theme"
 
 /* One renderer for all three content types, fully static.
@@ -61,18 +69,122 @@ export function guideMetadata(
 ): Metadata {
   const entry = getEntry(contentType, slug)
   if (!entry) return {}
-  if (pageSlug) {
-    const page = getBookPage(contentType, entry.slug, pageSlug)
-    if (!page) return {}
-    return {
-      title: `${page.title} - ${entry.meta.title} - jolts`,
-      description: entry.meta.subtitle,
-    }
-  }
+  const meta = entry.meta
+
+  const page = pageSlug ? getBookPage(contentType, entry.slug, pageSlug) : null
+  if (pageSlug && !page) return {}
+
+  // build guides are titled by the outcome; everything else by its name.
+  // The root layout's title.template appends "- Hack Club".
+  const entryTitle =
+    meta.type === "guide" && meta.build
+      ? `Make your own ${meta.title}!`
+      : meta.title
+  const title = page ? `${page.title} - ${meta.title}` : entryTitle
+  const description = page
+    ? plainExcerpt(page.body, 160) || meta.subtitle
+    : meta.subtitle
+
+  // canonical always points at the current slug, so prerendered alias
+  // slugs (which 301 anyway) never compete with the real URL
+  const base = entryPath(contentType, entry.slug)
+  const canonical = page ? `${base}/${page.slug}` : base
+  const hero = meta.hero
+    ? contentImageUrl(contentType, entry.slug, meta.hero)
+    : null
+
   return {
-    title: `${entry.meta.title} - jolts`,
-    description: entry.meta.subtitle,
+    title,
+    description,
+    alternates: { canonical },
+    // child openGraph replaces the root layout's wholesale, so restate
+    // the site name alongside the page-specific fields
+    openGraph: {
+      siteName: SITE_NAME,
+      type: "article",
+      url: canonical,
+      locale: "en_US",
+      authors: authors(meta).map((a) => `https://github.com/${a}`),
+      modifiedTime: meta.updated
+        ? new Date(meta.updated).toISOString()
+        : undefined,
+      tags: meta.tags.length > 0 ? meta.tags : undefined,
+      images: [{ url: hero ?? "/joltsbanner.png", alt: meta.title }],
+    },
   }
+}
+
+/* JSON-LD structured data, rendered into the page body (the approach the
+   Next metadata docs prescribe - there is no metadata field for it). One
+   Article + BreadcrumbList per entry page. */
+export function EntryJsonLd({
+  entry,
+  page,
+}: {
+  entry: Entry
+  page?: BookPage | null
+}) {
+  const meta = entry.meta
+  const base = `${SITE_URL}${entryPath(entry.contentType, entry.slug)}`
+  const url = page ? `${base}/${page.slug}` : base
+  const theme = typeTheme[entry.contentType]
+
+  const crumbs = [
+    { name: "Jolts", item: SITE_URL },
+    // site pages hang off the root, everything else under its hub
+    ...(entry.contentType === "pages"
+      ? []
+      : [
+          {
+            name: theme.labelPlural,
+            item: `${SITE_URL}/${entry.contentType}`,
+          },
+        ]),
+    { name: meta.title, item: base },
+    ...(page ? [{ name: page.title, item: url }] : []),
+  ]
+
+  const data = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: crumbs.map((c, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: c.name,
+          item: c.item,
+        })),
+      },
+      {
+        "@type": "TechArticle",
+        headline: page ? `${page.title} - ${meta.title}` : meta.title,
+        description: meta.subtitle,
+        url,
+        inLanguage: "en",
+        ...(meta.hero && {
+          image: `${SITE_URL}${contentImageUrl(
+            entry.contentType,
+            entry.slug,
+            meta.hero
+          )}`,
+        }),
+        ...(meta.updated && {
+          dateModified: new Date(meta.updated).toISOString(),
+        }),
+        author: authors(meta).map((a) => ({
+          "@type": "Person",
+          name: a,
+          url: `https://github.com/${a}`,
+        })),
+        publisher: { "@id": PUBLISHER_ID },
+        isPartOf: { "@id": WEBSITE_ID },
+        license: LICENSE_URL,
+      },
+    ],
+  }
+
+  return <JsonLd data={data} />
 }
 
 /* ---------- left panel items (serializable for the client nav) ---------- */
@@ -348,6 +460,7 @@ export async function GuideContent({
 
   return (
     <>
+      <EntryJsonLd entry={entry} page={page} />
       {page ? (
         <header>
           <h1 className="text-[32px] leading-[1.1] font-semibold tracking-[-0.03em] text-[#16181d] text-balance">
@@ -412,6 +525,7 @@ export async function GuidePage({
   if (!showPanel) {
     return (
       <div className="mx-auto w-full max-w-[720px] px-[28px] pt-[40px]">
+        <EntryJsonLd entry={entry} />
         <Breadcrumb
           trail={trail}
           accent={theme.accent}
@@ -427,6 +541,7 @@ export async function GuidePage({
 
   return (
     <div className="mx-auto grid w-full max-w-[1020px] gap-x-[52px] gap-y-[28px] px-[28px] pt-[40px] lg:grid-cols-[190px_minmax(0,1fr)]">
+      <EntryJsonLd entry={entry} />
       <GuideNav
         entryTitle={entry.meta.title}
         theme={theme}

@@ -1,8 +1,17 @@
+import type { Metadata } from "next"
+
+import { SiteJsonLd } from "@/components/json-ld"
+import { SITE_DESCRIPTION } from "@/lib/site"
 import { cn } from "@/lib/utils"
 
 /* The home page, all skeleton for now: the layout is blocked out with
    placeholder surfaces (hero, card row, list rows) so the structure can
    be judged before any real content lands. */
+
+// title and description come from the root layout's defaults
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+}
 
 function Skeleton({ className }: { className?: string }) {
   return (
@@ -16,6 +25,7 @@ function Skeleton({ className }: { className?: string }) {
 export default function Home() {
   return (
     <div className="mx-auto w-full max-w-[1100px] px-[28px] pt-[40px]">
+          <SiteJsonLd description={SITE_DESCRIPTION} />
           {/* hero container */}
           <div className="rounded-[14px] border border-black/[0.08] p-[28px]">
             <Skeleton className="h-[14px] w-[120px]" />

@@ -10,9 +10,10 @@ import {
 import { Breadcrumb } from "@/components/breadcrumb"
 
 export const metadata: Metadata = {
-  title: "Contribute - jolts",
+  title: "Contribute",
   description:
     "Jolts is community-written. How to write a guide, the block registry, and how pull requests get reviewed.",
+  alternates: { canonical: "/contribute" },
 }
 
 const REPO = "https://github.com/hackclub/jolts"

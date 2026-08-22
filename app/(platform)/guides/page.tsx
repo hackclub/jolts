@@ -5,18 +5,26 @@ import { Breadcrumb } from "@/components/breadcrumb"
 import { GuideCard } from "@/components/entry-card"
 import { NewEntryCard } from "@/components/new-entry-link"
 import { HubHero } from "@/components/hub-hero"
+import { CollectionJsonLd } from "@/components/json-ld"
 import { listGuides } from "@/lib/content"
 
 export const metadata: Metadata = {
-  title: "Guides - jolts",
+  title: "Hardware Build Guides",
   description:
     "Make a specific thing, start to finish. Every guide declares its cost, time, and prerequisites up front.",
+  alternates: { canonical: "/guides" },
 }
 
 export default function GuidesPage() {
   const guides = listGuides()
   return (
     <div className="mx-auto w-full max-w-[1100px] px-[28px] pt-[40px]">
+      <CollectionJsonLd
+        contentType="guides"
+        title="Guides"
+        description={metadata.description as string}
+        entries={guides}
+      />
       <Breadcrumb
         trail={[{ label: "Guides", href: "/guides" }]}
         accent="#FF902F"

@@ -6,9 +6,9 @@ import { Check, X } from "@phosphor-icons/react/dist/ssr"
 import { Breadcrumb } from "@/components/breadcrumb"
 
 export const metadata: Metadata = {
-  title: "Style guide - jolts",
-  description:
-    "The Jolts style guide!",
+  title: "Style Guide",
+  description: "The Jolts style guide!",
+  alternates: { canonical: "/style-guide" },
 }
 
 function Section({
