@@ -36,7 +36,7 @@ export function GuideBreadcrumb({
   const page = pages.find((p) => p.slug === pageSlug) ?? null
 
   const sep = (
-    <span aria-hidden className="text-black/20">
+    <span aria-hidden className="text-[var(--jt-fainter)]">
       /
     </span>
   )
@@ -49,7 +49,7 @@ export function GuideBreadcrumb({
       <Link
         href="/"
         aria-label="Home"
-        className="flex items-center text-[#9aa1ab] transition-colors duration-150 hover:text-[#16181d]"
+        className="flex items-center text-[var(--jt-faint)] transition-colors duration-150 hover:text-[var(--jt-ink)]"
       >
         <House size={14} weight="fill" aria-hidden />
       </Link>
@@ -58,7 +58,7 @@ export function GuideBreadcrumb({
         <>
           <Link
             href={hub.href}
-            className="text-[#9aa1ab] transition-colors duration-150 hover:text-[#16181d]"
+            className="text-[var(--jt-faint)] transition-colors duration-150 hover:text-[var(--jt-ink)]"
           >
             {hub.label}
           </Link>
@@ -69,7 +69,7 @@ export function GuideBreadcrumb({
         href={base}
         className={
           page
-            ? "text-[#9aa1ab] transition-colors duration-150 hover:text-[#16181d]"
+            ? "text-[var(--jt-faint)] transition-colors duration-150 hover:text-[var(--jt-ink)]"
             : "font-semibold"
         }
         style={page ? undefined : { color: accent }}
@@ -93,7 +93,7 @@ export function GuideBreadcrumb({
       {editBase && (
         <Link
           href={`${editBase}?page=${page?.file ?? "index.mdx"}`}
-          className="ml-auto inline-flex items-center gap-[5px] text-[#9aa1ab] transition-colors duration-150 hover:text-[#16181d]"
+          className="ml-auto inline-flex items-center gap-[5px] text-[var(--jt-faint)] transition-colors duration-150 hover:text-[var(--jt-ink)]"
         >
           <PencilSimple size={13} weight="fill" aria-hidden />
           Edit

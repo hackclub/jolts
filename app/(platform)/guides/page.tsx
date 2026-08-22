@@ -27,7 +27,7 @@ export default function GuidesPage() {
       />
       <Breadcrumb
         trail={[{ label: "Guides", href: "/guides" }]}
-        accent="#FF902F"
+        accent="var(--jt-guides-accent)"
       />
       <HubHero
         type="guides"
@@ -35,11 +35,11 @@ export default function GuidesPage() {
         blurb="Make this specific thing, start to finish. Every guide says what it costs, how long it takes, and what it assumes - nothing here is a checkpoint, they're all things you'll actually use."
       />
 
-      <p className="mt-[18px] text-[14.5px] tracking-[-0.01em] text-[#5c6470]">
+      <p className="mt-[18px] text-[14.5px] tracking-[-0.01em] text-[var(--jt-muted)]">
         First time touching hardware?{" "}
         <Link
           href="/start"
-          className="font-semibold text-[#16181d] underline decoration-[#ff902f] decoration-[1.5px] underline-offset-[3px] hover:decoration-[2px]"
+          className="font-semibold text-[var(--jt-ink)] underline decoration-[var(--jt-guides-accent)] decoration-[1.5px] underline-offset-[3px] hover:decoration-[2px]"
         >
           Start here
         </Link>

@@ -26,14 +26,14 @@ export default function ConceptsPage() {
       />
       <Breadcrumb
         trail={[{ label: "Concepts", href: "/concepts" }]}
-        accent="#A633D6"
+        accent="var(--jt-concepts-accent)"
       />
       <HubHero
         type="concepts"
         title="Concepts"
         blurb="Understand this idea. Builds never explain a concept inline - they link here at the exact moment you need it, so each idea gets written well once."
       />
-      <div className="mt-[26px] border-t border-black/10">
+      <div className="mt-[26px] border-t border-[var(--jt-line)]">
         <EntryList entries={concepts} />
       </div>
       <div className="mt-[20px]">

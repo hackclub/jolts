@@ -232,11 +232,11 @@ function PageFooterNav({
   const next = i < seq.length - 1 ? seq[i + 1] : null
   if (!prev && !next) return null
   return (
-    <div className="mt-[44px] flex items-baseline justify-between gap-[16px] border-t border-black/10 pt-[16px] text-[14.5px] tracking-[-0.01em]">
+    <div className="mt-[44px] flex items-baseline justify-between gap-[16px] border-t border-[var(--jt-line)] pt-[16px] text-[14.5px] tracking-[-0.01em]">
       {prev ? (
         <Link
           href={prev.href}
-          className="text-[#5c6470] transition-colors duration-150 hover:text-[#16181d]"
+          className="text-[var(--jt-muted)] transition-colors duration-150 hover:text-[var(--jt-ink)]"
         >
           ← {prev.title}
         </Link>
@@ -267,11 +267,11 @@ function FactTag({
   children: React.ReactNode
 }) {
   return (
-    <span className="group relative inline-flex h-[29px] cursor-default items-center gap-[7px] rounded-full border border-black/10 bg-white px-[12px] text-[13px] tracking-[-0.01em] text-[#33383f]">
+    <span className="group relative inline-flex h-[29px] cursor-default items-center gap-[7px] rounded-full border border-[var(--jt-line)] bg-[var(--jt-surface)] px-[12px] text-[13px] tracking-[-0.01em] text-[var(--jt-body)]">
       {children}
       <span
         role="tooltip"
-        className="pointer-events-none absolute bottom-[calc(100%+7px)] left-1/2 z-10 -translate-x-1/2 translate-y-[3px] rounded-[7px] bg-[#16181d] px-[10px] py-[5.5px] text-[12px] leading-[1.4] whitespace-nowrap text-white opacity-0 shadow-[0px_4px_12px_rgba(0,0,0,0.25)] transition-[opacity,transform] duration-150 ease-out group-hover:translate-y-0 group-hover:opacity-100"
+        className="pointer-events-none absolute bottom-[calc(100%+7px)] left-1/2 z-10 -translate-x-1/2 translate-y-[3px] rounded-[7px] bg-[var(--jt-ink)] px-[10px] py-[5.5px] text-[12px] leading-[1.4] whitespace-nowrap text-[var(--jt-page)] opacity-0 shadow-[0px_4px_12px_rgba(0,0,0,0.25)] transition-[opacity,transform] duration-150 ease-out group-hover:translate-y-0 group-hover:opacity-100"
       >
         {info}
       </span>
@@ -300,7 +300,7 @@ function FactTags({ meta }: { meta: Entry["meta"] }) {
               className="size-[6px] rounded-full"
               style={{
                 background:
-                  i <= filled ? typeTheme.guides.accent : "rgba(0,0,0,0.12)",
+                  i <= filled ? typeTheme.guides.accent : "var(--jt-dot-off)",
               }}
             />
           ))}
@@ -311,11 +311,11 @@ function FactTags({ meta }: { meta: Entry["meta"] }) {
         key="time"
         info="Hands-on time - spread it over as many sessions as you like"
       >
-        <Clock size={14} weight="fill" className="text-[#9aa1ab]" aria-hidden />
+        <Clock size={14} weight="fill" className="text-[var(--jt-faint)]" aria-hidden />
         {meta.time}
       </FactTag>,
       <FactTag key="cost" info="Approximate parts cost - shipping not included">
-        <Coins size={14} weight="fill" className="text-[#9aa1ab]" aria-hidden />
+        <Coins size={14} weight="fill" className="text-[var(--jt-faint)]" aria-hidden />
         {meta.cost}
       </FactTag>,
       <FactTag
@@ -326,7 +326,7 @@ function FactTags({ meta }: { meta: Entry["meta"] }) {
             : "The fab assembles everything - no iron needed"
         }
       >
-        <Wrench size={14} weight="fill" className="text-[#9aa1ab]" aria-hidden />
+        <Wrench size={14} weight="fill" className="text-[var(--jt-faint)]" aria-hidden />
         {meta.soldering ? "soldering required" : "no soldering"}
       </FactTag>
     )
@@ -334,7 +334,7 @@ function FactTags({ meta }: { meta: Entry["meta"] }) {
   if (meta.type === "tool" && meta.cost) {
     tags.push(
       <FactTag key="cost" info="What this tool costs to use">
-        <Coins size={14} weight="fill" className="text-[#9aa1ab]" aria-hidden />
+        <Coins size={14} weight="fill" className="text-[var(--jt-faint)]" aria-hidden />
         {meta.cost}
       </FactTag>
     )
@@ -364,7 +364,7 @@ async function OverviewHeader({ entry }: { entry: Entry }) {
       >
         {/* the surface: full-bleed rows, so the meta strip's divider
             reaches both edges */}
-        <div className="relative overflow-hidden rounded-[7px] bg-white">
+        <div className="relative overflow-hidden rounded-[7px] bg-[var(--jt-surface)]">
           {/* soft accent glow behind the photo corner */}
           <div
             aria-hidden
@@ -376,15 +376,15 @@ async function OverviewHeader({ entry }: { entry: Entry }) {
 
           <div className="relative flex items-center gap-[26px] px-[22px] pt-[20px] pb-[16px]">
             <div className="min-w-0 flex-1">
-              <h1 className="font-augie text-[40px] leading-[1.02] text-[#16181d] text-balance">
+              <h1 className="font-augie text-[40px] leading-[1.02] text-[var(--jt-ink)] text-balance">
                 {meta.title}
               </h1>
-              <p className="mt-[10px] text-[16px] leading-[1.55] tracking-[-0.01em] text-[#5c6470]">
+              <p className="mt-[10px] text-[16px] leading-[1.55] tracking-[-0.01em] text-[var(--jt-muted)]">
                 {meta.subtitle}
               </p>
 
               {meta.type === "guide" && (
-                <p className="mt-[10px] text-[14px] tracking-[-0.01em] text-[#9aa1ab]">
+                <p className="mt-[10px] text-[14px] tracking-[-0.01em] text-[var(--jt-faint)]">
                   You&rsquo;ll learn {meta.learns.join(", ")}
                 </p>
               )}
@@ -406,7 +406,7 @@ async function OverviewHeader({ entry }: { entry: Entry }) {
                 <img
                   src={contentImageUrl(entry.contentType, entry.slug, meta.hero)}
                   alt=""
-                  className="hidden aspect-[4/3] w-[196px] shrink-0 rotate-[2.5deg] rounded-[9px] border-[5px] border-white object-cover shadow-[0px_6px_18px_-4px_rgba(0,0,0,0.28)] md:block"
+                  className="hidden aspect-[4/3] w-[196px] shrink-0 rotate-[2.5deg] rounded-[9px] border-[5px] border-[var(--jt-mount)] object-cover shadow-[0px_6px_18px_-4px_rgba(0,0,0,0.28)] md:block"
                 />
               ))}
           </div>
@@ -414,7 +414,7 @@ async function OverviewHeader({ entry }: { entry: Entry }) {
           {/* credits strip - omitted entirely when there is nobody to
               credit, so site pages don't render an empty rule */}
           {credited && (
-            <div className="relative flex flex-wrap items-center gap-x-[18px] gap-y-[8px] border-t border-black/[0.07] px-[22px] py-[11px]">
+            <div className="relative flex flex-wrap items-center gap-x-[18px] gap-y-[8px] border-t border-[var(--jt-line-soft)] px-[22px] py-[11px]">
               <AuthorLine meta={meta} />
               <ContributorsLine names={meta.contributors} />
             </div>
@@ -463,7 +463,7 @@ export async function GuideContent({
       <EntryJsonLd entry={entry} page={page} />
       {page ? (
         <header>
-          <h1 className="text-[32px] leading-[1.1] font-semibold tracking-[-0.03em] text-[#16181d] text-balance">
+          <h1 className="text-[32px] leading-[1.1] font-semibold tracking-[-0.03em] text-[var(--jt-ink)] text-balance">
             {page.title}
           </h1>
         </header>

@@ -26,14 +26,14 @@ export default function ToolsPage() {
       />
       <Breadcrumb
         trail={[{ label: "Tools", href: "/tools" }]}
-        accent="#0EBF80"
+        accent="var(--jt-tools-accent)"
       />
       <HubHero
         type="tools"
         title="Tools"
         blurb="How to use this specific thing. Every tool starts with a first-hour page - enough to be dangerous - and software tools count as hardware here."
       />
-      <div className="mt-[26px] border-t border-black/10">
+      <div className="mt-[26px] border-t border-[var(--jt-line)]">
         <EntryList entries={tools} />
       </div>
       <div className="mt-[20px]">

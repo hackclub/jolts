@@ -17,7 +17,7 @@ function Skeleton({ className }: { className?: string }) {
   return (
     <div
       aria-hidden
-      className={cn("animate-pulse rounded-[8px] bg-black/[0.06]", className)}
+      className={cn("animate-pulse rounded-[8px] bg-[var(--jt-skeleton)]", className)}
     />
   )
 }
@@ -27,7 +27,7 @@ export default function Home() {
     <div className="mx-auto w-full max-w-[1100px] px-[28px] pt-[40px]">
           <SiteJsonLd description={SITE_DESCRIPTION} />
           {/* hero container */}
-          <div className="rounded-[14px] border border-black/[0.08] p-[28px]">
+          <div className="rounded-[14px] border border-[var(--jt-line)] p-[28px]">
             <Skeleton className="h-[14px] w-[120px]" />
             <Skeleton className="mt-[18px] h-[40px] w-[520px] max-w-full" />
             <Skeleton className="mt-[10px] h-[40px] w-[380px] max-w-[70%]" />
@@ -45,7 +45,7 @@ export default function Home() {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="overflow-hidden rounded-[10px] border border-black/[0.08]"
+                className="overflow-hidden rounded-[10px] border border-[var(--jt-line)]"
               >
                 <Skeleton className="aspect-[16/9] rounded-none" />
                 <div className="p-[16px]">
@@ -63,7 +63,7 @@ export default function Home() {
             {[0, 1].map((col) => (
               <div key={col}>
                 <Skeleton className="h-[22px] w-[130px]" />
-                <div className="mt-[14px] divide-y divide-black/[0.07] border-t border-black/10">
+                <div className="mt-[14px] divide-y divide-[var(--jt-line-soft)] border-t border-[var(--jt-line)]">
                   {[0, 1, 2].map((row) => (
                     <div
                       key={row}
