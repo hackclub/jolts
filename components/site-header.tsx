@@ -753,15 +753,26 @@ export function SiteHeader() {
   return (
     <header className="relative z-40 h-[68px] w-full md:h-[80px] lg:h-[91px]">
       {/* checkerboard background - pure CSS, no SVG involved */}
-      <div className="absolute inset-0 overflow-hidden shadow-[0px_3px_19px_0px_var(--jt-header-shadow)]">
+      <div className="absolute inset-0 overflow-hidden bg-[var(--jt-header)] shadow-[0px_3px_19px_0px_var(--jt-header-shadow)]">
+        {/* The plane spins about its own centre, so the further its ends
+            reach sideways the further they swing off the top and bottom of
+            the header - a fixed 250px overhang ran out near 2000px wide and
+            the corners fell through to bare page. The overhang has to grow
+            with the width instead: half the viewport times the sine of the
+            tilt, plus the header's own height (100% of the clipper). */}
         <div
           aria-hidden
-          className="absolute -inset-x-[10%] -inset-y-[250px] rotate-[-14.59deg] bg-[var(--jt-header)]"
-          style={{
-            backgroundImage:
-              "conic-gradient(var(--jt-header-checker-a) 0 25%, var(--jt-header-checker-b) 0 50%, var(--jt-header-checker-a) 0 75%, var(--jt-header-checker-b) 0)",
-            backgroundSize: "132px 132px",
-          }}
+          className="absolute -inset-x-[10%] bg-[var(--jt-header)]"
+          style={
+            {
+              "--tilt": "14.59deg",
+              rotate: "calc(-1 * var(--tilt))",
+              insetBlock: "calc(-1 * (50vw * sin(var(--tilt)) + 100%))",
+              backgroundImage:
+                "conic-gradient(var(--jt-header-checker-a) 0 25%, var(--jt-header-checker-b) 0 50%, var(--jt-header-checker-a) 0 75%, var(--jt-header-checker-b) 0)",
+              backgroundSize: "132px 132px",
+            } as React.CSSProperties
+          }
         />
         <div
           aria-hidden
