@@ -4,6 +4,8 @@ import { House, PencilSimple } from "@phosphor-icons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { BookLink } from "@/components/book-link"
+
 /* Breadcrumb for book pages: [home] / Guides / <guide> / <page>.
    Lives in the book layout OUTSIDE the ViewTransition, so it stays put
    while the page content animates. Every segment is clickable; the page
@@ -65,7 +67,7 @@ export function GuideBreadcrumb({
           {sep}
         </>
       )}
-      <Link
+      <BookLink
         href={base}
         className={
           page
@@ -76,7 +78,7 @@ export function GuideBreadcrumb({
         aria-current={page ? undefined : "page"}
       >
         {guideTitle}
-      </Link>
+      </BookLink>
       {page && (
         <>
           {sep}

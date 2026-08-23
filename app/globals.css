@@ -486,6 +486,33 @@
   }
 }
 
+/* The header is outside the transition, so it lands in the browser's
+   default `root` crossfade - and scrolled down, the old snapshot has no
+   header at the top of the viewport, so it fades in over the new page
+   instead of just being there. Pin it: no animation, no old snapshot to
+   dissolve from, and above the content that is still fading out (the
+   outgoing column is captured at its old scroll offset, which overlaps
+   the header's strip). */
+::view-transition-group(jolts-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(jolts-header) {
+  display: none;
+}
+::view-transition-new(jolts-header) {
+  animation: none;
+}
+
+/* Same reasoning for the rest of the chrome - nav rail, breadcrumb,
+   footer. Only the content column is meant to move, and crossfading two
+   snapshots taken at different scroll offsets never looks like anything
+   but a ghost. Swap it outright. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
 /* ---------- guide article plumbing ---------- */
 
 /* iFixit-style step numbering via CSS counters - Steps are server-rendered

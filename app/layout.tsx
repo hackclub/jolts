@@ -54,6 +54,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${openRunde.variable} ${augiePixel.variable} h-full scroll-smooth antialiased`}
+      /* `scroll-smooth` is for the in-page anchors. Without this
+         attribute the router inherits it too, and every navigation from
+         a scrolled position becomes a second-long smooth ride to the top
+         that the page transition plays straight through. Next reads the
+         attribute to know it should force `auto` for its own scrolling. */
+      data-scroll-behavior="smooth"
       // the inline scripts below write to <html> before hydration
       suppressHydrationWarning
     >

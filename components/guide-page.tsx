@@ -1,11 +1,11 @@
 import type { Metadata } from "next"
 import { ViewTransition } from "react"
 
-import Link from "next/link"
 import { notFound, permanentRedirect } from "next/navigation"
 
 import { Clock, Coins, Wrench } from "@phosphor-icons/react/dist/ssr"
 
+import { BookLink } from "@/components/book-link"
 import { Breadcrumb } from "@/components/breadcrumb"
 import { CheckerFrame } from "@/components/checker-frame"
 import { AuthorLine, ContributorsLine } from "@/components/entry-card"
@@ -234,23 +234,23 @@ function PageFooterNav({
   return (
     <div className="mt-[44px] flex items-baseline justify-between gap-[16px] border-t border-[var(--jt-line)] pt-[16px] text-[14.5px] tracking-[-0.01em]">
       {prev ? (
-        <Link
+        <BookLink
           href={prev.href}
           className="text-[var(--jt-muted)] transition-colors duration-150 hover:text-[var(--jt-ink)]"
         >
           ← {prev.title}
-        </Link>
+        </BookLink>
       ) : (
         <span />
       )}
       {next && (
-        <Link
+        <BookLink
           href={next.href}
           className="font-semibold hover:underline [text-underline-offset:3px]"
           style={{ color: typeTheme.guides.accent }}
         >
           {next.title} →
-        </Link>
+        </BookLink>
       )}
     </div>
   )

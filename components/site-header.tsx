@@ -751,7 +751,7 @@ export function SiteHeader() {
     }
 
   return (
-    <header className="relative z-40 h-[68px] w-full md:h-[80px] lg:h-[91px]">
+    <header className="relative z-40 h-[68px] w-full [view-transition-name:jolts-header] md:h-[80px] lg:h-[91px]">
       {/* checkerboard background - pure CSS, no SVG involved */}
       <div className="absolute inset-0 overflow-hidden bg-[var(--jt-header)] shadow-[0px_3px_19px_0px_var(--jt-header-shadow)]">
         {/* The plane spins about its own centre, so the further its ends

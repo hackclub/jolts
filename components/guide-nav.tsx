@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 
-import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { BookLink } from "@/components/book-link"
 import { CheckerFrame } from "@/components/checker-frame"
 import type { TocEntry } from "@/lib/content"
 import type { TypeTheme } from "@/lib/theme"
@@ -146,12 +146,12 @@ export function GuideNav({
                       {item.title}
                     </span>
                   ) : (
-                    <Link
+                    <BookLink
                       href={item.href}
                       className="min-w-0 flex-1 py-[3px] text-[13.5px] tracking-[-0.02em] text-[var(--jt-muted)] transition-colors duration-150 hover:text-[var(--jt-ink)]"
                     >
                       {item.title}
-                    </Link>
+                    </BookLink>
                   )}
                 </div>
 
