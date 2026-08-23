@@ -650,8 +650,15 @@ function proseComponents(entry: Entry, editUrl?: string): MDXComponents {
         {...props}
       />
     ),
-    a: (props) => (
+    /* Off-site links open in a new tab, matching ExternalGuide and the
+       parts tiles. Site-relative ones don't: a new tab for /tools/... is
+       just a second copy of the site. */
+    a: ({ href, ...props }) => (
       <a
+        href={href}
+        {...(href?.startsWith("http")
+          ? { target: "_blank", rel: "noreferrer" }
+          : null)}
         className="font-medium text-[var(--jt-ink)] underline decoration-[var(--jt-line-strong)] decoration-[1.5px] underline-offset-[3px] transition-colors duration-150 hover:decoration-[var(--jt-ink)]"
         {...props}
       />
