@@ -27,6 +27,8 @@ const KEY_ORDER = [
   "build",
   "title",
   "subtitle",
+  "seoTitle",
+  "seoDescription",
   "author",
   "contributors",
   "difficulty",

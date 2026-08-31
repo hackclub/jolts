@@ -80,10 +80,17 @@ export function guideMetadata(
     meta.type === "guide" && meta.build
       ? `Make your own ${meta.title}!`
       : meta.title
-  const title = page ? `${page.title} - ${meta.title}` : entryTitle
+  // seoTitle wins where it is set: a title written for the page list
+  // ("WTH do all these words mean?") is not the one a search result wants
+  const title = page
+    ? (page.seoTitle ?? `${page.title} - ${meta.title}`)
+    : (meta.seoTitle ?? entryTitle)
   const description = page
-    ? plainExcerpt(page.body, 160) || meta.subtitle
-    : meta.subtitle
+    ? page.seoDescription ||
+      plainExcerpt(page.body, 160) ||
+      meta.seoDescription ||
+      meta.subtitle
+    : meta.seoDescription || meta.subtitle
 
   // canonical always points at the current slug, so prerendered alias
   // slugs (which 301 anyway) never compete with the real URL
@@ -159,7 +166,8 @@ export function EntryJsonLd({
       {
         "@type": "TechArticle",
         headline: page ? `${page.title} - ${meta.title}` : meta.title,
-        description: meta.subtitle,
+        description:
+          page?.seoDescription ?? meta.seoDescription ?? meta.subtitle,
         url,
         inLanguage: "en",
         ...(meta.hero && {

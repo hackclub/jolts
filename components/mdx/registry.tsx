@@ -17,6 +17,7 @@ import {
 } from "@/components/checker-frame"
 import { GuideCard } from "@/components/entry-card"
 import { PreviewLink, type PreviewTheme } from "@/components/preview-link"
+import { ToolkitPicker } from "@/components/mdx/toolkit-picker"
 import {
   contentImageUrl,
   getEntry,
@@ -39,8 +40,8 @@ import { cn } from "@/lib/utils"
    loud moment at the end (ShipIt). Cross-links carry Wikipedia-style
    hover previews baked in at build time.
 
-   Everything except PreviewLink is a server component: guides ship almost
-   zero client JS. Blocks are bound per-entry (getMDXComponents) so they can
+   Everything except PreviewLink and ToolkitPicker is a server component:
+   guides ship almost zero client JS. Blocks are bound per-entry (getMDXComponents) so they can
    read frontmatter, resolve relative images, and inherit the content type's
    accent via --guide-accent on the article wrapper. */
 
@@ -738,6 +739,7 @@ export function getMDXComponents(
     ),
     PartsList: () => <PartsListFor entry={entry} />,
     GuideGrid,
+    ToolkitPicker,
     Tool: ToolLinkInline,
     Warning,
     Checkpoint,

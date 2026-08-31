@@ -19,6 +19,8 @@ const author = z.union([z.string(), z.array(z.string()).min(1)])
 const base = {
   title: z.string().min(1),
   subtitle: z.string().min(1),
+  seoTitle: z.string().optional(),
+  seoDescription: z.string().optional(),
   author: author.optional(),
   contributors: z.array(z.string()).default([]),
   aliases: z.array(z.string()).default([]),
@@ -62,7 +64,7 @@ const schemas = {
 const REGISTRY = new Set([
   "Step", "PartsList", "Tool", "Warning", "Checkpoint", "Schematic",
   "Video", "PinTable", "Difficulty", "ConceptLink", "ExternalGuide",
-  "ReadMore", "ShipIt", "GuideGrid",
+  "ReadMore", "ShipIt", "GuideGrid", "ToolkitPicker",
 ])
 
 let failures = 0

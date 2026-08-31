@@ -16,6 +16,12 @@ const baseSchema = z.object({
   title: z.string().min(1),
   /** One-to-two lines selling the outcome. Shown on cards and page headers. */
   subtitle: z.string().min(1),
+  /** What search results should say, when `title` is written for someone
+      already on the site and not for someone typing into Google. Replaces
+      the <title>; the page itself still shows `title`. */
+  seoTitle: z.string().optional(),
+  /** Meta description. Defaults to `subtitle`. */
+  seoDescription: z.string().optional(),
   /** GitHub username(s). Credited on the page; optional. */
   author: authorSchema.optional(),
   /** GitHub usernames of everyone who improved the guide after the

@@ -103,12 +103,19 @@ export function authors(meta: EntryMeta): string[] {
 
 const bookPageSchema = z.object({
   title: z.string().min(1),
+  /** Search-result title, when `title` reads well in the page list but
+      not in Google. Overrides the whole <title>, chapter and entry both. */
+  seoTitle: z.string().optional(),
+  /** Meta description. Defaults to the page's opening prose. */
+  seoDescription: z.string().optional(),
 })
 
 export type BookPage = {
   slug: string
   order: number
   title: string
+  seoTitle?: string
+  seoDescription?: string
   body: string
   /** filename within the entry folder, e.g. "02-soldering.mdx" */
   file: string
@@ -132,6 +139,8 @@ export const listBookPages = cache(
           slug: m[2],
           order: Number(m[1]),
           title: meta.title,
+          seoTitle: meta.seoTitle,
+          seoDescription: meta.seoDescription,
           body: content,
           file: m[0],
         }
