@@ -5,7 +5,9 @@ import { notFound } from "next/navigation"
 import { GuideBreadcrumb } from "@/components/guide-breadcrumb"
 import { GuideNav } from "@/components/guide-nav"
 import { buildNavItems } from "@/components/guide-page"
+import { ReadingClock } from "@/components/reading-clock"
 import {
+  entryClockPages,
   entryPath,
   getEntry,
   listBookPages,
@@ -64,6 +66,9 @@ export function BookLayout({
           <div className="min-w-0">{children}</div>
         </ViewTransition>
       </div>
+      {/* one clock for the whole book: it persists here across chapter
+          switches and counts down toward finishing every page */}
+      <ReadingClock pages={entryClockPages(entry)} />
     </div>
   )
 }

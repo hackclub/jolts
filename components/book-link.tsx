@@ -17,6 +17,15 @@ import { useRouter } from "next/navigation"
    Next's own scroll then finds the column's top edge already in view and
    exits early, so it doesn't fight this. */
 
+/* Fired on window the instant a book navigation is committed to on click,
+   before any scroll reset (the glide, or plain navigation's own). Anything
+   that samples the scroll to show progress (the reading clock) has to hold
+   still while the page rewinds to the top under it, or it reads the rewind
+   as un-reading - and the rewind runs on the OLD page, so watching for the
+   pathname to change catches it too late. This is the earlier signal; the
+   listener resumes once the destination page settles. */
+export const GLIDE_START_EVENT = "jolts:glide-start"
+
 // the most page the glide actually travels, in viewport heights
 const RUNWAY_VH = 0.8
 
@@ -152,6 +161,16 @@ export function BookLink({
         // modifier and middle clicks belong to the browser
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)
           return
+
+        // A page switch is coming - freeze any scroll-driven widget (the
+        // reading clock) before either the glide OR the plain-navigation
+        // scroll reset moves the page under it. Only for a real route
+        // change: firing this for a click on the page we're already on
+        // would leave the widget frozen with no navigation to thaw it.
+        const here = window.location.pathname.replace(/\/+$/, "")
+        const dest = href.replace(/\/+$/, "")
+        if (dest !== here) window.dispatchEvent(new Event(GLIDE_START_EVENT))
+
         if (window.scrollY <= window.innerHeight * FLOOR_VH) return
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches)
           return

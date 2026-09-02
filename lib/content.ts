@@ -236,6 +236,40 @@ export function plainExcerpt(body: string, maxLength = 220): string {
   return cut.slice(0, cut.lastIndexOf(" ")) + " …"
 }
 
+/* ---------- reading time ----------
+   Stolen from aisafety.dance's reading clock: count the words, divide by
+   a deliberately low words-per-minute (READING_WPM in lib/content-schema
+   - these pages carry photos, part pickers, and code the eye lingers on),
+   round up. We count words from the source prose (plainText strips code,
+   JSX, and markup) rather than the rendered DOM, which lets us total a
+   whole book at build time.
+
+   A book (guide or site page) is many chapters, so its reading time is
+   the ETA of finishing ALL of them. entryClockPages returns one entry per
+   page in reading order - the overview first, then each chapter - each
+   carrying its word count and its URL. The client-side ReadingClock sums
+   them and counts down across page switches toward the very last word. */
+
+export function wordCount(body: string): number {
+  const text = plainText(body)
+  return text ? text.split(/\s+/).length : 0
+}
+
+export type ClockPage = { words: number; href: string }
+
+export function entryClockPages(entry: Entry): ClockPage[] {
+  const base = entryPath(entry.contentType, entry.slug)
+  const overview: ClockPage = { words: wordCount(entry.body), href: base }
+  if (!isBookType(entry.contentType)) return [overview]
+  return [
+    overview,
+    ...listBookPages(entry.contentType, entry.slug).map((p) => ({
+      words: wordCount(p.body),
+      href: `${base}/${p.slug}`,
+    })),
+  ]
+}
+
 /** Map a guide-relative image path ("./photo.jpg") to its served URL. */
 export function contentImageUrl(
   contentType: ContentType,

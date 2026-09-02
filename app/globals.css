@@ -366,6 +366,18 @@
   }
   html {
     @apply font-sans;
+    /* Overscroll gutter colour. macOS/iOS paint the rubber-band gutter with
+       the ROOT background-colour only - DOM content above y=0 is never drawn
+       there, and a `fixed` background is skipped too - so this is the one
+       lever that reaches it. Default to the page colour so the bottom bounce
+       matches the page (and the footer); OverscrollColor flips it to the
+       header colour while scrolled to the very top (see [data-at-top]), the
+       only position where the TOP bounce is reachable, so the top bounce
+       continues the header instead of flashing white. */
+    background-color: var(--jt-page);
+  }
+  html[data-at-top] {
+    background-color: var(--jt-header);
   }
 }
 
@@ -456,6 +468,54 @@
   }
   100% {
     opacity: var(--jt-glow-rest);
+  }
+}
+
+/* ---------- reading clock ----------
+   Lifted wholesale from aisafety.dance: a 40px clock face that sweeps as
+   you read, with the minutes-left label tucked under it. The face is one
+   sprite sheet - 12 columns x 10 rows, 120 frames from empty to full -
+   scrubbed by background-position. Same art, light and dark. Sits above
+   the article but under modals; it lives in the persistent book layout so
+   it never gets captured by the page-switch transition below. */
+.reading-clock {
+  position: fixed;
+  right: 10px;
+  bottom: 13px;
+  z-index: 40;
+  text-align: center;
+  color: var(--jt-body);
+  pointer-events: none;
+}
+.reading-clock__icon {
+  width: 40px;
+  height: 40px;
+  display: inline-block;
+  background-image: url(/reading-clock/clock.png);
+  background-repeat: no-repeat;
+  background-size: 1200% 1000%; /* 12 cols x 10 rows of 40px frames */
+}
+.dark .reading-clock__icon {
+  background-image: url(/reading-clock/clock_dark.png);
+}
+.reading-clock__label {
+  position: relative;
+  top: -4px;
+  width: 100%;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+/* On phones the widget floats over the prose, so give the label a chip to
+   sit on - mirrors aisafety.dance's own mobile treatment. */
+@media (max-width: 768px) {
+  .reading-clock__label {
+    display: inline-block;
+    width: auto;
+    padding: 1px 7px;
+    border-radius: 20px;
+    background: var(--jt-surface);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
   }
 }
 

@@ -5,6 +5,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 import { EntryReveal } from "@/components/entry-reveal";
+import { OverscrollColor } from "@/components/overscroll-color";
 import { ThemeSync } from "@/components/theme-mode";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -60,6 +61,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
          that the page transition plays straight through. Next reads the
          attribute to know it should force `auto` for its own scrolling. */
       data-scroll-behavior="smooth"
+      /* fresh loads start at the top, so the root carries the header colour
+         from the first paint; OverscrollColor keeps it in step after that */
+      data-at-top=""
       // the inline scripts below write to <html> before hydration
       suppressHydrationWarning
     >
@@ -75,6 +79,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
         <ThemeSync />
+        <OverscrollColor />
         <EntryReveal />
         {/* one header/footer instance for every route, so the header's
             post-click hover-hold state survives navigating from anywhere

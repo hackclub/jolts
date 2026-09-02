@@ -18,10 +18,12 @@ import {
 } from "@/components/json-ld"
 import { getMDXComponents } from "@/components/mdx/registry"
 import { ToolkitProvider } from "@/components/mdx/toolkit-context"
+import { ReadingClock } from "@/components/reading-clock"
 import { contentImageHasAlpha } from "@/lib/content-image"
 import {
   authors,
   contentImageUrl,
+  entryClockPages,
   entryPath,
   extractToc,
   getEntry,
@@ -545,6 +547,7 @@ export async function GuidePage({
         <article className="jolts-guide pt-[8px] pb-[30px]" style={accentStyle}>
           {body}
         </article>
+        <ReadingClock pages={entryClockPages(entry)} />
       </div>
     )
   }
@@ -575,6 +578,7 @@ export async function GuidePage({
           </div>
         </ViewTransition>
       </div>
+      <ReadingClock pages={entryClockPages(entry)} />
     </div>
   )
 }

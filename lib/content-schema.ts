@@ -112,6 +112,14 @@ export function isBookType(type: ContentType): boolean {
   return (BOOK_TYPES as readonly string[]).includes(type)
 }
 
+/* ---------- reading time ----------
+   Words per minute for the reading clock. Deliberately low, the same
+   figure aisafety.dance lowballs to: our pages are dense with photos,
+   interactive part pickers, and code, so plain wpm overstates how fast
+   they actually go. Lives here (fs-free) so the browser-side clock and
+   the server loaders share one number. */
+export const READING_WPM = 180
+
 /* ---------- heading anchors ---------- */
 
 /** Anchor id for a heading or step title. Must match what the renderer
