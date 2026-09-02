@@ -17,6 +17,7 @@ import {
   WEBSITE_ID,
 } from "@/components/json-ld"
 import { getMDXComponents } from "@/components/mdx/registry"
+import { ToolkitProvider } from "@/components/mdx/toolkit-context"
 import { contentImageHasAlpha } from "@/lib/content-image"
 import {
   authors,
@@ -488,7 +489,8 @@ export async function GuideContent({
           } as React.CSSProperties
         }
       >
-        {body}
+        {/* shares the picker's answers with the <App> headers below it */}
+        <ToolkitProvider>{body}</ToolkitProvider>
       </article>
       <div className="pb-[30px]">
         <PageFooterNav

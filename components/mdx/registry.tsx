@@ -18,6 +18,7 @@ import {
 import { GuideCard } from "@/components/entry-card"
 import { PreviewLink, type PreviewTheme } from "@/components/preview-link"
 import { ToolkitPicker } from "@/components/mdx/toolkit-picker"
+import { App, AppGroup } from "@/components/mdx/app-logo"
 import {
   contentImageUrl,
   getEntry,
@@ -64,6 +65,24 @@ function EditPen({ editUrl, className }: { editUrl?: string; className?: string 
   )
 }
 
+/* the # that hangs in the left margin of a heading on hover - a link to the
+   heading's own anchor, in the content type's accent (orange/purple/green
+   via --guide-accent). The heading it sits in must be `relative group/heading`.
+   Absolute so it never shifts the heading text; hidden until hover, and on
+   touch (no hover) it simply never shows. */
+function AnchorLink({ id }: { id: string }) {
+  return (
+    <a
+      href={`#${id}`}
+      aria-label="Link to this section"
+      className="absolute top-0 right-full mr-[8px] font-normal opacity-0 transition-opacity duration-150 select-none group-hover/heading:opacity-100 hover:!opacity-100"
+      style={{ color: "var(--guide-accent, var(--jt-guides-accent))" }}
+    >
+      #
+    </a>
+  )
+}
+
 export function Step({
   title,
   image,
@@ -86,7 +105,8 @@ export function Step({
           accent with the tilted flag edge, continuing into a grey segment
           that carries the title */}
       {/* isolate: keeps the flag's z-10 from painting over floating UI */}
-      <h3 className="group/heading isolate flex items-stretch text-[17px] font-semibold tracking-[-0.03em]">
+      <h3 className="group/heading relative isolate flex items-stretch text-[17px] font-semibold tracking-[-0.03em]">
+        <AnchorLink id={slugifyHeading(title)} />
         {/* accent segment: the body's right edge is clipped diagonally so
             nothing can leak past the seam, and a skewed rounded cap rides
             the same diagonal (outside the clipped span - clip-path clips
@@ -629,22 +649,33 @@ function textOf(node: React.ReactNode): string {
 
 function proseComponents(entry: Entry, editUrl?: string): MDXComponents {
   return {
-    h2: ({ children, ...props }) => (
-      <h2
-        id={slugifyHeading(textOf(children))}
-        className="group/heading mt-[48px] mb-[12px] flex items-baseline gap-[10px] scroll-mt-[24px] text-[26px] font-semibold tracking-[-0.03em] text-[var(--jt-ink)]"
-        {...props}
-      >
-        <span className="min-w-0">{children}</span>
-        <EditPen editUrl={editUrl} className="ml-auto shrink-0 self-center" />
-      </h2>
-    ),
-    h3: (props) => (
-      <h3
-        className="mt-[34px] mb-[8px] text-[20px] font-semibold tracking-[-0.03em] text-[var(--jt-ink)]"
-        {...props}
-      />
-    ),
+    h2: ({ children, ...props }) => {
+      const id = slugifyHeading(textOf(children))
+      return (
+        <h2
+          id={id}
+          className="group/heading relative mt-[48px] mb-[12px] flex items-baseline gap-[10px] scroll-mt-[24px] text-[26px] font-semibold tracking-[-0.03em] text-[var(--jt-ink)]"
+          {...props}
+        >
+          <AnchorLink id={id} />
+          <span className="min-w-0">{children}</span>
+          <EditPen editUrl={editUrl} className="ml-auto shrink-0 self-center" />
+        </h2>
+      )
+    },
+    h3: ({ children, ...props }) => {
+      const id = slugifyHeading(textOf(children))
+      return (
+        <h3
+          id={id}
+          className="group/heading relative mt-[34px] mb-[8px] scroll-mt-[24px] text-[20px] font-semibold tracking-[-0.03em] text-[var(--jt-ink)]"
+          {...props}
+        >
+          <AnchorLink id={id} />
+          {children}
+        </h3>
+      )
+    },
     p: (props) => (
       <p
         className="my-[14px] text-[15.5px] leading-[1.7] tracking-[-0.01em] text-[var(--jt-body)]"
@@ -749,6 +780,8 @@ export function getMDXComponents(
     Video,
     PinTable,
     Difficulty,
+    App,
+    AppGroup,
     ConceptLink: ConceptLinkInline,
     ExternalGuide,
     ReadMore,

@@ -64,7 +64,7 @@ const schemas = {
 const REGISTRY = new Set([
   "Step", "PartsList", "Tool", "Warning", "Checkpoint", "Schematic",
   "Video", "PinTable", "Difficulty", "ConceptLink", "ExternalGuide",
-  "ReadMore", "ShipIt", "GuideGrid", "ToolkitPicker",
+  "ReadMore", "ShipIt", "GuideGrid", "ToolkitPicker", "App", "AppGroup",
 ])
 
 let failures = 0

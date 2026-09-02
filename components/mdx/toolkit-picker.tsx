@@ -1,183 +1,24 @@
 "use client"
 
-import { useId, useState } from "react"
+import { useId } from "react"
 
 import { ArrowUpRight } from "@phosphor-icons/react"
 import { AnimatePresence, motion } from "motion/react"
 
 import { CheckerFrame, type FrameTheme } from "@/components/checker-frame"
+import { useToolkit } from "@/components/mdx/toolkit-context"
+import {
+  PICKS,
+  recommendedApps,
+  type AppRef,
+  type ToolkitQuestion,
+} from "@/lib/toolkit"
 
-/* Three questions, one recommended set of apps.
+/* Three questions, one recommended set of apps. The data and rules live in
+   lib/toolkit (shared with the header tags via toolkit-context); this file is
+   just the UI. See lib/toolkit for how the answers map to picks. */
 
-   A beginner opening "what software do I need?" gets a wall of names -
-   KiCad, EasyEDA, Thonny, Arduino, Onshape - and no way to tell which
-   of them is for them. The picker narrows it to one app per job.
-
-   The questions come from the MDX so the page can reword them; the apps
-   and the rules live here, in PICKS and readTraits. The two meet at the
-   question ids (device / lang / pref) and at keywords in the option text
-   ("chromebook", "phone", "python"), matched loosely so rewording an
-   option doesn't silently change the answer - see readTraits. */
-
-export type ToolkitQuestion = {
-  /** must be one of the ids readTraits reads: device, lang, pref */
-  id: string
-  prompt: string
-  options: string[]
-}
-
-type Answers = Record<string, string>
-
-/* ---------- the apps ---------- */
-
-type App = {
-  name: string
-  href: string
-  /** one line: what it is and why it's the pick */
-  why: string
-  /** the second half of a pairing, e.g. the editor a language needs */
-  also?: { name: string; href: string; why: string }
-  /** the honest caveat, when the pick is a compromise */
-  caveat?: string
-}
-
-const KICAD = {
-  name: "KiCad",
-  href: "https://www.kicad.org/",
-  why: "Free, open source, and what most people around here draw their boards in.",
-}
-
-const EASYEDA = {
-  name: "EasyEDA",
-  href: "https://easyeda.com/",
-  why: "Runs in a browser tab, and its parts library is the same shop that will make your board.",
-}
-
-const CIRCUITPYTHON = {
-  name: "CircuitPython",
-  href: "https://circuitpython.org/",
-  why: "The board turns up as a USB drive. You edit code.py, hit save, and it runs.",
-}
-
-const THONNY = {
-  name: "Thonny",
-  href: "https://thonny.org/",
-  why: "A small editor that talks to the board and gives you a Python prompt on it.",
-}
-
-const CP_WEB_EDITOR = {
-  name: "the CircuitPython web editor",
-  href: "https://code.circuitpython.org/",
-  why: "Edits the board straight from Chrome, so nothing needs installing.",
-}
-
-const ARDUINO = {
-  name: "Arduino IDE",
-  href: "https://www.arduino.cc/en/software",
-  why: "C++, and the biggest pile of example code and libraries you'll find.",
-}
-
-const ARDUINO_CLOUD = {
-  name: "Arduino Cloud Editor",
-  href: "https://www.arduino.cc/en/software",
-  why: "The same C++ and the same libraries, in a browser tab.",
-}
-
-/* No Tinkercad, ever: it can't export STEP, so nothing drawn in it can
-   move on to another CAD tool, a printing service, or your board's 3D
-   view. Every pick below exports STEP. */
-const ONSHAPE = {
-  name: "Onshape",
-  href: "https://www.onshape.com/",
-  why: "Proper CAD in a browser tab - sketches, constraints, the real thing.",
-  caveat: "The free plan makes your designs public.",
-}
-
-const FREECAD = {
-  name: "FreeCAD",
-  href: "https://www.freecad.org/",
-  why: "Proper CAD you install and keep. Free and open source.",
-}
-
-/* ---------- what the answers mean ---------- */
-
-type Traits = {
-  /** browser apps only, by necessity or by choice */
-  browser: boolean
-  /** said no to browser apps - the one answer that rules them out */
-  avoidsBrowser: boolean
-  phone: boolean
-  codes: "python" | "other" | "none"
-}
-
-/* Keyword matching, not exact strings: the page owns the wording, so
-   "School Chromebook" and "a Chromebook I don't own" must land the same. */
-function readTraits(answers: Answers): Traits {
-  const device = answers.device ?? ""
-  const lang = answers.lang ?? ""
-  const pref = answers.pref ?? ""
-
-  const phone = /phone|tablet|ipad/i.test(device)
-  const chromebook = /chromebook/i.test(device)
-
-  return {
-    browser: phone || chromebook || /^y/i.test(pref),
-    avoidsBrowser: !phone && !chromebook && /^n/i.test(pref),
-    phone,
-    codes: /python/i.test(lang)
-      ? "python"
-      : /^n/i.test(lang)
-        ? "none"
-        : "other",
-  }
-}
-
-/* ---------- the rules ---------- */
-
-/* One pick per job, and the job names match this page's own sections. */
-const PICKS: { job: string; pick: (t: Traits) => App }[] = [
-  {
-    job: "Circuit boards",
-    pick: (t) => {
-      if (t.phone) {
-        return {
-          ...EASYEDA,
-          caveat:
-            "Board design on a phone screen is rough. Read on for now, and come back to this bit on a laptop or a Chromebook.",
-        }
-      }
-      return t.browser ? EASYEDA : KICAD
-    },
-  },
-  {
-    job: "Code",
-    pick: (t) => {
-      if (t.codes === "other") return t.browser ? ARDUINO_CLOUD : ARDUINO
-      return {
-        ...CIRCUITPYTHON,
-        why:
-          t.codes === "none"
-            ? "Nothing to set up: the board turns up as a USB drive, you edit code.py, and it runs."
-            : CIRCUITPYTHON.why,
-        also: t.browser ? CP_WEB_EDITOR : THONNY,
-      }
-    },
-  },
-  {
-    job: "3D parts",
-    pick: (t) => {
-      if (t.avoidsBrowser) return FREECAD
-      if (t.phone) {
-        return {
-          ...ONSHAPE,
-          caveat:
-            "It loads on a phone, but drawing a case on one is a fight. Worth waiting for a bigger screen.",
-        }
-      }
-      return ONSHAPE
-    },
-  },
-]
+export type { ToolkitQuestion }
 
 /* ---------- the block ---------- */
 
@@ -202,14 +43,32 @@ const OPEN = {
   opacity: { duration: 0.18, ease: [0.3, 0, 0, 1] },
 } as const
 
-function AppLink({ app }: { app: App }) {
+/* The app's own icon, inline with its name and sized to the line. The
+   white ground is invisible on the light surface and is what keeps the
+   dark marks (KiCad's, Thonny's) from disappearing into the dark one. */
+function AppIcon({ app }: { app: AppRef }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={app.icon}
+      alt=""
+      width={17}
+      height={17}
+      loading="lazy"
+      className="!my-0 size-[17px] shrink-0 self-center rounded-[4px] bg-white p-[1.5px] object-contain"
+    />
+  )
+}
+
+function AppLink({ app }: { app: AppRef }) {
   return (
     <a
       href={app.href}
       target="_blank"
       rel="noreferrer"
-      className="group inline-flex items-baseline gap-[3px] font-semibold text-[var(--jt-ink)] no-underline"
+      className="group inline-flex items-baseline gap-[4px] font-semibold text-[var(--jt-ink)] no-underline"
     >
+      <AppIcon app={app} />
       <span className="underline decoration-[var(--jt-line-strong)] decoration-[1.5px] underline-offset-[3px] transition-colors duration-150 group-hover:decoration-[var(--jt-ink)]">
         {app.name}
       </span>
@@ -224,11 +83,12 @@ function AppLink({ app }: { app: App }) {
 }
 
 export function ToolkitPicker({ questions }: { questions: ToolkitQuestion[] }) {
-  const [answers, setAnswers] = useState<Answers>({})
+  const { answers, setAnswers } = useToolkit()
   const groupId = useId()
 
   const done = questions.length > 0 && questions.every((q) => answers[q.id])
-  const traits = readTraits(answers)
+  // aligned with PICKS, so the map below can pair each job with its app
+  const apps = recommendedApps(answers)
 
   return (
     <CheckerFrame
@@ -310,7 +170,7 @@ export function ToolkitPicker({ questions }: { questions: ToolkitQuestion[] }) {
                 <div className="mt-[16px] border-t border-[var(--jt-line-soft)] pt-[14px]">
                   <div className="flex items-baseline justify-between gap-[12px]">
                     <p className="!m-0 text-[14.5px] font-semibold tracking-[-0.02em] text-[var(--jt-ink)]">
-                      Install these three
+                      Try these out!
                     </p>
                     <button
                       type="button"
@@ -321,8 +181,8 @@ export function ToolkitPicker({ questions }: { questions: ToolkitQuestion[] }) {
                     </button>
                   </div>
                   <ul className="!mt-[10px] !mb-0 grid !list-none gap-[10px] !p-0">
-                    {PICKS.map(({ job, pick }) => {
-                      const app = pick(traits)
+                    {PICKS.map(({ job }, i) => {
+                      const app = apps[i]
                       return (
                         <li
                           key={job}
